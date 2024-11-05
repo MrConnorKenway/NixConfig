@@ -31,6 +31,13 @@ vim.api.nvim_create_autocmd('BufRead', {
 
 require('lazy').setup({
   {
+    'folke/lazydev.nvim',
+    ft = 'lua', -- only load on lua files
+    config = function ()
+      require('lazydev').setup()
+    end
+  },
+  {
     'lewis6991/gitsigns.nvim',
     config = function()
       local gitsigns = require('gitsigns')
@@ -43,32 +50,80 @@ require('lazy').setup({
     end
   },
   {
-    "folke/flash.nvim",
-    keys = {
-      { "s", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash" },
-      { "S", mode = { "n", "x", "o" }, function() require("flash").treesitter() end, desc = "Flash Treesitter" },
-      { "r", mode = "o", function() require("flash").remote() end, desc = "Remote Flash" },
-      { "R", mode = { "o", "x" }, function() require("flash").treesitter_search() end, desc = "Treesitter Search" },
-      { "<c-s>", mode = { "c" }, function() require("flash").toggle() end, desc = "Toggle Flash Search" },
+    'folke/flash.nvim',
+    dependencies = {
+      'nvim-treesitter/nvim-treesitter'
     },
+    keys = {
+      { 's', mode = { 'n', 'x', 'o' }, function() require('flash').jump() end, desc = 'Flash' },
+      { 'S', mode = { 'n', 'x', 'o' }, function() require('flash').treesitter() end, desc = 'Flash Treesitter' },
+      { 'r', mode = 'o', function() require('flash').remote() end, desc = 'Remote Flash' },
+      { 'R', mode = { 'o', 'x' }, function() require('flash').treesitter_search() end, desc = 'Treesitter Search' },
+      { '<c-s>', mode = { 'c' }, function() require('flash').toggle() end, desc = 'Toggle Flash Search' }
+    }
   },
   {
     'nvim-treesitter/nvim-treesitter',
+    dependencies = {
+      'nvim-treesitter/nvim-treesitter-textobjects'
+    },
     config = function()
       require('nvim-treesitter.configs').setup {
+        auto_install = false,
+        sync_install = false,
         highlight = { enable = true },
-        indent = { enable = true }
+        indent = { enable = true },
+        ensure_installed = {
+          'c', 'lua', 'vim', 'vimdoc', 'query', 'markdown', 'markdown_inline',
+          'nix', 'asm', 'cpp', 'make', 'python', 'bash', 'rust', 'zig'
+        },
+        textobjects = {
+          select = {
+            enable = true,
+            lookahead = true, -- Automatically jump forward to textobj, similar to targets.vim
+            keymaps = {
+              -- You can use the capture groups defined in textobjects.scm
+              ['aa'] = '@parameter.outer',
+              ['ia'] = '@parameter.inner',
+              ['af'] = '@function.outer',
+              ['if'] = '@function.inner',
+              ['ac'] = '@class.outer',
+              ['ic'] = '@class.inner',
+            },
+          },
+          move = {
+            enable = true,
+            set_jumps = true, -- whether to set jumps in the jumplist
+            goto_next_start = {
+              [']m'] = '@function.outer',
+              [']]'] = '@class.outer',
+            },
+            goto_next_end = {
+              [']M'] = '@function.outer',
+              [']['] = '@class.outer',
+            },
+            goto_previous_start = {
+              ['[m'] = '@function.outer',
+              ['[['] = '@class.outer',
+            },
+            goto_previous_end = {
+              ['[M'] = '@function.outer',
+              ['[]'] = '@class.outer',
+            },
+          }
+        }
       }
     end
   },
   {
-    'AstroNvim/astrotheme',
+    'navarasu/onedark.nvim',
     priority = 1000,
+    lazy = false,
     init = function()
-      require('astrotheme').setup {
-        palette = 'astrodark'
+      require('onedark').setup {
+        style = 'darker'
       }
-      vim.cmd.colorscheme 'astrotheme'
+      require('onedark').load()
     end
   },
   {
@@ -91,6 +146,12 @@ require('lazy').setup({
     end
   },
   { 'nvim-tree/nvim-web-devicons', lazy = true },
+  {
+    'prichrd/netrw.nvim',
+    config = function()
+      require('netrw').setup()
+    end
+  },
   {
     'nvim-lualine/lualine.nvim',
     config = function()
@@ -123,7 +184,10 @@ require('lazy').setup({
         matching = {
           disallow_partial_matching = false,
           disallow_prefix_unmatching = true,
-          disallow_fuzzy_matching = true
+          disallow_fuzzy_matching = true,
+          disallow_fullfuzzy_matching = true,
+          disallow_partial_fuzzy_matching = true,
+          disallow_symbol_nonprefix_matching = true
         }
       }
     end
@@ -155,11 +219,22 @@ require('lazy').setup({
     end
   },
   {
-    'folke/which-key.nvim',
-    event = 'VeryLazy',
+    'mrjones2014/smart-splits.nvim',
     keys = {
-      { '<leader>c', '<cmd>bd<cr>', desc = 'Close buffer' }
-    }
+      { '<C-h>', mode = { 'n', 'i', 't' }, '<cmd>SmartCursorMoveLeft<cr>', desc = 'Move cursort left' },
+      { '<C-j>', mode = { 'n', 'i', 't' }, '<cmd>SmartCursorMoveDown<cr>', desc = 'Move cursort down' },
+      { '<C-k>', mode = { 'n', 'i', 't' }, '<cmd>SmartCursorMoveUp<cr>', desc = 'Move cursort up' },
+      { '<C-l>', mode = { 'n', 'i', 't' }, '<cmd>SmartCursorMoveRight<cr>', desc = 'Move cursort right' },
+      { '<M-h>', mode = { 'n', 'i', 't' }, '<cmd>SmartResizeLeft<cr>', desc = 'Resize window left' },
+      { '<M-j>', mode = { 'n', 'i', 't' }, '<cmd>SmartResizeDown<cr>', desc = 'Resize window down' },
+      { '<M-k>', mode = { 'n', 'i', 't' }, '<cmd>SmartResizeUp<cr>', desc = 'Resize window up' },
+      { '<M-l>', mode = { 'n', 'i', 't' }, '<cmd>SmartResizeRight<cr>', desc = 'Resize window right' }
+    },
+    config = function()
+      require('smart-splits').setup {
+        default_amount = 3
+      }
+    end
   },
   {
     'nvim-telescope/telescope.nvim',
@@ -190,11 +265,17 @@ require('lazy').setup({
     end
   }
 }, {
+  ui = {
+    border = 'rounded'
+  },
   performance = {
     rtp = {
       disabled_plugins = {
-        'gzip', 'netrwPlugin', 'tarPlugin', 'tohtml', 'zipPlugin', 'syntax'
+        'gzip', 'tarPlugin', 'tohtml', 'zipPlugin', 'syntax'
       }
     }
   }
 })
+
+vim.keymap.set('n', '<leader>l', function() vim.cmd('Lazy home') end, { desc = 'Display lazy' })
+

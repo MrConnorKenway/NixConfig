@@ -79,19 +79,6 @@
 
       plugins = with pkgs.vimPlugins; [
         lazy-nvim
-
-        nvim-treesitter-parsers.c
-        nvim-treesitter-parsers.cpp
-        nvim-treesitter-parsers.asm
-        nvim-treesitter-parsers.nix
-        nvim-treesitter-parsers.cpp
-        nvim-treesitter-parsers.lua
-        nvim-treesitter-parsers.vim
-        nvim-treesitter-parsers.make
-        nvim-treesitter-parsers.query
-        nvim-treesitter-parsers.vimdoc
-        nvim-treesitter-parsers.python
-        nvim-treesitter-parsers.markdown
       ];
 
       extraLuaConfig = builtins.readFile ./init.lua;
