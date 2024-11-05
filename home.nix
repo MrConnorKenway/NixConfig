@@ -64,6 +64,7 @@
       keyMode = "vi";
       prefix = "C-j";
       terminal = "screen-256color";
+      escapeTime = 10;
     };
 
     neovim = {
@@ -125,16 +126,12 @@
             'lewis6991/gitsigns.nvim',
             config = function()
               local gitsigns = require('gitsigns')
-              gitsigns.setup {
-                signs = {
-                  add = { text = '' },
-                  change = { text = '' },
-                  conflict = { text = '' },
-                  delete = { text = '' }
-                }
-              }
+              gitsigns.setup()
               vim.keymap.set('n', ']c', function() gitsigns.nav_hunk('next') end, { desc = 'Go to next git change' })
               vim.keymap.set('n', '[c', function() gitsigns.nav_hunk('prev') end, { desc = 'Go to previous git change' })
+              vim.keymap.set('n', '<leader>p', gitsigns.preview_hunk_inline, { desc = 'Git preview hunk' })
+              vim.keymap.set('n', '<leader>u', gitsigns.reset_hunk, { desc = 'Git reset hunk' })
+              vim.keymap.set('n', '<leader>b', gitsigns.blame_line, { desc = 'Git blame inline' })
             end
           },
           {
@@ -153,16 +150,21 @@
           },
           {
             'nvim-treesitter/nvim-treesitter',
-            opts = {
-              highlight = { enable = true },
-              indent = { enable = true }
-            }
+            config = function()
+              require('nvim-treesitter.configs').setup {
+                highlight = { enable = true },
+                indent = { enable = true }
+              }
+            end
           },
           {
-            'catppuccin/nvim',
+            'AstroNvim/astrotheme',
             priority = 1000,
             init = function()
-              vim.cmd.colorscheme 'catppuccin'
+              require('astrotheme').setup {
+                palette = 'astrodark'
+              }
+              vim.cmd.colorscheme 'astrotheme'
             end
           },
           {
@@ -191,6 +193,37 @@
             end
           },
           {
+            'hrsh7th/nvim-cmp',
+            dependencies = { 'hrsh7th/cmp-nvim-lsp' },
+            event = 'InsertEnter',
+            config = function()
+              local cmp = require('cmp')
+              cmp.setup {
+                sources = {
+                  { name = 'nvim_lsp' }
+                },
+                window = {
+                  completion = cmp.config.window.bordered(),
+                  documentation = cmp.config.window.bordered()
+                },
+                mapping = cmp.mapping.preset.insert {
+                  ['<cr>'] = cmp.mapping.confirm { select = true },
+                  ['<tab>'] = cmp.mapping.confirm { select = true },
+                  ['<C-e>'] = cmp.mapping.abort(),
+                  ['<C-n>'] = cmp.mapping.select_next_item(),
+                  ['<C-b>'] = cmp.mapping.scroll_docs(-4),
+                  ['<C-f>'] = cmp.mapping.scroll_docs(4),
+                  ['<C-p>'] = cmp.mapping.select_prev_item()
+                },
+                matching = {
+                  disallow_partial_matching = false,
+                  disallow_prefix_unmatching = true,
+                  disallow_fuzzy_matching = true
+                }
+              }
+            end
+          },
+          {
             'neovim/nvim-lspconfig',
             config = function()
               vim.api.nvim_create_autocmd('LspAttach', {
@@ -198,8 +231,14 @@
                   vim.lsp.handlers['textDocument/hover'] = vim.lsp.with(vim.lsp.handlers.hover, {
                     border = 'rounded'
                   })
+                  vim.lsp.handlers['textDocument/signatureHelp'] = vim.lsp.with(vim.lsp.handlers.signature_help, {
+                    border = 'rounded'
+                  })
 
                   vim.keymap.set('n', 'gh', vim.lsp.buf.hover, { desc = 'Go to type definitions' })
+                  vim.keymap.set('n', '<leader>i', function()
+                    vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf })
+                  end, { desc = 'Toggle LSP inlay hint' })
                 end
               })
 
@@ -211,13 +250,24 @@
             end
           },
           {
+            'folke/which-key.nvim',
+            event = 'VeryLazy',
+            keys = {
+              { '<leader>c', '<cmd>bd<cr>', desc = 'Close buffer' }
+            }
+          },
+          {
             'nvim-telescope/telescope.nvim',
+            event = 'VeryLazy',
             keys = {
               { '<leader>ff', '<cmd>Telescope find_files<cr>', desc = 'Telescope find files' },
+              { '<leader>fo', '<cmd>Telescope oldfiles<cr>', desc = 'Telescope find old files' },
               { '<leader>fg', '<cmd>Telescope live_grep<cr>', desc = 'Telescope live grep' },
               { '<leader>fb', '<cmd>Telescope buffers<cr>', desc = 'Telescope buffers' },
               { '<leader>fh', '<cmd>Telescope help_tags<cr>', desc = 'Telescope help tags' },
               { '<leader>fs', '<cmd>Telescope lsp_dynamic_workspace_symbols<cr>', desc = 'Telescope find workspace symbols' },
+              { '<leader>fS', '<cmd>Telescope lsp_document_symbols<cr>', desc = 'Telescope find document symbols' },
+              { '<leader>go', '<cmd>Telescope git_status<cr>', desc = 'Telescope preview git status' },
               { '<leader>r',  '<cmd>Telescope lsp_references<cr>', desc = 'Go to references' },
               { 'gd',         '<cmd>Telescope lsp_definitions<cr>', desc = 'Go to definitions' },
               { 'gy',         '<cmd>Telescope lsp_type_definitions<cr>', desc = 'Go to type definitions' }
@@ -239,61 +289,11 @@
           performance = {
             rtp = {
               disabled_plugins = {
-                'gzip', 'netrwPlugin', 'tarPlugin', 'tohtml', 'zipPlugin'
+                'gzip', 'netrwPlugin', 'tarPlugin', 'tohtml', 'zipPlugin', 'syntax'
               }
             }
           }
         })
-
-        -- require('leap').create_default_mappings()
-        -- require('leap.user').set_repeat_keys(';', ',', {
-        --   relative_directions = true,
-        --   modes = {'n'}
-        -- })
-
-        -- require('astrotheme').setup({
-        --   palette = 'astrodark',
-        --   style = {
-        --       transparent = false,         -- Bool value, toggles transparency.
-        --       inactive = true,             -- Bool value, toggles inactive window color.
-        --       float = true,                -- Bool value, toggles floating windows background colors.
-        --       neotree = true,              -- Bool value, toggles neo-trees background color.
-        --       border = true,               -- Bool value, toggles borders.
-        --       title_invert = true,         -- Bool value, swaps text and background colors.
-        --       italic_comments = true,      -- Bool value, toggles italic comments.
-        --       simple_syntax_colors = true, -- Bool value, simplifies the amounts of colors used for syntax highlighting.
-        --   }
-        -- })
-        -- vim.cmd([[colorscheme astrotheme]])
-
-        -- require('ibl').setup {
-        --   indent = {
-        --     char = "│",
-        --     tab_char = "⇥"
-        --   },
-        --   scope = { show_start = false, show_end = false }
-        -- }
-
-        -- local bufferline = require('bufferline')
-        -- bufferline.setup {
-        --   options = {
-        --     mode = 'buffers', -- set to 'tabs' to only show tabpages instead
-        --     style_preset = bufferline.style_preset.default, -- or bufferline.style_preset.minimal,
-        --     diagnostics = 'nvim_lsp',
-        --     diagnostics_update_in_insert = false,
-        --     offsets = {
-        --       {
-        --         filetype = 'neo-tree',
-        --         text = 'File Explorer',
-        --         text_align = 'left',
-        --         separator = true,
-        --       },
-        --     },
-        --     color_icons = true, -- whether or not to add the filetype icon highlights
-        --   },
-        -- }
-
-        -- vim.lsp.inlay_hint.enable()
       '';
     };
 
