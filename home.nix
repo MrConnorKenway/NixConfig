@@ -16,8 +16,8 @@
       python311Packages.python-lsp-server
     ];
 
-    username = "dingluochangqi.ck";
-    homeDirectory = "/home/dingluochangqi.ck";
+    username = builtins.getEnv "USER";
+    homeDirectory = builtins.getEnv "HOME";
 
     stateVersion = "24.05";
 
@@ -65,6 +65,11 @@
       prefix = "C-j";
       terminal = "screen-256color";
       escapeTime = 10;
+
+      plugins = with pkgs.tmuxPlugins; [
+        nord
+        prefix-highlight
+      ];
     };
 
     neovim = {
@@ -136,10 +141,6 @@
           },
           {
             "folke/flash.nvim",
-            event = "VeryLazy",
-            ---@type Flash.Config
-            opts = {},
-            -- stylua: ignore
             keys = {
               { "s", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash" },
               { "S", mode = { "n", "x", "o" }, function() require("flash").treesitter() end, desc = "Flash Treesitter" },
@@ -170,7 +171,8 @@
           {
             'akinsho/toggleterm.nvim',
             keys = {
-              { '<leader>t', function() vim.cmd([[ToggleTerm direction='float']]) end, desc = 'Toggle floating terminal' }
+              { '<leader>t', function() vim.cmd([[ToggleTerm direction='float']]) end, desc = 'Toggle floating terminal' },
+              { '<F9>', '<cmd>ToggleTerm<cr>', mode = { 'n', 'o', 'x', 't', 'i', 'v' }, desc = 'Toggle terminal' }
             },
             config = function()
               require('toggleterm').setup {
@@ -258,7 +260,6 @@
           },
           {
             'nvim-telescope/telescope.nvim',
-            event = 'VeryLazy',
             keys = {
               { '<leader>ff', '<cmd>Telescope find_files<cr>', desc = 'Telescope find files' },
               { '<leader>fo', '<cmd>Telescope oldfiles<cr>', desc = 'Telescope find old files' },
