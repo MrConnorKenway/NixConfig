@@ -97,18 +97,22 @@ require('lazy').setup({
             goto_next_start = {
               [']m'] = '@function.outer',
               [']]'] = '@class.outer',
+              [']l'] = '@loop.outer'
             },
             goto_next_end = {
               [']M'] = '@function.outer',
               [']['] = '@class.outer',
+              [']L'] = '@loop.outer'
             },
             goto_previous_start = {
               ['[m'] = '@function.outer',
               ['[['] = '@class.outer',
+              ['[l'] = '@loop.outer'
             },
             goto_previous_end = {
               ['[M'] = '@function.outer',
               ['[]'] = '@class.outer',
+              ['[L'] = '@loop.outer'
             },
           }
         }
@@ -124,6 +128,32 @@ require('lazy').setup({
         style = 'darker'
       }
       require('onedark').load()
+    end
+  },
+  {
+    'karb94/neoscroll.nvim',
+    config = function ()
+      local neoscroll = require('neoscroll')
+
+      neoscroll.setup {
+        easing = 'quadratic'
+      }
+
+      local keymap = {
+        ["<C-u>"] = function() neoscroll.ctrl_u({ duration = 100 }) end;
+        ["<C-d>"] = function() neoscroll.ctrl_d({ duration = 100 }) end;
+        ["<C-b>"] = function() neoscroll.ctrl_b({ duration = 120 }) end;
+        ["<C-f>"] = function() neoscroll.ctrl_f({ duration = 120 }) end;
+        ["<C-y>"] = function() neoscroll.scroll(-0.1, { move_cursor=false; duration = 70 }) end;
+        ["<C-e>"] = function() neoscroll.scroll(0.1, { move_cursor=false; duration = 70 }) end;
+        ["zt"]    = function() neoscroll.zt({ half_win_duration = 80 }) end;
+        ["zz"]    = function() neoscroll.zz({ half_win_duration = 80 }) end;
+        ["zb"]    = function() neoscroll.zb({ half_win_duration = 80 }) end;
+      }
+      local modes = { 'n', 'v', 'x' }
+      for key, func in pairs(keymap) do
+        vim.keymap.set(modes, key, func)
+      end
     end
   },
   {
@@ -160,8 +190,11 @@ require('lazy').setup({
   },
   {
     'hrsh7th/nvim-cmp',
-    dependencies = { 'hrsh7th/cmp-nvim-lsp' },
-    event = 'InsertEnter',
+    dependencies = {
+      'hrsh7th/cmp-nvim-lsp',
+      'hrsh7th/cmp-cmdline'
+    },
+    event = 'UIEnter',
     config = function()
       local cmp = require('cmp')
       cmp.setup {
@@ -190,6 +223,23 @@ require('lazy').setup({
           disallow_symbol_nonprefix_matching = true
         }
       }
+      cmp.setup.cmdline(':', {
+        sources = {
+          { name = 'cmdline' }
+        },
+        window = {
+          completion = cmp.config.window.bordered(),
+        },
+        mapping = cmp.mapping.preset.cmdline(),
+        matching = {
+          disallow_partial_matching = false,
+          disallow_prefix_unmatching = true,
+          disallow_fuzzy_matching = true,
+          disallow_fullfuzzy_matching = true,
+          disallow_partial_fuzzy_matching = true,
+          disallow_symbol_nonprefix_matching = true
+        }
+      })
     end
   },
   {
