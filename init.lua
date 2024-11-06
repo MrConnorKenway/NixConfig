@@ -160,10 +160,11 @@ require('lazy').setup({
     'akinsho/toggleterm.nvim',
     keys = {
       { '<leader>t', function() vim.cmd([[ToggleTerm direction='float']]) end, desc = 'Toggle floating terminal' },
-      { '<F9>', '<cmd>ToggleTerm<cr>', mode = { 'n', 'o', 'x', 't', 'i', 'v' }, desc = 'Toggle terminal' }
+      { '<C-`>', '<cmd>ToggleTerm<cr>', mode = { 'n', 'o', 'x', 't', 'i', 'v' }, desc = 'Toggle terminal' }
     },
     config = function()
       require('toggleterm').setup {
+        size = 16,
         shading_factor = 2,
         float_opts = { border = 'rounded' }
       }
@@ -233,11 +234,11 @@ require('lazy').setup({
         mapping = cmp.mapping.preset.cmdline(),
         matching = {
           disallow_partial_matching = false,
-          disallow_prefix_unmatching = true,
-          disallow_fuzzy_matching = true,
-          disallow_fullfuzzy_matching = true,
-          disallow_partial_fuzzy_matching = true,
-          disallow_symbol_nonprefix_matching = true
+          disallow_prefix_unmatching = false,
+          disallow_fuzzy_matching = false,
+          disallow_fullfuzzy_matching = false,
+          disallow_partial_fuzzy_matching = false,
+          disallow_symbol_nonprefix_matching = false
         }
       })
     end
@@ -286,6 +287,7 @@ require('lazy').setup({
       }
     end
   },
+  { 'nvim-telescope/telescope-fzf-native.nvim', build = 'make' },
   {
     'nvim-telescope/telescope.nvim',
     keys = {
@@ -298,10 +300,15 @@ require('lazy').setup({
       { '<leader>fS', '<cmd>Telescope lsp_document_symbols<cr>', desc = 'Telescope find document symbols' },
       { '<leader>go', '<cmd>Telescope git_status<cr>', desc = 'Telescope preview git status' },
       { '<leader>r',  '<cmd>Telescope lsp_references<cr>', desc = 'Go to references' },
+      { '<leader>h',  '<cmd>Telescope command_history<cr>', desc = 'Telescope find files' },
       { 'gd',         '<cmd>Telescope lsp_definitions<cr>', desc = 'Go to definitions' },
       { 'gy',         '<cmd>Telescope lsp_type_definitions<cr>', desc = 'Go to type definitions' }
     },
-    dependencies = { 'nvim-lua/plenary.nvim', 'nvim-telescope/telescope-ui-select.nvim' },
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'nvim-telescope/telescope-ui-select.nvim',
+      'nvim-telescope/telescope-fzf-native.nvim'
+    },
     config = function()
       require('telescope').setup {
         defaults = {
@@ -312,6 +319,7 @@ require('lazy').setup({
           }
         }
       }
+      require('telescope').load_extension('fzf')
     end
   }
 }, {
