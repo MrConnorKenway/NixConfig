@@ -9,6 +9,9 @@ vim.opt.smartcase = true
 
 vim.g.mapleader = ' '
 
+vim.keymap.set('n', '<leader>w', '<cmd>bd<cr>', { desc = 'Close buffer' })
+vim.keymap.set('n', '<leader>q', '<cmd>qa<cr>', { desc = 'Quit' })
+
 vim.api.nvim_create_autocmd('BufRead', {
   callback = function(opts)
     vim.api.nvim_create_autocmd('BufWinEnter', {
@@ -54,6 +57,12 @@ require('lazy').setup({
     dependencies = {
       'nvim-treesitter/nvim-treesitter'
     },
+    opts = {
+      labels = 'asdfjkl;',
+      label = {
+        rainbow = { enabled = true }
+      }
+    },
     keys = {
       { 's', mode = { 'n', 'x', 'o' }, function() require('flash').jump() end, desc = 'Flash' },
       { 'S', mode = { 'n', 'x', 'o' }, function() require('flash').treesitter() end, desc = 'Flash Treesitter' },
@@ -63,59 +72,66 @@ require('lazy').setup({
     }
   },
   {
-    'nvim-treesitter/nvim-treesitter',
-    dependencies = {
-      'nvim-treesitter/nvim-treesitter-textobjects'
+    "rmagatti/goto-preview",
+    keys = {
+      { 'gp', mode = { 'n' }, function() require('goto-preview').goto_preview_definition() end, desc = 'Preview LSP definition' }
     },
+    config = true
+  },
+  {
+    'nvim-treesitter/nvim-treesitter',
+    -- dependencies = {
+    --   'nvim-treesitter/nvim-treesitter-textobjects'
+    -- },
     config = function()
       require('nvim-treesitter.configs').setup {
         auto_install = false,
         sync_install = false,
-        highlight = { enable = true },
-        indent = { enable = true },
+        highlight = { enable = false },
+        indent = { enable = false },
         ensure_installed = {
           'c', 'lua', 'vim', 'vimdoc', 'query', 'markdown', 'markdown_inline',
           'nix', 'asm', 'cpp', 'make', 'python', 'bash', 'rust', 'zig'
         },
-        textobjects = {
-          select = {
-            enable = true,
-            lookahead = true, -- Automatically jump forward to textobj, similar to targets.vim
-            keymaps = {
-              -- You can use the capture groups defined in textobjects.scm
-              ['aa'] = '@parameter.outer',
-              ['ia'] = '@parameter.inner',
-              ['af'] = '@function.outer',
-              ['if'] = '@function.inner',
-              ['ac'] = '@class.outer',
-              ['ic'] = '@class.inner',
-            },
-          },
-          move = {
-            enable = true,
-            set_jumps = true, -- whether to set jumps in the jumplist
-            goto_next_start = {
-              [']m'] = '@function.outer',
-              [']]'] = '@class.outer',
-              [']l'] = '@loop.outer'
-            },
-            goto_next_end = {
-              [']M'] = '@function.outer',
-              [']['] = '@class.outer',
-              [']L'] = '@loop.outer'
-            },
-            goto_previous_start = {
-              ['[m'] = '@function.outer',
-              ['[['] = '@class.outer',
-              ['[l'] = '@loop.outer'
-            },
-            goto_previous_end = {
-              ['[M'] = '@function.outer',
-              ['[]'] = '@class.outer',
-              ['[L'] = '@loop.outer'
-            },
-          }
-        }
+        -- textobjects = {
+        --   select = {
+        --     enable = true,
+        --     lookahead = true, -- Automatically jump forward to textobj, similar to targets.vim
+        --     keymaps = {
+        --       -- You can use the capture groups defined in textobjects.scm
+        --       ['aa'] = '@parameter.outer',
+        --       ['ia'] = '@parameter.inner',
+        --       ['af'] = '@function.outer',
+        --       ['if'] = '@function.inner',
+        --       ['ac'] = '@class.outer',
+        --       ['ic'] = '@class.inner',
+        --     },
+        --   },
+        --   move = {
+        --     enable = true,
+        --     set_jumps = true, -- whether to set jumps in the jumplist
+        --     goto_next_start = {
+        --       [']m'] = '@function.outer',
+        --       [']]'] = '@class.outer',
+        --       [']l'] = '@loop.outer'
+        --     },
+        --     goto_next_end = {
+        --       [']M'] = '@function.outer',
+        --       [']['] = '@class.outer',
+        --       [']L'] = '@loop.outer'
+        --     },
+        --     goto_previous_start = {
+        --       ['[m'] = '@function.outer',
+        --       ['[['] = '@class.outer',
+        --       ['[l'] = '@loop.outer'
+        --     },
+        --     goto_previous_end = {
+        --       ['[M'] = '@function.outer',
+        --       ['[]'] = '@class.outer',
+        --       ['[L'] = '@loop.outer'
+        --     },
+        --   }
+        -- }
       }
     end
   },
@@ -131,36 +147,18 @@ require('lazy').setup({
     end
   },
   {
-    'karb94/neoscroll.nvim',
-    config = function ()
-      local neoscroll = require('neoscroll')
-
-      neoscroll.setup {
-        easing = 'quadratic'
-      }
-
-      local keymap = {
-        ["<C-u>"] = function() neoscroll.ctrl_u({ duration = 100 }) end;
-        ["<C-d>"] = function() neoscroll.ctrl_d({ duration = 100 }) end;
-        ["<C-b>"] = function() neoscroll.ctrl_b({ duration = 120 }) end;
-        ["<C-f>"] = function() neoscroll.ctrl_f({ duration = 120 }) end;
-        ["<C-y>"] = function() neoscroll.scroll(-0.1, { move_cursor=false; duration = 70 }) end;
-        ["<C-e>"] = function() neoscroll.scroll(0.1, { move_cursor=false; duration = 70 }) end;
-        ["zt"]    = function() neoscroll.zt({ half_win_duration = 80 }) end;
-        ["zz"]    = function() neoscroll.zz({ half_win_duration = 80 }) end;
-        ["zb"]    = function() neoscroll.zb({ half_win_duration = 80 }) end;
-      }
-      local modes = { 'n', 'v', 'x' }
-      for key, func in pairs(keymap) do
-        vim.keymap.set(modes, key, func)
-      end
+    'rmagatti/auto-session',
+    lazy = false,
+    config = function()
+      require('auto-session').setup {}
     end
   },
   {
     'akinsho/toggleterm.nvim',
     keys = {
-      { '<leader>t', function() vim.cmd([[ToggleTerm direction='float']]) end, desc = 'Toggle floating terminal' },
-      { '<C-`>', '<cmd>ToggleTerm<cr>', mode = { 'n', 'o', 'x', 't', 'i', 'v' }, desc = 'Toggle terminal' }
+      { '<leader>t', function() require('toggleterm').toggle(nil, nil, nil, 'float', nil) end, desc = 'Toggle floating terminal' },
+      { '<C-`>', function() require('toggleterm').toggle() end, mode = { 'n', 'o', 'x', 't', 'i', 'v' }, desc = 'Toggle terminal' },
+      { '<M-J>', function() require('toggleterm').toggle() end, mode = { 'n', 'o', 'x', 't', 'i', 'v' }, desc = 'Toggle terminal' }
     },
     config = function()
       require('toggleterm').setup {
@@ -183,12 +181,12 @@ require('lazy').setup({
       require('netrw').setup()
     end
   },
-  {
-    'nvim-lualine/lualine.nvim',
-    config = function()
-      require('lualine').setup()
-    end
-  },
+  -- {
+  --   'nvim-lualine/lualine.nvim',
+  --   config = function()
+  --     require('lualine').setup()
+  --   end
+  -- },
   {
     'hrsh7th/nvim-cmp',
     dependencies = {
@@ -291,18 +289,18 @@ require('lazy').setup({
   {
     'nvim-telescope/telescope.nvim',
     keys = {
-      { '<leader>ff', '<cmd>Telescope find_files<cr>', desc = 'Telescope find files' },
-      { '<leader>fo', '<cmd>Telescope oldfiles<cr>', desc = 'Telescope find old files' },
-      { '<leader>fg', '<cmd>Telescope live_grep<cr>', desc = 'Telescope live grep' },
-      { '<leader>fb', '<cmd>Telescope buffers<cr>', desc = 'Telescope buffers' },
-      { '<leader>fh', '<cmd>Telescope help_tags<cr>', desc = 'Telescope help tags' },
-      { '<leader>fs', '<cmd>Telescope lsp_dynamic_workspace_symbols<cr>', desc = 'Telescope find workspace symbols' },
-      { '<leader>fS', '<cmd>Telescope lsp_document_symbols<cr>', desc = 'Telescope find document symbols' },
-      { '<leader>go', '<cmd>Telescope git_status<cr>', desc = 'Telescope preview git status' },
-      { '<leader>r',  '<cmd>Telescope lsp_references<cr>', desc = 'Go to references' },
-      { '<leader>h',  '<cmd>Telescope command_history<cr>', desc = 'Telescope find files' },
-      { 'gd',         '<cmd>Telescope lsp_definitions<cr>', desc = 'Go to definitions' },
-      { 'gy',         '<cmd>Telescope lsp_type_definitions<cr>', desc = 'Go to type definitions' }
+      { '<leader>ff', function() require('telescope.builtin').find_files() end, desc = 'Telescope find files' },
+      { '<leader>fo', function() require('telescope.builtin').oldfiles() end, desc = 'Telescope find old files' },
+      { '<leader>fg', function() require('telescope.builtin').live_grep() end, desc = 'Telescope live grep' },
+      { '<leader>fb', function() require('telescope.builtin').buffers() end, desc = 'Telescope buffers' },
+      { '<leader>fh', function() require('telescope.builtin').help_tags() end, desc = 'Telescope help tags' },
+      { '<leader>fs', function() require('telescope.builtin').lsp_dynamic_workspace_symbols() end, desc = 'Telescope find workspace symbols' },
+      { '<leader>fS', function() require('telescope.builtin').lsp_document_symbols() end, desc = 'Telescope find document symbols' },
+      { '<leader>go', function() require('telescope.builtin').git_status() end, desc = 'Telescope preview git status' },
+      { '<leader>r',  function() require('telescope.builtin').lsp_references() end, desc = 'Go to references' },
+      { '<leader>h',  function() require('telescope.builtin').command_history() end, desc = 'Telescope find files' },
+      { 'gd',         function() require('telescope.builtin').lsp_definitions() end, desc = 'Go to definitions' },
+      { 'gy',         function() require('telescope.builtin').lsp_type_definitions() end, desc = 'Go to type definitions' }
     },
     dependencies = {
       'nvim-lua/plenary.nvim',
@@ -335,5 +333,5 @@ require('lazy').setup({
   }
 })
 
-vim.keymap.set('n', '<leader>l', function() vim.cmd('Lazy home') end, { desc = 'Display lazy' })
+vim.keymap.set('n', '<leader>l', function() require('lazy.view').show('home') end, { desc = 'Display lazy' })
 
