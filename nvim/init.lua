@@ -1,3 +1,20 @@
+-- Bootstrap lazy.nvim
+local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+if not (vim.uv or vim.loop).fs_stat(lazypath) then
+  local lazyrepo = "https://github.com/folke/lazy.nvim.git"
+  local out = vim.fn.system({ "git", "clone", "--filter=blob:none", "--branch=stable", lazyrepo, lazypath })
+  if vim.v.shell_error ~= 0 then
+    vim.api.nvim_echo({
+      { "Failed to clone lazy.nvim:\n", "ErrorMsg" },
+      { out, "WarningMsg" },
+      { "\nPress any key to exit..." },
+    }, true, {})
+    vim.fn.getchar()
+    os.exit(1)
+  end
+end
+vim.opt.rtp:prepend(lazypath)
+
 vim.opt.list = true
 vim.opt.listchars = { tab = '⇥ ', lead = '·', trail = '•', nbsp = '␣', multispace = '·' }
 vim.opt.cursorline = true
@@ -10,6 +27,8 @@ vim.opt.smartcase = true
 vim.g.mapleader = ' '
 
 vim.keymap.set('n', '<leader>w', '<cmd>bd<cr>', { desc = 'Close buffer' })
+vim.keymap.set('n', '[b', '<cmd>bp<cr>', { desc = 'Navigate to previous buffer' })
+vim.keymap.set('n', ']b', '<cmd>bn<cr>', { desc = 'Navigate to next buffer' })
 vim.keymap.set('n', '<leader>q', '<cmd>qa<cr>', { desc = 'Quit' })
 
 vim.api.nvim_create_autocmd('BufRead', {
@@ -136,14 +155,14 @@ require('lazy').setup({
     end
   },
   {
-    'navarasu/onedark.nvim',
+    'AstroNvim/astrotheme',
     priority = 1000,
-    lazy = false,
     init = function()
-      require('onedark').setup {
-        style = 'darker'
+      require('astrotheme').setup {
+        palette = 'astrodark',
+        plugin_default = false
       }
-      require('onedark').load()
+      vim.cmd.colorscheme 'astrotheme'
     end
   },
   {

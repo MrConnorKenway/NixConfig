@@ -3,6 +3,7 @@
 {
   home = {
     packages = with pkgs; [
+      tree
       procs
       git
       pahole
@@ -31,6 +32,10 @@
           Add: [-Wno-unknown-warning-option, -Wno-address-of-packed-member]
           Remove: [-m*, -f*]
       '';
+      };
+      ".config/nvim" = {
+        source = ./nvim;
+        recursive = true;
       };
     };
   };
@@ -76,12 +81,6 @@
       package = pkgs-unstable.neovim-unwrapped;
       enable = true;
       vimAlias = true;
-
-      plugins = with pkgs.vimPlugins; [
-        lazy-nvim
-      ];
-
-      extraLuaConfig = builtins.readFile ./init.lua;
     };
 
     zsh = {
