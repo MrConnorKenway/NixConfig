@@ -6,7 +6,7 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
   if vim.v.shell_error ~= 0 then
     vim.api.nvim_echo({
       { "Failed to clone lazy.nvim:\n", "ErrorMsg" },
-      { out, "WarningMsg" },
+      { out,                            "WarningMsg" },
       { "\nPress any key to exit..." },
     }, true, {})
     vim.fn.getchar()
@@ -40,9 +40,9 @@ vim.api.nvim_create_autocmd('BufRead', {
         local ft = vim.bo[opts.buf].filetype
         local last_known_line = vim.api.nvim_buf_get_mark(opts.buf, '"')[1]
         if
-          not (ft:match('commit') and ft:match('rebase'))
-          and last_known_line > 1
-          and last_known_line <= vim.api.nvim_buf_line_count(opts.buf)
+            not (ft:match('commit') and ft:match('rebase'))
+            and last_known_line > 1
+            and last_known_line <= vim.api.nvim_buf_line_count(opts.buf)
         then
           vim.api.nvim_feedkeys([[g`"]], 'nx', false)
         end
@@ -55,7 +55,7 @@ require('lazy').setup({
   {
     'folke/lazydev.nvim',
     ft = 'lua', -- only load on lua files
-    config = function ()
+    config = function()
       require('lazydev').setup()
     end
   },
@@ -83,11 +83,11 @@ require('lazy').setup({
       }
     },
     keys = {
-      { 's', mode = { 'n', 'x', 'o' }, function() require('flash').jump() end, desc = 'Flash' },
-      { 'S', mode = { 'n', 'x', 'o' }, function() require('flash').treesitter() end, desc = 'Flash Treesitter' },
-      { 'r', mode = 'o', function() require('flash').remote() end, desc = 'Remote Flash' },
-      { 'R', mode = { 'o', 'x' }, function() require('flash').treesitter_search() end, desc = 'Treesitter Search' },
-      { '<c-s>', mode = { 'c' }, function() require('flash').toggle() end, desc = 'Toggle Flash Search' }
+      { 's',     mode = { 'n', 'x', 'o' }, function() require('flash').jump() end,              desc = 'Flash' },
+      { 'S',     mode = { 'n', 'x', 'o' }, function() require('flash').treesitter() end,        desc = 'Flash Treesitter' },
+      { 'r',     mode = 'o',               function() require('flash').remote() end,            desc = 'Remote Flash' },
+      { 'R',     mode = { 'o', 'x' },      function() require('flash').treesitter_search() end, desc = 'Treesitter Search' },
+      { '<c-s>', mode = { 'c' },           function() require('flash').toggle() end,            desc = 'Toggle Flash Search' }
     }
   },
   {
@@ -176,8 +176,8 @@ require('lazy').setup({
     'akinsho/toggleterm.nvim',
     keys = {
       { '<leader>t', function() require('toggleterm').toggle(nil, nil, nil, 'float', nil) end, desc = 'Toggle floating terminal' },
-      { '<C-`>', function() require('toggleterm').toggle() end, mode = { 'n', 'o', 'x', 't', 'i', 'v' }, desc = 'Toggle terminal' },
-      { '<M-J>', function() require('toggleterm').toggle() end, mode = { 'n', 'o', 'x', 't', 'i', 'v' }, desc = 'Toggle terminal' }
+      { '<C-`>',     function() require('toggleterm').toggle() end,                            mode = { 'n', 'o', 'x', 't', 'i', 'v' }, desc = 'Toggle terminal' },
+      { '<M-J>',     function() require('toggleterm').toggle() end,                            mode = { 'n', 'o', 'x', 't', 'i', 'v' }, desc = 'Toggle terminal' }
     },
     config = function()
       require('toggleterm').setup {
@@ -193,7 +193,7 @@ require('lazy').setup({
       require('guess-indent').setup()
     end
   },
-  { 'nvim-tree/nvim-web-devicons', lazy = true },
+  { 'nvim-tree/nvim-web-devicons',              lazy = true },
   {
     'prichrd/netrw.nvim',
     config = function()
@@ -262,6 +262,7 @@ require('lazy').setup({
   },
   {
     'neovim/nvim-lspconfig',
+    dependencies = { 'lukas-reineke/lsp-format.nvim' },
     config = function()
       vim.api.nvim_create_autocmd('LspAttach', {
         callback = function(event)
@@ -279,24 +280,27 @@ require('lazy').setup({
         end
       })
 
+
       local lspconfig = require('lspconfig')
-      lspconfig.clangd.setup{}
-      lspconfig.nixd.setup{}
-      lspconfig.lua_ls.setup{}
-      lspconfig.pylsp.setup{}
+      local lspformat = require('lsp-format')
+      lspformat.setup {}
+      lspconfig.clangd.setup { on_attach = lspformat.on_attach }
+      lspconfig.nixd.setup { on_attach = lspformat.on_attach }
+      lspconfig.lua_ls.setup { on_attach = lspformat.on_attach }
+      lspconfig.pylsp.setup { on_attach = lspformat.on_attach }
     end
   },
   {
     'mrjones2014/smart-splits.nvim',
     keys = {
-      { '<C-h>', mode = { 'n', 'i', 't' }, '<cmd>SmartCursorMoveLeft<cr>', desc = 'Move cursort left' },
-      { '<C-j>', mode = { 'n', 'i', 't' }, '<cmd>SmartCursorMoveDown<cr>', desc = 'Move cursort down' },
-      { '<C-k>', mode = { 'n', 'i', 't' }, '<cmd>SmartCursorMoveUp<cr>', desc = 'Move cursort up' },
+      { '<C-h>', mode = { 'n', 'i', 't' }, '<cmd>SmartCursorMoveLeft<cr>',  desc = 'Move cursort left' },
+      { '<C-j>', mode = { 'n', 'i', 't' }, '<cmd>SmartCursorMoveDown<cr>',  desc = 'Move cursort down' },
+      { '<C-k>', mode = { 'n', 'i', 't' }, '<cmd>SmartCursorMoveUp<cr>',    desc = 'Move cursort up' },
       { '<C-l>', mode = { 'n', 'i', 't' }, '<cmd>SmartCursorMoveRight<cr>', desc = 'Move cursort right' },
-      { '<M-h>', mode = { 'n', 'i', 't' }, '<cmd>SmartResizeLeft<cr>', desc = 'Resize window left' },
-      { '<M-j>', mode = { 'n', 'i', 't' }, '<cmd>SmartResizeDown<cr>', desc = 'Resize window down' },
-      { '<M-k>', mode = { 'n', 'i', 't' }, '<cmd>SmartResizeUp<cr>', desc = 'Resize window up' },
-      { '<M-l>', mode = { 'n', 'i', 't' }, '<cmd>SmartResizeRight<cr>', desc = 'Resize window right' }
+      { '<M-h>', mode = { 'n', 'i', 't' }, '<cmd>SmartResizeLeft<cr>',      desc = 'Resize window left' },
+      { '<M-j>', mode = { 'n', 'i', 't' }, '<cmd>SmartResizeDown<cr>',      desc = 'Resize window down' },
+      { '<M-k>', mode = { 'n', 'i', 't' }, '<cmd>SmartResizeUp<cr>',        desc = 'Resize window up' },
+      { '<M-l>', mode = { 'n', 'i', 't' }, '<cmd>SmartResizeRight<cr>',     desc = 'Resize window right' }
     },
     config = function()
       require('smart-splits').setup {
@@ -308,18 +312,18 @@ require('lazy').setup({
   {
     'nvim-telescope/telescope.nvim',
     keys = {
-      { '<leader>ff', function() require('telescope.builtin').find_files() end, desc = 'Telescope find files' },
-      { '<leader>fo', function() require('telescope.builtin').oldfiles() end, desc = 'Telescope find old files' },
-      { '<leader>fg', function() require('telescope.builtin').live_grep() end, desc = 'Telescope live grep' },
-      { '<leader>fb', function() require('telescope.builtin').buffers() end, desc = 'Telescope buffers' },
-      { '<leader>fh', function() require('telescope.builtin').help_tags() end, desc = 'Telescope help tags' },
+      { '<leader>ff', function() require('telescope.builtin').find_files() end,                    desc = 'Telescope find files' },
+      { '<leader>fo', function() require('telescope.builtin').oldfiles() end,                      desc = 'Telescope find old files' },
+      { '<leader>fg', function() require('telescope.builtin').live_grep() end,                     desc = 'Telescope live grep' },
+      { '<leader>fb', function() require('telescope.builtin').buffers() end,                       desc = 'Telescope buffers' },
+      { '<leader>fh', function() require('telescope.builtin').help_tags() end,                     desc = 'Telescope help tags' },
       { '<leader>fs', function() require('telescope.builtin').lsp_dynamic_workspace_symbols() end, desc = 'Telescope find workspace symbols' },
-      { '<leader>fS', function() require('telescope.builtin').lsp_document_symbols() end, desc = 'Telescope find document symbols' },
-      { '<leader>go', function() require('telescope.builtin').git_status() end, desc = 'Telescope preview git status' },
-      { '<leader>r',  function() require('telescope.builtin').lsp_references() end, desc = 'Go to references' },
-      { '<leader>h',  function() require('telescope.builtin').command_history() end, desc = 'Telescope find files' },
-      { 'gd',         function() require('telescope.builtin').lsp_definitions() end, desc = 'Go to definitions' },
-      { 'gy',         function() require('telescope.builtin').lsp_type_definitions() end, desc = 'Go to type definitions' }
+      { '<leader>fS', function() require('telescope.builtin').lsp_document_symbols() end,          desc = 'Telescope find document symbols' },
+      { '<leader>go', function() require('telescope.builtin').git_status() end,                    desc = 'Telescope preview git status' },
+      { '<leader>r',  function() require('telescope.builtin').lsp_references() end,                desc = 'Go to references' },
+      { '<leader>h',  function() require('telescope.builtin').command_history() end,               desc = 'Telescope find files' },
+      { 'gd',         function() require('telescope.builtin').lsp_definitions() end,               desc = 'Go to definitions' },
+      { 'gy',         function() require('telescope.builtin').lsp_type_definitions() end,          desc = 'Go to type definitions' }
     },
     dependencies = {
       'nvim-lua/plenary.nvim',
@@ -353,4 +357,3 @@ require('lazy').setup({
 })
 
 vim.keymap.set('n', '<leader>l', function() require('lazy.view').show('home') end, { desc = 'Display lazy' })
-
