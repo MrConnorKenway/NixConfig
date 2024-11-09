@@ -1,13 +1,13 @@
 -- Bootstrap lazy.nvim
-local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not (vim.uv or vim.loop).fs_stat(lazypath) then
-  local lazyrepo = "https://github.com/folke/lazy.nvim.git"
-  local out = vim.fn.system({ "git", "clone", "--filter=blob:none", "--branch=stable", lazyrepo, lazypath })
+local lazypath = vim.fn.stdpath('data') .. '/lazy/lazy.nvim'
+if not vim.uv.fs_stat(lazypath) then
+  local lazyrepo = 'https://github.com/folke/lazy.nvim.git'
+  local out = vim.fn.system({ 'git', 'clone', '--filter=blob:none', '--branch=stable', lazyrepo, lazypath })
   if vim.v.shell_error ~= 0 then
     vim.api.nvim_echo({
-      { "Failed to clone lazy.nvim:\n", "ErrorMsg" },
-      { out,                            "WarningMsg" },
-      { "\nPress any key to exit..." },
+      { 'Failed to clone lazy.nvim:\n', 'ErrorMsg' },
+      { out,                            'WarningMsg' },
+      { '\nPress any key to exit...' },
     }, true, {})
     vim.fn.getchar()
     os.exit(1)
@@ -91,7 +91,7 @@ require('lazy').setup({
     }
   },
   {
-    "rmagatti/goto-preview",
+    'rmagatti/goto-preview',
     keys = {
       { 'gp', mode = { 'n' }, function() require('goto-preview').goto_preview_definition() end, desc = 'Preview LSP definition' }
     },
@@ -265,7 +265,6 @@ require('lazy').setup({
   },
   {
     'neovim/nvim-lspconfig',
-    dependencies = { 'lukas-reineke/lsp-format.nvim' },
     config = function()
       vim.api.nvim_create_autocmd('LspAttach', {
         callback = function(event)
@@ -285,108 +284,112 @@ require('lazy').setup({
 
 
       local lspconfig = require('lspconfig')
-      local lspformat = require('lsp-format')
-      lspformat.setup {}
-      lspconfig.clangd.setup { on_attach = lspformat.on_attach }
-      lspconfig.nixd.setup { on_attach = lspformat.on_attach }
-      lspconfig.lua_ls.setup { on_attach = lspformat.on_attach }
-      lspconfig.pylsp.setup { on_attach = lspformat.on_attach }
+      lspconfig.clangd.setup {}
+      lspconfig.nixd.setup {}
+      lspconfig.lua_ls.setup {}
+      lspconfig.pylsp.setup {}
     end
   },
   {
-    "nvim-lualine/lualine.nvim",
+    'stevearc/conform.nvim',
+    config = function()
+      require('conform').setup({
+        formatters_by_ft = {
+          c = { 'clang-format' }
+        },
+        format_after_save = {
+          lsp_format = 'fallback'
+        }
+      })
+    end
+  },
+  {
+    'nvim-lualine/lualine.nvim',
     opts = function(_)
       local icons = {
         misc = {
-          dots = "󰇘",
+          dots = '󰇘',
         },
         ft = {
-          octo = "",
-        },
-        dap = {
-          Stopped             = { "󰁕 ", "DiagnosticWarn", "DapStoppedLine" },
-          Breakpoint          = " ",
-          BreakpointCondition = " ",
-          BreakpointRejected  = { " ", "DiagnosticError" },
-          LogPoint            = ".>",
+          octo = '',
         },
         diagnostics = {
-          Error = " ",
-          Warn  = " ",
-          Hint  = " ",
-          Info  = " ",
+          Error = ' ',
+          Warn  = ' ',
+          Hint  = ' ',
+          Info  = ' ',
         },
         git = {
-          added    = " ",
-          modified = " ",
-          removed  = " ",
+          added    = ' ',
+          modified = ' ',
+          removed  = ' ',
         },
         kinds = {
-          Array         = " ",
-          Boolean       = "󰨙 ",
-          Class         = " ",
-          Codeium       = "󰘦 ",
-          Color         = " ",
-          Control       = " ",
-          Collapsed     = " ",
-          Constant      = "󰏿 ",
-          Constructor   = " ",
-          Copilot       = " ",
-          Enum          = " ",
-          EnumMember    = " ",
-          Event         = " ",
-          Field         = " ",
-          File          = " ",
-          Folder        = " ",
-          Function      = "󰊕 ",
-          Interface     = " ",
-          Key           = " ",
-          Keyword       = " ",
-          Method        = "󰊕 ",
-          Module        = " ",
-          Namespace     = "󰦮 ",
-          Null          = " ",
-          Number        = "󰎠 ",
-          Object        = " ",
-          Operator      = " ",
-          Package       = " ",
-          Property      = " ",
-          Reference     = " ",
-          Snippet       = " ",
-          String        = " ",
-          Struct        = "󰆼 ",
-          TabNine       = "󰏚 ",
-          Text          = " ",
-          TypeParameter = " ",
-          Unit          = " ",
-          Value         = " ",
-          Variable      = "󰀫 ",
+          Array         = ' ',
+          Boolean       = '󰨙 ',
+          Class         = ' ',
+          Codeium       = '󰘦 ',
+          Color         = ' ',
+          Control       = ' ',
+          Collapsed     = ' ',
+          Constant      = '󰏿 ',
+          Constructor   = ' ',
+          Copilot       = ' ',
+          Enum          = ' ',
+          EnumMember    = ' ',
+          Event         = ' ',
+          Field         = ' ',
+          File          = ' ',
+          Folder        = ' ',
+          Function      = '󰊕 ',
+          Interface     = ' ',
+          Key           = ' ',
+          Keyword       = ' ',
+          Method        = '󰊕 ',
+          Module        = ' ',
+          Namespace     = '󰦮 ',
+          Null          = ' ',
+          Number        = '󰎠 ',
+          Object        = ' ',
+          Operator      = ' ',
+          Package       = ' ',
+          Property      = ' ',
+          Reference     = ' ',
+          Snippet       = ' ',
+          String        = ' ',
+          Struct        = '󰆼 ',
+          TabNine       = '󰏚 ',
+          Text          = ' ',
+          TypeParameter = ' ',
+          Unit          = ' ',
+          Value         = ' ',
+          Variable      = '󰀫 ',
         },
       }
 
       return {
         options = {
-          theme = "catppuccin",
+          theme = 'auto',
           globalstatus = true,
-          disabled_filetypes = { statusline = { "dashboard", "lazy", "alpha", "grapple" } },
-          component_separators = "",
-          section_separators = "",
+          disabled_filetypes = { statusline = { 'dashboard', 'lazy', 'alpha', 'grapple' } },
+          component_separators = '',
+          section_separators = '',
         },
         sections = {
-          lualine_a = { "mode" },
-          lualine_b = { "grapple" },
+          lualine_a = { 'mode' },
+          lualine_b = { 'grapple' },
           lualine_c = {},
           lualine_x = {
             {
               function()
-                return require("noice").api.status.mode.get()
+                return require('noice').api.status.mode.get()
               end,
               cond = function()
-                return package.loaded["noice"] and require("noice").api.status.mode.has()
+                return package.loaded['noice'] and require('noice').api.status.mode.has()
               end,
             },
             {
-              "diff",
+              'diff',
               symbols = {
                 added = icons.git.added,
                 modified = icons.git.modified,
@@ -394,18 +397,18 @@ require('lazy').setup({
               },
             },
             {
-              "branch",
+              'branch',
               fmt = function(str)
                 return string.sub(str, 1, 12)
               end,
             },
           },
           lualine_y = {
-            "location",
-            { "filetype", icons_enabled = false },
+            'location',
+            { 'filetype', icons_enabled = false },
           },
           lualine_z = {
-            { "filename", file_status = true },
+            { 'filename', file_status = true },
           },
         },
       }
