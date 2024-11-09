@@ -53,6 +53,11 @@ vim.api.nvim_create_autocmd('BufRead', {
 
 require('lazy').setup({
   {
+    'windwp/nvim-autopairs',
+    event = 'InsertEnter',
+    config = true
+  },
+  {
     'folke/lazydev.nvim',
     ft = 'lua', -- only load on lua files
     config = function()
@@ -89,6 +94,15 @@ require('lazy').setup({
       { 'R',     mode = { 'o', 'x' },      function() require('flash').treesitter_search() end, desc = 'Treesitter Search' },
       { '<c-s>', mode = { 'c' },           function() require('flash').toggle() end,            desc = 'Toggle Flash Search' }
     }
+  },
+  {
+    'RRethy/vim-illuminate',
+    config = function()
+      require('illuminate').configure {
+        providers = { 'lsp' },
+        min_count_to_highlight = 2
+      }
+    end
   },
   {
     'rmagatti/goto-preview',
@@ -203,12 +217,6 @@ require('lazy').setup({
       require('netrw').setup()
     end
   },
-  -- {
-  --   'nvim-lualine/lualine.nvim',
-  --   config = function()
-  --     require('lualine').setup()
-  --   end
-  -- },
   {
     'hrsh7th/nvim-cmp',
     dependencies = {
@@ -405,7 +413,7 @@ require('lazy').setup({
           },
           lualine_y = {
             'location',
-            { 'filetype', icons_enabled = false },
+            { 'filetype', icons_enabled = true },
           },
           lualine_z = {
             { 'filename', file_status = true },
