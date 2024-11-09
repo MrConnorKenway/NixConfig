@@ -26,9 +26,9 @@ vim.opt.smartcase = true
 
 vim.g.mapleader = ' '
 
-vim.keymap.set('n', '<leader>w', '<cmd>bd<cr>', { desc = 'Close buffer' })
 vim.keymap.set('n', '[b', '<cmd>bp<cr>', { desc = 'Navigate to previous buffer' })
 vim.keymap.set('n', ']b', '<cmd>bn<cr>', { desc = 'Navigate to next buffer' })
+vim.keymap.set('n', '<leader>w', '<cmd>q<cr>', { desc = 'Close window' })
 vim.keymap.set('n', '<leader>q', '<cmd>qa<cr>', { desc = 'Quit' })
 
 vim.api.nvim_create_autocmd('BufRead', {
@@ -98,10 +98,13 @@ require('lazy').setup({
     config = true
   },
   {
+    'echasnovski/mini.bufremove',
+    keys = {
+      { '<leader>c', mode = { 'n' }, function() require('mini.bufremove').delete() end, desc = 'Close buffer' }
+    }
+  },
+  {
     'nvim-treesitter/nvim-treesitter',
-    -- dependencies = {
-    --   'nvim-treesitter/nvim-treesitter-textobjects'
-    -- },
     config = function()
       require('nvim-treesitter.configs').setup {
         auto_install = false,
@@ -291,6 +294,124 @@ require('lazy').setup({
     end
   },
   {
+    "nvim-lualine/lualine.nvim",
+    opts = function(_)
+      local icons = {
+        misc = {
+          dots = "󰇘",
+        },
+        ft = {
+          octo = "",
+        },
+        dap = {
+          Stopped             = { "󰁕 ", "DiagnosticWarn", "DapStoppedLine" },
+          Breakpoint          = " ",
+          BreakpointCondition = " ",
+          BreakpointRejected  = { " ", "DiagnosticError" },
+          LogPoint            = ".>",
+        },
+        diagnostics = {
+          Error = " ",
+          Warn  = " ",
+          Hint  = " ",
+          Info  = " ",
+        },
+        git = {
+          added    = " ",
+          modified = " ",
+          removed  = " ",
+        },
+        kinds = {
+          Array         = " ",
+          Boolean       = "󰨙 ",
+          Class         = " ",
+          Codeium       = "󰘦 ",
+          Color         = " ",
+          Control       = " ",
+          Collapsed     = " ",
+          Constant      = "󰏿 ",
+          Constructor   = " ",
+          Copilot       = " ",
+          Enum          = " ",
+          EnumMember    = " ",
+          Event         = " ",
+          Field         = " ",
+          File          = " ",
+          Folder        = " ",
+          Function      = "󰊕 ",
+          Interface     = " ",
+          Key           = " ",
+          Keyword       = " ",
+          Method        = "󰊕 ",
+          Module        = " ",
+          Namespace     = "󰦮 ",
+          Null          = " ",
+          Number        = "󰎠 ",
+          Object        = " ",
+          Operator      = " ",
+          Package       = " ",
+          Property      = " ",
+          Reference     = " ",
+          Snippet       = " ",
+          String        = " ",
+          Struct        = "󰆼 ",
+          TabNine       = "󰏚 ",
+          Text          = " ",
+          TypeParameter = " ",
+          Unit          = " ",
+          Value         = " ",
+          Variable      = "󰀫 ",
+        },
+      }
+
+      return {
+        options = {
+          theme = "catppuccin",
+          globalstatus = true,
+          disabled_filetypes = { statusline = { "dashboard", "lazy", "alpha", "grapple" } },
+          component_separators = "",
+          section_separators = "",
+        },
+        sections = {
+          lualine_a = { "mode" },
+          lualine_b = { "grapple" },
+          lualine_c = {},
+          lualine_x = {
+            {
+              function()
+                return require("noice").api.status.mode.get()
+              end,
+              cond = function()
+                return package.loaded["noice"] and require("noice").api.status.mode.has()
+              end,
+            },
+            {
+              "diff",
+              symbols = {
+                added = icons.git.added,
+                modified = icons.git.modified,
+                removed = icons.git.removed,
+              },
+            },
+            {
+              "branch",
+              fmt = function(str)
+                return string.sub(str, 1, 12)
+              end,
+            },
+          },
+          lualine_y = {
+            "location",
+            { "filetype", icons_enabled = false },
+          },
+          lualine_z = {
+            { "filename", file_status = true },
+          },
+        },
+      }
+    end,
+  },
+  {
     'mrjones2014/smart-splits.nvim',
     keys = {
       { '<C-h>', mode = { 'n', 'i', 't' }, '<cmd>SmartCursorMoveLeft<cr>',  desc = 'Move cursort left' },
@@ -350,7 +471,7 @@ require('lazy').setup({
   performance = {
     rtp = {
       disabled_plugins = {
-        'gzip', 'tarPlugin', 'tohtml', 'zipPlugin', 'syntax'
+        'gzip', 'tarPlugin', 'tohtml', 'zipPlugin', 'syntax', 'tutor'
       }
     }
   }
