@@ -23,12 +23,14 @@ vim.opt.ignorecase = true
 vim.opt.termguicolors = true
 vim.opt.wildmode = 'full:longest'
 vim.opt.smartcase = true
+vim.opt.relativenumber = true
 
 vim.g.mapleader = ' '
 
 vim.keymap.set('n', '[b', '<cmd>bp<cr>', { desc = 'Navigate to previous buffer' })
 vim.keymap.set('n', ']b', '<cmd>bn<cr>', { desc = 'Navigate to next buffer' })
 vim.keymap.set('n', '<leader>w', '<cmd>q<cr>', { desc = 'Close window' })
+vim.keymap.set('n', 'q', '<cmd>q<cr>', { desc = 'Close window' })
 vim.keymap.set('n', '<leader>q', '<cmd>qa<cr>', { desc = 'Quit' })
 
 vim.api.nvim_create_autocmd('BufRead', {
@@ -128,46 +130,7 @@ require('lazy').setup({
         ensure_installed = {
           'c', 'lua', 'vim', 'vimdoc', 'query', 'markdown', 'markdown_inline',
           'nix', 'asm', 'cpp', 'make', 'python', 'bash', 'rust', 'zig'
-        },
-        -- textobjects = {
-        --   select = {
-        --     enable = true,
-        --     lookahead = true, -- Automatically jump forward to textobj, similar to targets.vim
-        --     keymaps = {
-        --       -- You can use the capture groups defined in textobjects.scm
-        --       ['aa'] = '@parameter.outer',
-        --       ['ia'] = '@parameter.inner',
-        --       ['af'] = '@function.outer',
-        --       ['if'] = '@function.inner',
-        --       ['ac'] = '@class.outer',
-        --       ['ic'] = '@class.inner',
-        --     },
-        --   },
-        --   move = {
-        --     enable = true,
-        --     set_jumps = true, -- whether to set jumps in the jumplist
-        --     goto_next_start = {
-        --       [']m'] = '@function.outer',
-        --       [']]'] = '@class.outer',
-        --       [']l'] = '@loop.outer'
-        --     },
-        --     goto_next_end = {
-        --       [']M'] = '@function.outer',
-        --       [']['] = '@class.outer',
-        --       [']L'] = '@loop.outer'
-        --     },
-        --     goto_previous_start = {
-        --       ['[m'] = '@function.outer',
-        --       ['[['] = '@class.outer',
-        --       ['[l'] = '@loop.outer'
-        --     },
-        --     goto_previous_end = {
-        --       ['[M'] = '@function.outer',
-        --       ['[]'] = '@class.outer',
-        --       ['[L'] = '@loop.outer'
-        --     },
-        --   }
-        -- }
+        }
       }
     end
   },
@@ -379,21 +342,17 @@ require('lazy').setup({
         options = {
           theme = 'auto',
           globalstatus = true,
-          disabled_filetypes = { statusline = { 'dashboard', 'lazy', 'alpha', 'grapple' } },
+          disabled_filetypes = { statusline = { 'dashboard', 'lazy', 'alpha', 'grapple', 'toggleterm' } },
           component_separators = '',
           section_separators = '',
         },
         sections = {
           lualine_a = { 'mode' },
-          lualine_b = { 'grapple' },
-          lualine_c = {},
-          lualine_x = {
+          lualine_b = {
             {
-              function()
-                return require('noice').api.status.mode.get()
-              end,
-              cond = function()
-                return package.loaded['noice'] and require('noice').api.status.mode.has()
+              'branch',
+              fmt = function(str)
+                return string.sub(str, 1, 12)
               end,
             },
             {
@@ -404,19 +363,15 @@ require('lazy').setup({
                 removed = icons.git.removed,
               },
             },
-            {
-              'branch',
-              fmt = function(str)
-                return string.sub(str, 1, 12)
-              end,
-            },
           },
+          lualine_c = {},
+          lualine_x = {},
           lualine_y = {
             'location',
-            { 'filetype', icons_enabled = true },
+            { 'filetype', icons_enabled = true, icon_only = true },
           },
           lualine_z = {
-            { 'filename', file_status = true },
+            { 'filename', file_status = true, path = 2 },
           },
         },
       }
