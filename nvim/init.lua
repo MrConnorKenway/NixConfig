@@ -93,6 +93,7 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>p', gitsigns.preview_hunk_inline, { desc = 'Git preview hunk' })
       vim.keymap.set('n', '<leader>u', gitsigns.reset_hunk, { desc = 'Git reset hunk' })
       vim.keymap.set('n', '<leader>b', gitsigns.blame_line, { desc = 'Git blame inline' })
+      vim.keymap.set('n', '<leader>a', gitsigns.stage_hunk, { desc = 'Git stage hunk' })
     end
   },
   {
@@ -176,6 +177,7 @@ require('lazy').setup({
     },
     config = function()
       require('toggleterm').setup {
+        shell = 'zsh',
         size = 16,
         shading_factor = 2,
         float_opts = { border = 'rounded' }
