@@ -261,7 +261,7 @@ return {
       FileIcon,
       utils.insert(FileNameModifer, FileName), -- a new table where FileName is a child of FileNameModifier
       FileFlags,
-      { provider = '%<' }                      -- this means that the statusline is cut here when there's not enough space
+      { provider = ' %<' }                     -- this means that the statusline is cut here when there's not enough space
     )
 
     local FileType = {
@@ -388,6 +388,7 @@ return {
       Git,
       Align,
       Diagnostics,
+      Space,
       LSPMessages,
       Space,
       Ruler,
@@ -395,16 +396,16 @@ return {
       ScrollBar
     }
 
-    local InactiveViMode = {
+    local StatusBorder = {
       provider = function()
-        return '%2(%)'
+        return '  '
       end,
       hl = { bg = 'bright_bg' }
     }
 
     local InactiveStatusline = {
       condition = conditions.is_not_active,
-      InactiveViMode,
+      StatusBorder,
       Space,
       {
         hl = { fg = 'bright_bg', force = true },
@@ -417,9 +418,9 @@ return {
         LSPMessages,
         Space,
         Ruler,
-        Space,
-        ScrollBar
-      }
+        Space
+      },
+      StatusBorder
     }
 
     local StatusLines = {

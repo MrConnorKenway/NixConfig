@@ -17,44 +17,57 @@ vim.opt.rtp:prepend(lazypath)
 
 vim.opt.list = true
 vim.opt.listchars = { tab = '⇥ ', lead = '·', trail = '•', nbsp = '␣', multispace = '·' }
-vim.opt.cursorline = true
 vim.opt.number = true
 vim.opt.ignorecase = true
 vim.opt.termguicolors = true
 vim.opt.wildmode = 'full:longest'
 vim.opt.smartcase = true
-vim.opt.relativenumber = true
-vim.opt.signcolumn = 'yes'
 vim.opt.showmode = false
 
 vim.g.mapleader = ' '
 
 vim.keymap.set('n', '[b', '<cmd>bp<cr>', { desc = 'Navigate to previous buffer' })
 vim.keymap.set('n', ']b', '<cmd>bn<cr>', { desc = 'Navigate to next buffer' })
-vim.keymap.set('n', '<leader>w', '<cmd>q<cr>', { desc = 'Close window' })
 vim.keymap.set('n', 'q', '<cmd>q<cr>', { desc = 'Close window' })
+vim.keymap.set('n', '<leader>w', '<cmd>wa<cr>', { desc = 'Save workspace without quit' })
 vim.keymap.set('n', '<leader>x', '<cmd>xa<cr>', { desc = 'Save and quit workspace' })
 vim.keymap.set('n', '<leader>q', '<cmd>qa<cr>', { desc = 'Quit workspace without save' })
 
-vim.api.nvim_create_autocmd('BufRead', {
-  callback = function(opts)
-    vim.api.nvim_create_autocmd('BufWinEnter', {
-      once = true,
-      buffer = opts.buf,
-      callback = function()
-        local ft = vim.bo[opts.buf].filetype
-        local last_known_line = vim.api.nvim_buf_get_mark(opts.buf, '"')[1]
-        if
-            not (ft:match('commit') and ft:match('rebase'))
-            and last_known_line > 1
-            and last_known_line <= vim.api.nvim_buf_line_count(opts.buf)
-        then
-          vim.api.nvim_feedkeys([[g`"]], 'nx', false)
-        end
-      end,
-    })
-  end,
-})
+
+local function autocmd(events, ...)
+  vim.api.nvim_create_autocmd(events, { callback = ... })
+end
+
+autocmd('BufRead', function(opts)
+  vim.api.nvim_create_autocmd('BufWinEnter', {
+    once = true,
+    buffer = opts.buf,
+    callback = function()
+      local ft = vim.bo[opts.buf].filetype
+      local last_known_line = vim.api.nvim_buf_get_mark(opts.buf, '"')[1]
+      if
+          not (ft:match('commit') and ft:match('rebase'))
+          and last_known_line > 1
+          and last_known_line <= vim.api.nvim_buf_line_count(opts.buf)
+      then
+        vim.api.nvim_feedkeys([[g`"]], 'nx', false)
+      end
+    end,
+  })
+end)
+
+autocmd({ 'VimEnter', 'WinEnter', 'BufWinEnter' }, function()
+  if vim.bo.filetype ~= 'toggleterm' then
+    vim.opt.relativenumber = true
+    vim.opt.cursorline = true
+    vim.opt.signcolumn = 'yes'
+  end
+end)
+
+autocmd({ 'WinLeave' }, function()
+  vim.opt.relativenumber = false
+  vim.opt.cursorline = false
+end)
 
 require('lazy').setup({
   require('heirline.config'),
