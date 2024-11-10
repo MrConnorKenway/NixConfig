@@ -299,7 +299,7 @@ require('lazy').setup({
   },
   {
     'stevearc/conform.nvim',
-    event = 'InsertEnter',
+    event = 'BufWritePre',
     keys = {
       {
         '<leader>f',
