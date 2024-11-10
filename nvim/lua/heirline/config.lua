@@ -368,13 +368,22 @@ return {
       Align,
     }
 
+    local leaving = false
+    vim.api.nvim_create_autocmd('VimLeavePre', {
+      callback = function()
+        leaving = true
+      end
+    })
+
     local LSPMessages = {
       provider = function() return require('lsp-progress').progress() end,
       update = {
         'User',
         pattern = 'LspProgressStatusUpdated',
         callback = vim.schedule_wrap(function()
-          vim.cmd('redrawstatus')
+          if not leaving then
+            vim.cmd('redrawstatus')
+          end
         end),
       },
       hl = { fg = theme_colors.green, bold = true },
