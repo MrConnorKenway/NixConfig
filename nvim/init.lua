@@ -149,6 +149,74 @@ require('lazy').setup({
           'nix', 'asm', 'cpp', 'make', 'python', 'bash', 'rust', 'zig'
         }
       }
+
+      vim.keymap.set('n', '<M-o>', function()
+        local cursor = vim.api.nvim_win_get_cursor(0)
+        local last_row = cursor[1] - 1
+        local last_col = cursor[2]
+        local row, col
+        local node = vim.treesitter.get_node()
+
+        if node == nil then
+          return
+        end
+
+        if node:parent() ~= nil then
+          vim.cmd("normal! m'") -- add to jump list
+        end
+
+        while true do
+          node = node:parent()
+          if node == nil then
+            return
+          end
+
+          row, col, _ = node:start()
+
+          if row ~= last_row or col ~= last_col then
+            break
+          end
+
+          last_row = row
+          last_col = col
+        end
+
+        vim.api.nvim_win_set_cursor(0, { row + 1, col })
+      end, { desc = 'Go to start of parent syntax tree node' })
+
+      vim.keymap.set('n', '<M-O>', function()
+        local cursor = vim.api.nvim_win_get_cursor(0)
+        local last_row = cursor[1] - 1
+        local last_col = cursor[2] + 1 -- treesitter's end_() refers to outside column
+        local row, col
+        local node = vim.treesitter.get_node()
+
+        if node == nil then
+          return
+        end
+
+        if node:parent() ~= nil then
+          vim.cmd("normal! m'") -- add to jump list
+        end
+
+        while true do
+          node = node:parent()
+          if node == nil then
+            return
+          end
+
+          row, col, _ = node:end_()
+
+          if row ~= last_row or col ~= last_col then
+            break
+          end
+
+          last_row = row
+          last_col = col
+        end
+
+        vim.api.nvim_win_set_cursor(0, { row + 1, col })
+      end, { desc = 'Go to end of parent syntax tree node' })
     end
   },
   {
