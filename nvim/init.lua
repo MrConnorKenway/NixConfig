@@ -28,7 +28,13 @@ vim.g.mapleader = ' '
 
 vim.keymap.set('n', '[b', '<cmd>bp<cr>', { desc = 'Navigate to previous buffer' })
 vim.keymap.set('n', ']b', '<cmd>bn<cr>', { desc = 'Navigate to next buffer' })
-vim.keymap.set('n', 'q', '<cmd>q<cr>', { desc = 'Close window' })
+vim.keymap.set('n', 'q', function()
+  if vim.bo.filetype == 'DiffviewFiles' then
+    require('diffview').close()
+  else
+    vim.cmd('q')
+  end
+end, { desc = 'Close window' })
 vim.keymap.set('n', '<leader>w', '<cmd>wa<cr>', { desc = 'Save workspace without quit' })
 vim.keymap.set('n', '<leader>x', '<cmd>xa<cr>', { desc = 'Save and quit workspace' })
 vim.keymap.set('n', '<leader>q', '<cmd>qa<cr>', { desc = 'Quit workspace without save' })
@@ -71,6 +77,19 @@ end)
 
 require('lazy').setup({
   require('heirline.config'),
+  {
+    'sindrets/diffview.nvim',
+    keys = {
+      {
+        '<leader>d',
+        mode = { 'n' },
+        function()
+          require('diffview').open({ '-uno' }) -- hide untracked files
+        end,
+        desc = 'Open git diffview'
+      }
+    }
+  },
   {
     'windwp/nvim-autopairs',
     event = 'InsertEnter',
