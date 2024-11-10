@@ -203,7 +203,7 @@ require('lazy').setup({
       'hrsh7th/cmp-nvim-lsp',
       'hrsh7th/cmp-cmdline'
     },
-    event = 'UIEnter',
+    event = { 'InsertEnter', 'CmdlineEnter' },
     config = function()
       local cmp = require('cmp')
       cmp.setup {
@@ -280,6 +280,7 @@ require('lazy').setup({
   },
   {
     'stevearc/conform.nvim',
+    event = 'InsertEnter',
     config = function()
       require('conform').setup({
         formatters_by_ft = {
