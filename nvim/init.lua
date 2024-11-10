@@ -33,7 +33,8 @@ vim.keymap.set('n', '[b', '<cmd>bp<cr>', { desc = 'Navigate to previous buffer' 
 vim.keymap.set('n', ']b', '<cmd>bn<cr>', { desc = 'Navigate to next buffer' })
 vim.keymap.set('n', '<leader>w', '<cmd>q<cr>', { desc = 'Close window' })
 vim.keymap.set('n', 'q', '<cmd>q<cr>', { desc = 'Close window' })
-vim.keymap.set('n', '<leader>q', '<cmd>qa<cr>', { desc = 'Quit' })
+vim.keymap.set('n', '<leader>x', '<cmd>xa<cr>', { desc = 'Save and quit workspace' })
+vim.keymap.set('n', '<leader>q', '<cmd>qa<cr>', { desc = 'Quit workspace without save' })
 
 vim.api.nvim_create_autocmd('BufRead', {
   callback = function(opts)

@@ -1,11 +1,10 @@
 return {
   'rebelot/heirline.nvim',
+  dependencies = 'linrongbin16/lsp-progress.nvim',
   config = function()
     local conditions = require('heirline.conditions')
     local utils = require('heirline.utils')
-
     local theme_colors = require('catppuccin.palettes').get_palette('mocha')
-
     local colors = {
       bright_bg = utils.get_highlight('Folded').bg,
       bright_fg = utils.get_highlight('Folded').fg,
@@ -23,6 +22,8 @@ return {
       git_change = utils.get_highlight('GitSignsChange').fg,
     }
 
+    require('lsp-progress').setup {}
+
     require('heirline').load_colors(colors)
 
     local ViMode = {
@@ -30,7 +31,7 @@ return {
       -- and the highlight functions, so we compute it only once per component
       -- evaluation and store it as a component attribute
       init = function(self)
-        self.mode = vim.fn.mode(1)   -- :h mode()
+        self.mode = vim.fn.mode(1) -- :h mode()
       end,
       -- Now we define some dictionaries to map the output of mode() to the
       -- corresponding string and color. We can put these into `static` to compute
@@ -100,7 +101,7 @@ return {
       end,
       -- Same goes for the highlight. Now the foreground will change according to the current mode.
       hl = function(self)
-        local mode = self.mode:sub(1, 1)   -- get only the first mode character
+        local mode = self.mode:sub(1, 1) -- get only the first mode character
         return { fg = theme_colors.base, bg = self.mode_bgs[mode], bold = true }
       end,
       -- Re-evaluate the component only on ModeChanged event
@@ -114,20 +115,6 @@ return {
       },
     }
 
-    local LSPActive = {
-      condition = conditions.lsp_attached,
-      update = { 'LspAttach', 'LspDetach' },
-
-      provider = function()
-        local names = {}
-        for _, server in pairs(vim.lsp.get_clients({ bufnr = 0 })) do
-          table.insert(names, server.name)
-        end
-        return ' [' .. table.concat(names, ' ') .. ']'
-      end,
-      hl = { fg = theme_colors.green, bold = true },
-    }
-
     local Ruler = {
       -- :help 'statusline'
       -- ------------------
@@ -136,7 +123,7 @@ return {
       -- %L  : number of lines in the buffer
       -- %c  : column number
       -- %V  : virtual column number as -{num}.  Not displayed if equal to '%c'.
-      provider = '%4(%l%):%-3(%v%)',
+      provider = '%l:%-3(%v%)',
       hl = { bold = true }
     }
 
@@ -151,20 +138,19 @@ return {
         return string.rep(self.sbar[i], 2)
       end,
       hl = function()
-        local mode = vim.fn.mode(1):sub(1, 1)   -- get only the first mode character
+        local mode = vim.fn.mode(1):sub(1, 1) -- get only the first mode character
         return { fg = ViMode.static.mode_bgs[mode], bg = 'bright_bg' }
       end
     }
 
     local Diagnostics = {
-
       condition = conditions.has_diagnostics,
 
       static = {
-        error_icon = ' ',
-        warn_icon = ' ',
-        info_icon = ' ',
-        hint_icon = ' ',
+        error_icon = '  ',
+        warn_icon = '  ',
+        info_icon = '  ',
+        hint_icon = '  ',
       },
 
       init = function(self)
@@ -179,19 +165,19 @@ return {
       {
         provider = function(self)
           -- 0 is just another output, we can decide to print it or not!
-          return self.errors > 0 and (self.error_icon .. self.errors .. ' ')
+          return self.errors > 0 and (self.error_icon .. self.errors)
         end,
         hl = { fg = 'diag_error' },
       },
       {
         provider = function(self)
-          return self.warnings > 0 and (self.warn_icon .. self.warnings .. ' ')
+          return self.warnings > 0 and (self.warn_icon .. self.warnings)
         end,
         hl = { fg = 'diag_warn' },
       },
       {
         provider = function(self)
-          return self.info > 0 and (self.info_icon .. self.info .. ' ')
+          return self.info > 0 and (self.info_icon .. self.info)
         end,
         hl = { fg = 'diag_info' },
       },
@@ -273,9 +259,9 @@ return {
 
     FileNameBlock = utils.insert(FileNameBlock,
       FileIcon,
-      utils.insert(FileNameModifer, FileName),   -- a new table where FileName is a child of FileNameModifier
+      utils.insert(FileNameModifer, FileName), -- a new table where FileName is a child of FileNameModifier
       FileFlags,
-      { provider = '%<' }                        -- this means that the statusline is cut here when there's not enough space
+      { provider = '%<' }                      -- this means that the statusline is cut here when there's not enough space
     )
 
     local FileType = {
@@ -382,6 +368,18 @@ return {
       Align,
     }
 
+    local LSPMessages = {
+      provider = function() return require('lsp-progress').progress() end,
+      update = {
+        'User',
+        pattern = 'LspProgressStatusUpdated',
+        callback = vim.schedule_wrap(function()
+          vim.cmd('redrawstatus')
+        end),
+      },
+      hl = { fg = theme_colors.green, bold = true },
+    }
+
     local DefaultStatusline = {
       ViMode,
       Space,
@@ -390,10 +388,9 @@ return {
       Git,
       Align,
       Diagnostics,
+      LSPMessages,
       Space,
       Ruler,
-      Space,
-      LSPActive,
       Space,
       ScrollBar
     }
@@ -417,9 +414,9 @@ return {
         Align,
         Diagnostics,
         Space,
-        Ruler,
+        LSPMessages,
         Space,
-        LSPActive,
+        Ruler,
         Space,
         ScrollBar
       }
