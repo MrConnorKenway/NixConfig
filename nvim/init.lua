@@ -146,7 +146,7 @@ require('lazy').setup({
   {
     'rmagatti/goto-preview',
     keys = {
-      { 'gp', mode = { 'n' }, function() require('goto-preview').goto_preview_definition() end, desc = 'Preview LSP definition' }
+      { 'gp', mode = { 'n' }, function() require('goto-preview').goto_preview_definition {} end, desc = 'Preview LSP definition' }
     },
     config = true
   },
@@ -160,6 +160,8 @@ require('lazy').setup({
     'nvim-treesitter/nvim-treesitter',
     config = function()
       require('nvim-treesitter.configs').setup {
+        modules = {},
+        ignore_install = {},
         auto_install = false,
         sync_install = false,
         highlight = { enable = false },
@@ -206,7 +208,7 @@ require('lazy').setup({
   {
     'nmac427/guess-indent.nvim',
     config = function()
-      require('guess-indent').setup()
+      require('guess-indent').setup {}
     end
   },
   { 'nvim-tree/nvim-web-devicons', lazy = true },
