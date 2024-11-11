@@ -62,9 +62,18 @@ autocmd('BufRead', function(opts)
   })
 end)
 
-vim.opt.relativenumber = true
-vim.opt.cursorline = true
-vim.opt.signcolumn = 'yes'
+autocmd({ 'VimEnter', 'WinEnter', 'BufWinEnter' }, function()
+  if vim.o.number then
+    vim.opt.relativenumber = true
+    vim.opt.cursorline = true
+    vim.opt.signcolumn = 'yes'
+  end
+end)
+
+autocmd({ 'WinLeave' }, function()
+  vim.opt.relativenumber = false
+  vim.opt.cursorline = false
+end)
 
 require('lazy').setup({
   require('heirline.config'),
@@ -80,12 +89,6 @@ require('lazy').setup({
         desc = 'Open git diffview'
       }
     }
-  },
-  {
-    'unfocus',
-    dir = '~/.config/nvim',
-    dev = true,
-    config = true
   },
   {
     'windwp/nvim-autopairs',
