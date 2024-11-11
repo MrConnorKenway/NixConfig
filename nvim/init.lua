@@ -96,6 +96,29 @@ require('lazy').setup({
     config = true
   },
   {
+    "NeogitOrg/neogit",
+    keys = {
+      { '<leader>g', function() require('neogit').open() end, desc = 'Open neogit home' }
+    },
+    dependencies = {
+      "nvim-lua/plenary.nvim",         -- required
+      "nvim-telescope/telescope.nvim", -- optional
+    },
+    config = function()
+      require('neogit').setup {
+        graph_style = 'ascii', -- unicode does not support color yet
+        kind = 'floating',
+        commit_editor = {
+          kind = 'auto'
+        },
+        integrations = {
+          telescope = true,
+          diffview = false
+        }
+      }
+    end
+  },
+  {
     'folke/lazydev.nvim',
     ft = 'lua', -- only load on lua files
     config = function()
