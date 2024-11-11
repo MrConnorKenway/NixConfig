@@ -63,7 +63,7 @@ autocmd('BufRead', function(opts)
 end)
 
 autocmd({ 'VimEnter', 'WinEnter', 'BufWinEnter' }, function()
-  if vim.bo.filetype ~= 'toggleterm' then
+  if vim.o.number then
     vim.opt.relativenumber = true
     vim.opt.cursorline = true
     vim.opt.signcolumn = 'yes'
