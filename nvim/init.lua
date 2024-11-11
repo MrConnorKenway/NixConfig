@@ -186,7 +186,10 @@ require('lazy').setup({
       require('auto-session').setup {}
     end
   },
-  { 'stevearc/dressing.nvim' },
+  {
+    'stevearc/dressing.nvim',
+    event = 'UIEnter'
+  },
   {
     'akinsho/toggleterm.nvim',
     keys = {
@@ -209,7 +212,7 @@ require('lazy').setup({
       require('guess-indent').setup {}
     end
   },
-  { 'nvim-tree/nvim-web-devicons', lazy = true },
+  { 'nvim-tree/nvim-web-devicons' },
   {
     'prichrd/netrw.nvim',
     config = function()
