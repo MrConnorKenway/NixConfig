@@ -28,6 +28,13 @@ return {
 
     require('heirline').load_colors(colors)
 
+    local leaving = false
+    vim.api.nvim_create_autocmd('VimLeavePre', {
+      callback = function()
+        leaving = true
+      end
+    })
+
     local ViMode = {
       -- get vim current mode, this information will be required by the provider
       -- and the highlight functions, so we compute it only once per component
@@ -112,7 +119,9 @@ return {
         'ModeChanged',
         pattern = '*:*',
         callback = vim.schedule_wrap(function()
-          vim.cmd('redrawstatus')
+          if not leaving then
+            vim.cmd('redrawstatus')
+          end
         end),
       },
     }
@@ -367,13 +376,6 @@ return {
       TerminalName,
       Align,
     }
-
-    local leaving = false
-    vim.api.nvim_create_autocmd('VimLeavePre', {
-      callback = function()
-        leaving = true
-      end
-    })
 
     local LSPMessages = {
       provider = function() return require('lsp-progress').progress() end,
