@@ -146,7 +146,11 @@ require('lazy').setup({
     keys = {
       { 'gp', mode = { 'n' }, function() require('goto-preview').goto_preview_definition {} end, desc = 'Preview LSP definition' }
     },
-    config = true
+    config = function()
+      require('goto-preview').setup {
+        border = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" }
+      }
+    end
   },
   {
     'echasnovski/mini.bufremove',
