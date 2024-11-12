@@ -31,6 +31,8 @@ vim.keymap.set('n', ']b', '<cmd>bn<cr>', { desc = 'Navigate to next buffer' })
 vim.keymap.set('n', 'q', function()
   if vim.bo.filetype == 'DiffviewFiles' then
     require('diffview').close()
+  elseif vim.bo.filetype == 'toggleterm' then
+    vim.cmd('startinsert')
   else
     vim.cmd('q')
   end
