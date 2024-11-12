@@ -106,7 +106,11 @@ require('lazy').setup({
     'lewis6991/gitsigns.nvim',
     config = function()
       local gitsigns = require('gitsigns')
-      gitsigns.setup()
+      gitsigns.setup {
+        preview_config = {
+          border = 'rounded'
+        }
+      }
       vim.keymap.set('n', ']c', function() gitsigns.nav_hunk('next') end, { desc = 'Go to next git change' })
       vim.keymap.set('n', '[c', function() gitsigns.nav_hunk('prev') end, { desc = 'Go to previous git change' })
       vim.keymap.set('n', '<leader>p', gitsigns.preview_hunk_inline, { desc = 'Git preview hunk' })
