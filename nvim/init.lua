@@ -376,9 +376,9 @@ require('lazy').setup({
       { '<leader>fh', function() require('telescope.builtin').help_tags() end,                     desc = 'Telescope help tags' },
       { '<leader>fs', function() require('telescope.builtin').lsp_dynamic_workspace_symbols() end, desc = 'Telescope find workspace symbols' },
       { '<leader>fS', function() require('telescope.builtin').lsp_document_symbols() end,          desc = 'Telescope find document symbols' },
-      { '<leader>go', function() require('telescope.builtin').git_status() end,                    desc = 'Telescope preview git status' },
+      { '<leader>go', function() require('telescope.builtin').git_files() end,                     desc = 'Telescope open git files' },
       { '<leader>r',  function() require('telescope.builtin').lsp_references() end,                desc = 'Go to references' },
-      { '<leader>h',  function() require('telescope.builtin').command_history() end,               desc = 'Telescope find files' },
+      { '<leader>h',  function() require('telescope.builtin').command_history() end,               desc = 'Telescope find command history' },
       { 'gd',         function() require('telescope.builtin').lsp_definitions() end,               desc = 'Go to definitions' },
       { 'gy',         function() require('telescope.builtin').lsp_type_definitions() end,          desc = 'Go to type definitions' }
     },
