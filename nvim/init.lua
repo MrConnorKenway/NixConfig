@@ -203,16 +203,25 @@ require('lazy').setup({
   {
     'akinsho/toggleterm.nvim',
     keys = {
-      { '<leader>t', function() require('toggleterm').toggle(nil, nil, nil, 'float', nil) end, desc = 'Toggle floating terminal' },
-      { '<C-`>',     function() require('toggleterm').toggle() end,                            mode = { 'n', 'o', 'x', 't', 'i', 'v' }, desc = 'Toggle terminal' }
+      {
+        '<leader>t',
+        function() require('toggleterm').toggle(nil, nil, nil, 'float', nil) end,
+        desc = 'Toggle floating terminal'
+      },
+      {
+        '<C-`>',
+        function() require('toggleterm').toggle() end,
+        mode = { 'n', 'o', 'x', 't', 'i', 'v' },
+        desc = 'Toggle terminal'
+      }
     },
     config = function()
       require('toggleterm').setup {
-        shell = 'zsh',
         size = 16,
-        shading_factor = 2,
+        shade_terminals = true,
         float_opts = { border = 'rounded' }
       }
+      vim.keymap.set('t', '<C-s>', [[<C-\><C-n>]], { desc = 'Exit to terminal normal mode' })
     end
   },
   {
