@@ -225,6 +225,7 @@ require('lazy').setup({
   { 'nvim-tree/nvim-web-devicons' },
   {
     'prichrd/netrw.nvim',
+    ft = 'netrw', -- only load on netrw files
     config = function()
       require('netrw').setup()
     end
