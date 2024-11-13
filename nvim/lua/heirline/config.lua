@@ -6,7 +6,7 @@ return {
   config = function()
     local conditions = require('heirline.conditions')
     local utils = require('heirline.utils')
-    local theme_colors = require('catppuccin.palettes').get_palette('mocha')
+    local theme_colors = require('catppuccin.palettes').get_palette()
     local colors = {
       bright_bg = utils.get_highlight('Folded').bg,
       bright_fg = utils.get_highlight('Folded').fg,
@@ -369,8 +369,6 @@ return {
         return conditions.buffer_matches({ buftype = { 'terminal' } })
       end,
 
-      hl = { bg = theme_colors.surface0 },
-
       -- Quickly add a condition to the ViMode to only show it when buffer is active!
       { condition = conditions.is_active, ViMode, Space },
       TerminalName,
@@ -437,7 +435,7 @@ return {
     local StatusLines = {
       hl = function()
         if conditions.is_active() then
-          return 'StatusLine'
+          return { bg = theme_colors.surface0 }
         else
           return 'StatusLineNC'
         end
