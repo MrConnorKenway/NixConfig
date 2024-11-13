@@ -372,6 +372,11 @@ require('lazy').setup({
     'nvim-telescope/telescope.nvim',
     keys = {
       { '<leader>o',  function() require('telescope.builtin').find_files() end,                    desc = 'Telescope find files' },
+      {
+        '<leader>O',
+        function() require('telescope.builtin').find_files { cwd = require('telescope.utils').buffer_dir() } end,
+        desc = 'Telescope find files in directory of current buffer'
+      },
       { '<leader>fg', function() require('telescope.builtin').live_grep() end,                     desc = 'Telescope live grep' },
       { '<S-D-f>',    function() require('telescope.builtin').live_grep() end,                     desc = 'Telescope live grep' },
       { '<leader>p',  function() require('telescope.builtin').buffers() end,                       desc = 'Telescope buffers' },
@@ -393,6 +398,15 @@ require('lazy').setup({
     config = function()
       require('telescope').setup {
         defaults = {
+          mappings = {
+            i = {
+              ['<esc>'] = require('telescope.actions').close,
+              ['<C-a>'] = function() vim.cmd('normal! I') end,
+              ['<C-e>'] = function() vim.cmd('startinsert!') end,
+              ['<C-f>'] = require('telescope.actions').results_scrolling_down,
+              ['<C-b>'] = require('telescope.actions').results_scrolling_up
+            }
+          },
           sorting_strategy = 'ascending',
           layout_config = {
             horizontal = { prompt_position = 'top' },
