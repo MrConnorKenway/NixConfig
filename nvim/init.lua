@@ -115,7 +115,6 @@ require('lazy').setup({
       }
       vim.keymap.set('n', ']c', function() gitsigns.nav_hunk('next') end, { desc = 'Go to next git change' })
       vim.keymap.set('n', '[c', function() gitsigns.nav_hunk('prev') end, { desc = 'Go to previous git change' })
-      vim.keymap.set('n', '<leader>p', gitsigns.preview_hunk_inline, { desc = 'Git preview hunk' })
       vim.keymap.set('n', '<leader>u', gitsigns.reset_hunk, { desc = 'Git reset hunk' })
       vim.keymap.set('n', '<leader>b', gitsigns.blame_line, { desc = 'Git blame inline' })
       vim.keymap.set('n', '<leader>a', gitsigns.stage_hunk, { desc = 'Git stage hunk' })
@@ -150,7 +149,8 @@ require('lazy').setup({
   {
     'rmagatti/goto-preview',
     keys = {
-      { 'gp', mode = { 'n' }, function() require('goto-preview').goto_preview_definition {} end, desc = 'Preview LSP definition' }
+      { 'gp', mode = { 'n' }, function() require('goto-preview').goto_preview_definition {} end, desc = 'Preview LSP definition in popup' },
+      { 'gr', mode = { 'n' }, function() require('goto-preview').goto_preview_references {} end, desc = 'Preview LSP references in popup' },
     },
     config = function()
       require('goto-preview').setup {
@@ -204,7 +204,8 @@ require('lazy').setup({
     'akinsho/toggleterm.nvim',
     keys = {
       { '<leader>t', function() require('toggleterm').toggle(nil, nil, nil, 'float', nil) end, desc = 'Toggle floating terminal' },
-      { '<C-`>',     function() require('toggleterm').toggle() end,                            mode = { 'n', 'o', 'x', 't', 'i', 'v' }, desc = 'Toggle terminal' }
+      { '<C-`>',     function() require('toggleterm').toggle() end,                            mode = { 'n', 'o', 'x', 't', 'i', 'v' }, desc = 'Toggle terminal' },
+      { '<D-j>',     function() require('toggleterm').toggle() end,                            mode = { 'n', 'o', 'x', 't', 'i', 'v' }, desc = 'Toggle terminal' }
     },
     config = function()
       require('toggleterm').setup {
@@ -369,16 +370,17 @@ require('lazy').setup({
   {
     'nvim-telescope/telescope.nvim',
     keys = {
-      { '<leader>ff', function() require('telescope.builtin').find_files() end,                    desc = 'Telescope find files' },
-      { '<leader>fo', function() require('telescope.builtin').oldfiles() end,                      desc = 'Telescope find old files' },
+      { '<leader>o',  function() require('telescope.builtin').find_files() end,                    desc = 'Telescope find files' },
       { '<leader>fg', function() require('telescope.builtin').live_grep() end,                     desc = 'Telescope live grep' },
-      { '<leader>fb', function() require('telescope.builtin').buffers() end,                       desc = 'Telescope buffers' },
+      { '<S-D-f>',    function() require('telescope.builtin').live_grep() end,                     desc = 'Telescope live grep' },
+      { '<leader>p',  function() require('telescope.builtin').buffers() end,                       desc = 'Telescope buffers' },
+      { '<D-p>',      function() require('telescope.builtin').buffers() end,                       desc = 'Telescope buffers' },
       { '<leader>fh', function() require('telescope.builtin').help_tags() end,                     desc = 'Telescope help tags' },
-      { '<leader>fs', function() require('telescope.builtin').lsp_dynamic_workspace_symbols() end, desc = 'Telescope find workspace symbols' },
-      { '<leader>fS', function() require('telescope.builtin').lsp_document_symbols() end,          desc = 'Telescope find document symbols' },
-      { '<leader>go', function() require('telescope.builtin').git_files() end,                     desc = 'Telescope open git files' },
+      { '<leader>s',  function() require('telescope.builtin').lsp_dynamic_workspace_symbols() end, desc = 'Telescope find workspace symbols' },
+      { '<leader>S',  function() require('telescope.builtin').lsp_document_symbols() end,          desc = 'Telescope find document symbols' },
       { '<leader>r',  function() require('telescope.builtin').lsp_references() end,                desc = 'Go to references' },
       { '<leader>h',  function() require('telescope.builtin').command_history() end,               desc = 'Telescope find command history' },
+      { '<S-D-p>',    function() require('telescope.builtin').commands() end,                      desc = 'Telescope find commands' },
       { 'gd',         function() require('telescope.builtin').lsp_definitions() end,               desc = 'Go to definitions' },
       { 'gy',         function() require('telescope.builtin').lsp_type_definitions() end,          desc = 'Go to type definitions' }
     },
