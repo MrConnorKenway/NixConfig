@@ -231,6 +231,44 @@ require('lazy').setup({
     end
   },
   {
+    'ibhagwan/fzf-lua',
+    keys = {
+      { '<leader>o', function() require('fzf-lua').files() end, desc = 'FzfLua find files' },
+    },
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    config = function()
+      require('fzf-lua').setup {
+        'default-title',
+        files = {
+          git_icons = false
+        },
+        winopts = {
+          preview = {
+            default = 'builtin',
+            delay = 10
+          }
+        },
+        previewers = {
+          builtin = {
+            treesitter = { enable = true }
+          }
+        },
+        -- keymap = {
+        --   builtin = {
+        --     ['<C-f>'] = ,
+        --     ['<C-b>'] = ,
+        --     ['<C-u>'] = 'preview-half-page-up',
+        --     ['<C-d>'] = 'preview-half-page-down'
+        --   },
+        --   fzf = {
+        --     ['ctrl-u'] = 'preview-half-page-up',
+        --     ['ctrl-d'] = 'preview-half-page-down'
+        --   }
+        -- }
+      }
+    end
+  },
+  {
     'hrsh7th/nvim-cmp',
     dependencies = {
       'hrsh7th/cmp-nvim-lsp',
