@@ -68,7 +68,7 @@
       enable = true;
       keyMode = "vi";
       prefix = "C-j";
-      terminal = "screen-256color";
+      terminal = "tmux-256color";
       escapeTime = 10;
 
       plugins = with pkgs.tmuxPlugins; [
