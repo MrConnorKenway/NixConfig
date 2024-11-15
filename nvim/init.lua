@@ -150,72 +150,69 @@ require('lazy').setup({
         }
       }
 
+      local treesitter_highlight_namespace = vim.api.nvim_create_namespace('treesitter.navigator.highlight')
+      local ts_utils = require('nvim-treesitter.ts_utils')
+      local node = nil
+
+      local on_cursor_moved = function(info)
+        if not node then
+          vim.api.nvim_del_autocmd(info.id)
+          return
+        end
+
+        local crow, ccol = unpack(vim.api.nvim_win_get_cursor(0))
+        local start_row, start_col, _ = node:start()
+        local end_row, end_col, _ = node:end_()
+
+        if (crow ~= (start_row + 1) or ccol ~= start_col) and (crow ~= (end_row + 1) or ccol ~= (end_col - 1)) then
+          vim.api.nvim_buf_clear_namespace(0, treesitter_highlight_namespace, start_row, end_row + 1)
+          vim.api.nvim_del_autocmd(info.id)
+          node = nil
+        end
+      end
+
       vim.keymap.set('n', '<M-o>', function()
-        local cursor = vim.api.nvim_win_get_cursor(0)
-        local last_row = cursor[1] - 1
-        local last_col = cursor[2]
         local row, col
-        local node = vim.treesitter.get_node()
+        node = node or vim.treesitter.get_node()
 
         if node == nil then
           return
         end
 
-        if node:parent() ~= nil then
-          vim.cmd("normal! m'") -- add to jump list
+        node = node:parent()
+        if node == nil then
+          return
         end
 
-        while true do
-          node = node:parent()
-          if node == nil then
-            return
-          end
+        vim.cmd("normal! m'") -- add to jump list
 
-          row, col, _ = node:start()
-
-          if row ~= last_row or col ~= last_col then
-            break
-          end
-
-          last_row = row
-          last_col = col
-        end
-
+        row, col, _ = node:start()
         vim.api.nvim_win_set_cursor(0, { row + 1, col })
+        ts_utils.highlight_node(node, 0, treesitter_highlight_namespace, 'IlluminatedWordText')
+
+        vim.api.nvim_create_autocmd('CursorMoved', { callback = on_cursor_moved })
       end, { desc = 'Go to start of parent syntax tree node' })
 
       vim.keymap.set('n', '<M-O>', function()
-        local cursor = vim.api.nvim_win_get_cursor(0)
-        local last_row = cursor[1] - 1
-        local last_col = cursor[2] + 1 -- treesitter's end_() refers to outside column
         local row, col
-        local node = vim.treesitter.get_node()
+        node = node or vim.treesitter.get_node()
 
         if node == nil then
           return
         end
 
-        if node:parent() ~= nil then
-          vim.cmd("normal! m'") -- add to jump list
+        node = node:parent()
+        if node == nil then
+          return
         end
 
-        while true do
-          node = node:parent()
-          if node == nil then
-            return
-          end
+        vim.cmd("normal! m'") -- add to jump list
 
-          row, col, _ = node:end_()
+        row, col, _ = node:end_()
+        vim.api.nvim_win_set_cursor(0, { row + 1, col - 1 })
+        ts_utils.highlight_node(node, 0, treesitter_highlight_namespace, 'IlluminatedWordText')
 
-          if row ~= last_row or col ~= last_col then
-            break
-          end
-
-          last_row = row
-          last_col = col
-        end
-
-        vim.api.nvim_win_set_cursor(0, { row + 1, col })
+        vim.api.nvim_create_autocmd('CursorMoved', { callback = on_cursor_moved })
       end, { desc = 'Go to end of parent syntax tree node' })
     end
   },
