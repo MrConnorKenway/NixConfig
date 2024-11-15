@@ -204,15 +204,15 @@ require('lazy').setup({
 
       local on_cursor_moved = function(info)
         if not node then
+          vim.api.nvim_buf_clear_namespace(0, treesitter_highlight_namespace, 0, -1)
           vim.api.nvim_del_autocmd(info.id)
           return
         end
 
         local crow, ccol = unpack(vim.api.nvim_win_get_cursor(0))
-        local start_row, start_col, _ = node:start()
-        local end_row, end_col, _ = node:end_()
+        local start_row, start_col, end_row, end_col = ts_utils.get_vim_range { node:range() }
 
-        if (crow ~= (start_row + 1) or ccol ~= start_col) and (crow ~= (end_row + 1) or ccol ~= (end_col - 1)) then
+        if (crow ~= start_row or ccol ~= start_col - 1) and (crow ~= end_row or ccol ~= end_col - 1) then
           vim.api.nvim_buf_clear_namespace(0, treesitter_highlight_namespace, start_row, end_row + 1)
           vim.api.nvim_del_autocmd(info.id)
           node = nil
@@ -227,15 +227,14 @@ require('lazy').setup({
           return
         end
 
-        node = node:parent()
-        if node == nil then
-          return
-        end
-
         vim.cmd("normal! m'") -- add to jump list
 
-        row, col, _ = node:start()
-        vim.api.nvim_win_set_cursor(0, { row + 1, col })
+        if node:parent() ~= nil then
+          node = node:parent()
+        end
+
+        row, col, _, _ = ts_utils.get_vim_range { node:range() }
+        vim.api.nvim_win_set_cursor(0, { row, col - 1 }) -- `nvim_win_set_cursor` requires (1, 0) indexed (row, col)
         ts_utils.highlight_node(node, 0, treesitter_highlight_namespace, 'IlluminatedWordText')
 
         vim.api.nvim_create_autocmd('CursorMoved', { callback = on_cursor_moved })
@@ -249,15 +248,14 @@ require('lazy').setup({
           return
         end
 
-        node = node:parent()
-        if node == nil then
-          return
-        end
-
         vim.cmd("normal! m'") -- add to jump list
 
-        row, col, _ = node:end_()
-        vim.api.nvim_win_set_cursor(0, { row + 1, col - 1 })
+        if node:parent() ~= nil then
+          node = node:parent()
+        end
+
+        _, _, row, col = ts_utils.get_vim_range { node:range() }
+        vim.api.nvim_win_set_cursor(0, { row, col - 1 }) -- `nvim_win_set_cursor` requires (1, 0) indexed (row, col)
         ts_utils.highlight_node(node, 0, treesitter_highlight_namespace, 'IlluminatedWordText')
 
         vim.api.nvim_create_autocmd('CursorMoved', { callback = on_cursor_moved })
