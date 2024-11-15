@@ -26,6 +26,24 @@ vim.opt.showmode = false
 
 vim.g.mapleader = ' '
 
+if os.getenv('SSH_TTY') ~= nil then
+  local function paste()
+    return { vim.fn.split(vim.fn.getreg(''), '\n'), vim.fn.getregtype('') }
+  end
+  local osc52 = require('vim.ui.clipboard.osc52')
+  vim.g.clipboard = {
+    name = 'OSC 52',
+    copy = {
+      ['+'] = osc52.copy('+'),
+      ['*'] = osc52.copy('*')
+    },
+    paste = {
+      ['+'] = paste,
+      ['*'] = paste,
+    }
+  }
+end
+
 vim.keymap.set('n', '[b', '<cmd>bp<cr>', { desc = 'Navigate to previous buffer' })
 vim.keymap.set('n', ']b', '<cmd>bn<cr>', { desc = 'Navigate to next buffer' })
 vim.keymap.set('n', 'q', function()
@@ -136,37 +154,6 @@ require('lazy').setup({
       { 'R',     mode = { 'o', 'x' },      function() require('flash').treesitter_search({ label = { rainbow = { enabled = true } } }) end, desc = 'Treesitter Search' },
       { '<c-s>', mode = { 'c' },           function() require('flash').toggle() end,                                                        desc = 'Toggle Flash Search' }
     }
-  },
-  {
-    'ojroques/nvim-osc52',
-    config = function()
-      if os.getenv('SSH_TTY') == nil then return end
-
-      require('osc52').setup()
-
-      local function copy(lines, _)
-        require('osc52').copy(table.concat(lines, '\n'))
-      end
-
-      local function paste()
-        return {
-          vim.fn.split(vim.fn.getreg(''), '\n'),
-          vim.fn.getregtype('')
-        }
-      end
-
-      vim.g.clipboard = {
-        name = 'osc52',
-        copy = {
-          ['+'] = copy,
-          ['*'] = copy
-        },
-        paste = {
-          ['+'] = paste,
-          ['*'] = paste
-        }
-      }
-    end
   },
   {
     'RRethy/vim-illuminate',
