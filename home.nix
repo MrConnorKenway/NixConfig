@@ -1,4 +1,4 @@
-{ pkgs, pkgs-unstable, ... }:
+{ config, pkgs, pkgs-unstable, ... }:
 
 {
   home = {
@@ -34,8 +34,7 @@
       '';
       };
       ".config/nvim" = {
-        source = ./nvim;
-        recursive = true;
+        source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/NixConfig/nvim";
       };
     };
   };
