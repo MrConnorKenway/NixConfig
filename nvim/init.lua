@@ -237,7 +237,7 @@ require('lazy').setup({
         vim.api.nvim_win_set_cursor(0, { row, col - 1 }) -- `nvim_win_set_cursor` requires (1, 0) indexed (row, col)
         ts_utils.highlight_node(node, 0, treesitter_highlight_namespace, 'IlluminatedWordText')
 
-        vim.api.nvim_create_autocmd('CursorMoved', { callback = on_cursor_moved })
+        vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, { callback = on_cursor_moved })
       end, { desc = 'Go to start of parent syntax tree node' })
 
       vim.keymap.set('n', '<M-O>', function()
@@ -258,7 +258,7 @@ require('lazy').setup({
         vim.api.nvim_win_set_cursor(0, { row, col - 1 }) -- `nvim_win_set_cursor` requires (1, 0) indexed (row, col)
         ts_utils.highlight_node(node, 0, treesitter_highlight_namespace, 'IlluminatedWordText')
 
-        vim.api.nvim_create_autocmd('CursorMoved', { callback = on_cursor_moved })
+        vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, { callback = on_cursor_moved })
       end, { desc = 'Go to end of parent syntax tree node' })
     end
   },
