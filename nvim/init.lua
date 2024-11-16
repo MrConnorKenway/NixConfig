@@ -213,7 +213,7 @@ require('lazy').setup({
         local start_row, start_col, end_row, end_col = ts_utils.get_vim_range { node:range() }
 
         if (crow ~= start_row or ccol ~= start_col - 1) and (crow ~= end_row or ccol ~= end_col - 1) then
-          vim.api.nvim_buf_clear_namespace(0, treesitter_highlight_namespace, start_row, end_row + 1)
+          vim.api.nvim_buf_clear_namespace(0, treesitter_highlight_namespace, start_row - 1, end_row)
           vim.api.nvim_del_autocmd(info.id)
           node = nil
         end
