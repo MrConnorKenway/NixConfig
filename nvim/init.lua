@@ -372,8 +372,8 @@ require('lazy').setup({
         },
         winopts = {
           preview = {
-            default = 'builtin',
-            delay = 10
+            default = 'bat_native',
+            delay = 100
           }
         },
         previewers = {
@@ -383,16 +383,16 @@ require('lazy').setup({
         },
         keymap = {
           builtin = {
-            ['<C-b>'] = 'half-page-up',
-            ['<C-f>'] = 'half-page-down',
+            true,
             ['<C-u>'] = 'preview-half-page-up',
-            ['<C-d>'] = 'preview-half-page-down'
+            ['<C-d>'] = 'preview-half-page-down',
+            ['F9'] = 'toggle-preview'
           },
           fzf = {
-            ['Ctrl-b'] = 'half-page-up',
-            ['Ctrl-f'] = 'half-page-down',
+            true,
             ['Ctrl-u'] = 'preview-half-page-up',
-            ['Ctrl-d'] = 'preview-half-page-down'
+            ['Ctrl-d'] = 'preview-half-page-down',
+            ['F9'] = 'toggle-preview'
           }
         }
       }
