@@ -172,7 +172,7 @@ require('lazy').setup({
     },
     config = function()
       require('goto-preview').setup {
-        border = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" }
+        border = { '╭', '─', '╮', '│', '╯', '─', '╰', '│' }
       }
     end
   },
@@ -391,9 +391,9 @@ require('lazy').setup({
           end, { desc = 'Toggle LSP inlay hint' })
           vim.keymap.set('n', '<F2>', vim.lsp.buf.rename, { desc = 'LSP Rename' })
 
-          local signs = { Error = " ", Warn = " ", Hint = " ", Info = " " }
+          local signs = { Error = ' ', Warn = ' ', Hint = ' ', Info = ' ' }
           for type, icon in pairs(signs) do
-            local hl = "DiagnosticSign" .. type
+            local hl = 'DiagnosticSign' .. type
             vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
           end
         end
