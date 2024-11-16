@@ -351,6 +351,48 @@ require('lazy').setup({
     end
   },
   {
+    'ibhagwan/fzf-lua',
+    keys = {
+      { '<leader>o',  function() require('fzf-lua').files() end,                      desc = 'FzfLua find files' },
+      {
+        '<leader>O',
+        function() require('fzf-lua').files { cwd = vim.fn.expand('%:h') } end,
+        desc = 'FzfLua find files in directory of current buffer'
+      },
+      { '<leader>fg', function() require('fzf-lua').live_grep_native() end,           desc = 'FzfLua live grep' },
+      { '<S-D-f>',    function() require('fzf-lua').live_grep_native() end,           desc = 'FzfLua live grep' },
+      { '<leader>s',  function() require('fzf-lua').lsp_live_workspace_symbols() end, desc = 'FzfLua find workspace symbols' },
+    },
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    config = function()
+      require('fzf-lua').setup {
+        'default-title',
+        files = {
+          git_icons = false
+        },
+        winopts = {
+          preview = {
+            default = 'builtin',
+            delay = 10
+          }
+        },
+        previewers = {
+          builtin = {
+            treesitter = { enable = true }
+          }
+        },
+        keymap = {
+          builtin = {
+            ['<C-f>'] = 'half-page-up',
+            ['<C-b>'] = 'half-page-down',
+            ['<C-u>'] = 'preview-half-page-up',
+            ['<C-d>'] = 'preview-half-page-down'
+          }
+        }
+      }
+    end
+  },
+  {
     'hrsh7th/nvim-cmp',
     dependencies = {
       'hrsh7th/cmp-nvim-lsp',
@@ -491,24 +533,15 @@ require('lazy').setup({
   {
     'nvim-telescope/telescope.nvim',
     keys = {
-      { '<leader>o',  function() require('telescope.builtin').find_files() end,                    desc = 'Telescope find files' },
-      {
-        '<leader>O',
-        function() require('telescope.builtin').find_files { cwd = require('telescope.utils').buffer_dir() } end,
-        desc = 'Telescope find files in directory of current buffer'
-      },
-      { '<leader>fg', function() require('telescope.builtin').live_grep() end,                     desc = 'Telescope live grep' },
-      { '<S-D-f>',    function() require('telescope.builtin').live_grep() end,                     desc = 'Telescope live grep' },
-      { '<leader>p',  function() require('telescope.builtin').buffers() end,                       desc = 'Telescope buffers' },
-      { '<D-p>',      function() require('telescope.builtin').buffers() end,                       desc = 'Telescope buffers' },
-      { '<leader>fh', function() require('telescope.builtin').help_tags() end,                     desc = 'Telescope help tags' },
-      { '<leader>s',  function() require('telescope.builtin').lsp_dynamic_workspace_symbols() end, desc = 'Telescope find workspace symbols' },
-      { '<leader>S',  function() require('telescope.builtin').lsp_document_symbols() end,          desc = 'Telescope find document symbols' },
-      { '<leader>r',  function() require('telescope.builtin').lsp_references() end,                desc = 'Go to references' },
-      { '<leader>h',  function() require('telescope.builtin').command_history() end,               desc = 'Telescope find command history' },
-      { '<S-D-p>',    function() require('telescope.builtin').commands() end,                      desc = 'Telescope find commands' },
-      { 'gd',         function() require('telescope.builtin').lsp_definitions() end,               desc = 'Go to definitions' },
-      { 'gy',         function() require('telescope.builtin').lsp_type_definitions() end,          desc = 'Go to type definitions' }
+      { '<leader>p',  function() require('telescope.builtin').buffers() end,              desc = 'Telescope buffers' },
+      { '<D-p>',      function() require('telescope.builtin').buffers() end,              desc = 'Telescope buffers' },
+      { '<leader>fh', function() require('telescope.builtin').help_tags() end,            desc = 'Telescope help tags' },
+      { '<leader>S',  function() require('telescope.builtin').lsp_document_symbols() end, desc = 'Telescope find document symbols' },
+      { '<leader>r',  function() require('telescope.builtin').lsp_references() end,       desc = 'Go to references' },
+      { '<leader>h',  function() require('telescope.builtin').command_history() end,      desc = 'Telescope find command history' },
+      { '<S-D-p>',    function() require('telescope.builtin').commands() end,             desc = 'Telescope find commands' },
+      { 'gd',         function() require('telescope.builtin').lsp_definitions() end,      desc = 'Go to definitions' },
+      { 'gy',         function() require('telescope.builtin').lsp_type_definitions() end, desc = 'Go to type definitions' }
     },
     dependencies = {
       'nvim-lua/plenary.nvim',
