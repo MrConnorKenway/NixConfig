@@ -383,10 +383,16 @@ require('lazy').setup({
         },
         keymap = {
           builtin = {
-            ['<C-f>'] = 'half-page-up',
-            ['<C-b>'] = 'half-page-down',
+            ['<C-b>'] = 'half-page-up',
+            ['<C-f>'] = 'half-page-down',
             ['<C-u>'] = 'preview-half-page-up',
             ['<C-d>'] = 'preview-half-page-down'
+          },
+          fzf = {
+            ['Ctrl-b'] = 'half-page-up',
+            ['Ctrl-f'] = 'half-page-down',
+            ['Ctrl-u'] = 'preview-half-page-up',
+            ['Ctrl-d'] = 'preview-half-page-down'
           }
         }
       }
