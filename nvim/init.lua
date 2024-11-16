@@ -301,8 +301,36 @@ require('lazy').setup({
       require('toggleterm').setup {
         size = 16,
         shade_terminals = true,
-        float_opts = { border = 'rounded' }
+        float_opts = { border = 'rounded' },
+        on_create = function()
+          local vsplit_term = function()
+            local terminals = require("toggleterm.terminal").get_all()
+            local idx = 0
+
+            for _, t in pairs(terminals) do
+              if idx < t.id then
+                idx = t.id
+              end
+            end
+
+            require('toggleterm').toggle(idx + 1)
+          end
+
+          vim.opt.cursorline = false
+
+          vim.keymap.set({ 'n', 't' }, [[<M-\>]], vsplit_term, { desc = 'Split terminals in vertical', buffer = true })
+          vim.keymap.set({ 'n', 't' }, [[<D-\>]], vsplit_term, { desc = 'Split terminals in vertical', buffer = true })
+        end,
+        persist_mode = false, -- always open terminal in insert mode
+        close_on_exit = false,
+        on_exit = function(term)
+          term:close() -- hack toggleterm's normal exit procedure to prevent mode changing
+          if vim.api.nvim_buf_is_loaded(term.bufnr) then
+            vim.defer_fn(function() vim.api.nvim_buf_delete(term.bufnr, { force = true }) end, 10)
+          end
+        end
       }
+
       vim.keymap.set('t', '<C-s>', [[<C-\><C-n>]], { desc = 'Exit to terminal normal mode' })
     end
   },
