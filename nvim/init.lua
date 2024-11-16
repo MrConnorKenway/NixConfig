@@ -222,13 +222,14 @@ require('lazy').setup({
 
       vim.keymap.set('n', '<M-o>', function()
         local start_row, start_col, end_row, end_col
-        node = node or vim.treesitter.get_node()
 
         if node == nil then
-          return
+          node = vim.treesitter.get_node()
+          if node == nil then
+            return
+          end
+          vim.cmd("normal! m'") -- add to jump list
         end
-
-        vim.cmd("normal! m'") -- add to jump list
 
         if node:parent() ~= nil then
           node = node:parent()
@@ -244,13 +245,14 @@ require('lazy').setup({
 
       vim.keymap.set('n', '<M-O>', function()
         local start_row, start_col, end_row, end_col
-        node = node or vim.treesitter.get_node()
 
         if node == nil then
-          return
+          node = vim.treesitter.get_node()
+          if node == nil then
+            return
+          end
+          vim.cmd("normal! m'") -- add to jump list
         end
-
-        vim.cmd("normal! m'") -- add to jump list
 
         if node:parent() ~= nil then
           node = node:parent()
