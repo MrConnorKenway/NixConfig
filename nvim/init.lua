@@ -470,7 +470,7 @@ require('lazy').setup({
             border = 'rounded'
           })
 
-          vim.keymap.set('n', 'gh', vim.lsp.buf.hover, { desc = 'Go to type definitions' })
+          vim.keymap.set('n', 'gh', vim.lsp.buf.hover, { desc = 'Display LSP hover' })
           vim.keymap.set('n', '<leader>i', function()
             vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf })
           end, { desc = 'Toggle LSP inlay hint' })
