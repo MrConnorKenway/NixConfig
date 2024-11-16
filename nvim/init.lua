@@ -453,6 +453,10 @@ require('lazy').setup({
     end
   },
   {
+    'williamboman/mason.nvim',
+    config = true
+  },
+  {
     'neovim/nvim-lspconfig',
     config = function()
       vim.api.nvim_create_autocmd('LspAttach', {
