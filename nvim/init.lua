@@ -221,7 +221,7 @@ require('lazy').setup({
       end
 
       vim.keymap.set('n', '<M-o>', function()
-        local row, col
+        local start_row, start_col, end_row, end_col
         node = node or vim.treesitter.get_node()
 
         if node == nil then
@@ -234,15 +234,16 @@ require('lazy').setup({
           node = node:parent()
         end
 
-        row, col, _, _ = ts_utils.get_vim_range { node:range() }
-        vim.api.nvim_win_set_cursor(0, { row, col - 1 }) -- `nvim_win_set_cursor` requires (1, 0) indexed (row, col)
-        ts_utils.highlight_node(node, 0, treesitter_highlight_namespace, 'IlluminatedWordText')
+        start_row, start_col, end_row, end_col = ts_utils.get_vim_range { node:range() }
+        vim.api.nvim_win_set_cursor(0, { start_row, start_col - 1 }) -- `nvim_win_set_cursor` requires (1, 0) indexed (row, col)
+        vim.api.nvim_buf_set_extmark(0, treesitter_highlight_namespace, start_row - 1, start_col - 1,
+          { end_row = end_row - 1, end_col = end_col, hl_group = 'Visual' })
 
         vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, { callback = on_cursor_moved })
       end, { desc = 'Go to start of parent syntax tree node' })
 
       vim.keymap.set('n', '<M-O>', function()
-        local row, col
+        local start_row, start_col, end_row, end_col
         node = node or vim.treesitter.get_node()
 
         if node == nil then
@@ -255,9 +256,10 @@ require('lazy').setup({
           node = node:parent()
         end
 
-        _, _, row, col = ts_utils.get_vim_range { node:range() }
-        vim.api.nvim_win_set_cursor(0, { row, col - 1 }) -- `nvim_win_set_cursor` requires (1, 0) indexed (row, col)
-        ts_utils.highlight_node(node, 0, treesitter_highlight_namespace, 'IlluminatedWordText')
+        start_row, start_col, end_row, end_col = ts_utils.get_vim_range { node:range() }
+        vim.api.nvim_win_set_cursor(0, { end_row, end_col - 1 }) -- `nvim_win_set_cursor` requires (1, 0) indexed (row, col)
+        vim.api.nvim_buf_set_extmark(0, treesitter_highlight_namespace, start_row - 1, start_col - 1,
+          { end_row = end_row - 1, end_col = end_col, hl_group = 'Visual' })
 
         vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, { callback = on_cursor_moved })
       end, { desc = 'Go to end of parent syntax tree node' })
