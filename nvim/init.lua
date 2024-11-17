@@ -382,6 +382,7 @@ require('lazy').setup({
       },
       { '<leader>fg', function() require('fzf-lua').live_grep_native() end,           desc = 'FzfLua live grep' },
       { '<S-D-f>',    function() require('fzf-lua').live_grep_native() end,           desc = 'FzfLua live grep' },
+      { '<S-M-f>',    function() require('fzf-lua').live_grep_native() end,           desc = 'FzfLua live grep' },
       { '<leader>s',  function() require('fzf-lua').lsp_live_workspace_symbols() end, desc = 'FzfLua find workspace symbols' },
     },
     dependencies = { 'nvim-tree/nvim-web-devicons' },
