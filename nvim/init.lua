@@ -60,6 +60,17 @@ vim.keymap.set('n', '<leader>x', '<cmd>xa<cr>', { desc = 'Save and quit workspac
 vim.keymap.set('n', '<leader>q', '<cmd>qa<cr>', { desc = 'Quit workspace without save' })
 vim.keymap.set('v', '<leader>c', '"+y', { desc = 'Navigate to previous buffer' })
 
+-- copy from https://github.com/neovim/neovim/pull/28176/files#diff-49225a49c226c2f1b36f966d0178c556e204cdc0b660c80db9e4568e03f6ef99R126
+-- WARN: may change as neovim updates
+vim.keymap.set('n', '<C-/>', function() return require('vim._comment').operator() .. '_' end,
+  { expr = true, desc = 'Comment current line' })
+vim.keymap.set('n', '<D-/>', function() return require('vim._comment').operator() .. '_' end,
+  { expr = true, desc = 'Comment current line' })
+vim.keymap.set('v', '<C-/>', function() return require('vim._comment').operator() end,
+  { expr = true, desc = 'Comment current block' })
+vim.keymap.set('v', '<D-/>', function() return require('vim._comment').operator() end,
+  { expr = true, desc = 'Comment current block' })
+
 
 local function autocmd(events, ...)
   vim.api.nvim_create_autocmd(events, { callback = ... })
