@@ -239,6 +239,16 @@ require('lazy').setup({
         vim.api.nvim_buf_set_extmark(0, treesitter_highlight_namespace, start_row - 1, start_col - 1,
           { end_row = end_row - 1, end_col = end_col, hl_group = 'Visual' })
 
+        for i = start_row, end_row - 1 do
+          if vim.api.nvim_buf_get_lines(0, i, i + 1, false)[1]:len() == 0 then
+            vim.api.nvim_buf_set_extmark(0, treesitter_highlight_namespace, i, 0,
+              {
+                virt_text = { { ' ', 'Visual' } },
+                virt_text_win_col = 0
+              })
+          end
+        end
+
         vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, { callback = on_cursor_moved })
       end, { desc = 'Go to start of parent syntax tree node' })
 
@@ -261,6 +271,16 @@ require('lazy').setup({
         vim.api.nvim_win_set_cursor(0, { end_row, end_col - 1 }) -- `nvim_win_set_cursor` requires (1, 0) indexed (row, col)
         vim.api.nvim_buf_set_extmark(0, treesitter_highlight_namespace, start_row - 1, start_col - 1,
           { end_row = end_row - 1, end_col = end_col, hl_group = 'Visual' })
+
+        for i = start_row, end_row - 1 do
+          if vim.api.nvim_buf_get_lines(0, i, i + 1, false)[1]:len() == 0 then
+            vim.api.nvim_buf_set_extmark(0, treesitter_highlight_namespace, i, 0,
+              {
+                virt_text = { { ' ', 'Visual' } },
+                virt_text_win_col = 0
+              })
+          end
+        end
 
         vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, { callback = on_cursor_moved })
       end, { desc = 'Go to end of parent syntax tree node' })
