@@ -399,7 +399,10 @@ require('lazy').setup({
   {
     'junegunn/fzf',
     lazy = true,
-    build = "./install --bin"
+    build = "./install --bin",
+    enabled = function()
+      return vim.fn.executable('fzf') == 0
+    end
   },
   {
     'ibhagwan/fzf-lua',
