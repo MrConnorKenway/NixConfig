@@ -580,7 +580,11 @@ require('lazy').setup({
       }
     end
   },
-  { 'nvim-telescope/telescope-fzf-native.nvim', build = 'make' },
+  {
+    'nvim-telescope/telescope-fzf-native.nvim',
+    build = 'make',
+    lazy = true
+  },
   {
     'nvim-telescope/telescope.nvim',
     keys = {
