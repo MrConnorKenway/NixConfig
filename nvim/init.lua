@@ -24,6 +24,8 @@ vim.opt.wildmode = 'full:longest'
 vim.opt.smartcase = true
 vim.opt.showmode = false
 
+vim.lsp.set_log_level('off')
+
 vim.g.mapleader = ' '
 
 if os.getenv('SSH_TTY') ~= nil then
