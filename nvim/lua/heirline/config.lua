@@ -468,7 +468,6 @@ return {
       provider = function(self)
         return self.child:eval()
       end,
-      update = 'CursorMoved'
     }
 
     local DefaultStatusline = {
