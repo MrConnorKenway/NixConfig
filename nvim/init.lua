@@ -169,6 +169,7 @@ require('lazy').setup({
   },
   {
     'RRethy/vim-illuminate',
+    event = 'LspAttach',
     config = function()
       require('illuminate').configure {
         providers = { 'lsp' }
