@@ -397,6 +397,11 @@ require('lazy').setup({
     end
   },
   {
+    'junegunn/fzf',
+    lazy = true,
+    build = "./install --bin"
+  },
+  {
     'ibhagwan/fzf-lua',
     keys = {
       { '<leader>o',  function() require('fzf-lua').files() end,                      desc = 'FzfLua find files' },
@@ -410,7 +415,7 @@ require('lazy').setup({
       { '<S-M-f>',    function() require('fzf-lua').live_grep_native() end,           desc = 'FzfLua live grep' },
       { '<leader>s',  function() require('fzf-lua').lsp_live_workspace_symbols() end, desc = 'FzfLua find workspace symbols' },
     },
-    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    dependencies = { 'nvim-tree/nvim-web-devicons', 'junegunn/fzf' },
     config = function()
       require('fzf-lua').setup {
         'default-title',
