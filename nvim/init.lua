@@ -325,6 +325,12 @@ require('lazy').setup({
         desc = 'Toggle floating terminal'
       },
       {
+        '<D-j>',
+        function() require('toggleterm').toggle() end,
+        mode = { 'n', 'o', 'x', 't', 'i', 'v' },
+        desc = 'Toggle terminal'
+      },
+      {
         '<C-`>',
         function() require('toggleterm').toggle() end,
         mode = { 'n', 'o', 'x', 't', 'i', 'v' },
