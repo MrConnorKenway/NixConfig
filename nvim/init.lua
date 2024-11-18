@@ -139,6 +139,7 @@ require('lazy').setup({
     config = function()
       local gitsigns = require('gitsigns')
       gitsigns.setup {
+        sign_priority = 100,
         preview_config = {
           border = 'rounded'
         }
