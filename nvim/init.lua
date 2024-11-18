@@ -96,14 +96,12 @@ end)
 
 autocmd({ 'VimEnter', 'WinEnter', 'BufWinEnter' }, function()
   if vim.o.number then
-    vim.opt.relativenumber = true
     vim.opt.cursorline = true
     vim.opt.signcolumn = 'yes'
   end
 end)
 
 autocmd({ 'WinLeave' }, function()
-  vim.opt.relativenumber = false
   vim.opt.cursorline = false
 end)
 
