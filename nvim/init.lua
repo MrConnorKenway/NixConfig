@@ -352,7 +352,7 @@ require('lazy').setup({
         float_opts = { border = 'rounded' },
         on_create = function()
           local vsplit_term = function()
-            local terminals = require("toggleterm.terminal").get_all()
+            local terminals = require('toggleterm.terminal').get_all()
             local idx = 0
 
             for _, t in pairs(terminals) do
@@ -399,7 +399,7 @@ require('lazy').setup({
   {
     'junegunn/fzf',
     lazy = true,
-    build = "./install --bin",
+    build = './install --bin',
     enabled = function()
       return vim.fn.executable('fzf') == 0
     end
