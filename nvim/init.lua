@@ -58,6 +58,8 @@ vim.keymap.set('n', 'q', function()
   end
 end, { desc = 'Close window' })
 vim.keymap.set('n', '<leader>w', '<cmd>wa<cr>', { desc = 'Save workspace without quit' })
+vim.keymap.set({ 'i', 'n' }, '<C-s>', '<cmd>wa<cr>', { desc = 'Save workspace without quit' })
+vim.keymap.set({ 'i', 'n' }, '<D-s>', '<cmd>wa<cr>', { desc = 'Save workspace without quit' })
 vim.keymap.set('n', '<leader>x', '<cmd>xa<cr>', { desc = 'Save and quit workspace' })
 vim.keymap.set('n', '<leader>q', '<cmd>qa<cr>', { desc = 'Quit workspace without save' })
 vim.keymap.set('v', '<leader>c', '"+y', { desc = 'Navigate to previous buffer' })
