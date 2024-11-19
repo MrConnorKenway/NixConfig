@@ -76,6 +76,15 @@ vim.keymap.set('v', '<D-/>', function() return require('vim._comment').operator(
   { expr = true, desc = 'Comment current block' })
 
 
+-- readline-style keybindings
+vim.keymap.set('i', '<C-b>', '<Left>', { silent = true })
+vim.keymap.set('i', '<C-f>', '<Right>', { silent = true })
+vim.keymap.set('i', '<C-p>', '<Up>', { silent = true })
+vim.keymap.set('i', '<C-n>', '<Down>', { silent = true })
+vim.keymap.set('i', '<C-a>', '<Home>', { silent = true })
+vim.keymap.set('i', '<C-e>', '<End>', { silent = true })
+
+
 local function autocmd(events, ...)
   vim.api.nvim_create_autocmd(events, { callback = ... })
 end
