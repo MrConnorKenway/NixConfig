@@ -139,6 +139,13 @@ require('lazy').setup({
     config = true
   },
   {
+    'kylechui/nvim-surround',
+    event = 'VeryLazy',
+    config = function()
+      require('nvim-surround').setup()
+    end
+  },
+  {
     'folke/lazydev.nvim',
     ft = 'lua', -- only load on lua files
     config = function()
