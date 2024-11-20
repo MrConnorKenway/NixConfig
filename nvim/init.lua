@@ -620,7 +620,7 @@ require('lazy').setup({
           end
           return {
             name = client_name,
-            body = spinner .. " " .. table.concat(series_messages, ", "),
+            body = spinner .. ' ' .. table.concat(series_messages, ', '),
           }
         end,
         format = function(client_messages)
@@ -628,10 +628,10 @@ require('lazy').setup({
           --- @param msg string?
           --- @return string
           local function stringify(name, msg)
-            return msg and string.format("%s %s", name, msg) or name
+            return msg and string.format('%s %s', name, msg) or name
           end
 
-          local sign = "" -- nf-fa-gear \uf013
+          local sign = '' -- nf-fa-gear \uf013
           local lsp_clients = vim.lsp.get_clients { bufnr = 0 }
           local messages_map = {}
           for _, climsg in ipairs(client_messages) do
@@ -645,8 +645,8 @@ require('lazy').setup({
             local builder = {}
             for _, cli in ipairs(lsp_clients) do
               if
-                  type(cli) == "table"
-                  and type(cli.name) == "string"
+                  type(cli) == 'table'
+                  and type(cli.name) == 'string'
                   and string.len(cli.name) > 0
               then
                 if messages_map[cli.name] then
@@ -660,10 +660,10 @@ require('lazy').setup({
               end
             end
             if #builder > 0 then
-              return sign .. " " .. table.concat(builder, ", ")
+              return sign .. ' ' .. table.concat(builder, ', ')
             end
           end
-          return ""
+          return ''
         end,
         max_size = 40
       }
