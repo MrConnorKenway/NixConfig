@@ -382,6 +382,30 @@ require('lazy').setup({
       }
 
       vim.keymap.set('t', '<C-s>', [[<C-\><C-n>]], { desc = 'Exit to terminal normal mode' })
+
+      local saved_mode
+      local saved_winid
+
+      local custom_toggle = function()
+        if vim.bo.filetype ~= 'toggleterm' then
+          saved_mode = vim.fn.mode()
+          saved_winid = vim.api.nvim_get_current_win()
+          require('toggleterm').toggle()
+        else
+          require('toggleterm').toggle()
+          vim.api.nvim_set_current_win(saved_winid)
+          vim.defer_fn(function()
+            if saved_mode == 'i' then
+              vim.cmd('startinsert')
+            else
+              vim.cmd('stopinsert')
+            end
+          end, 1)
+        end
+      end
+
+      vim.keymap.set({ 'n', 'i', 'v', 'o', 't' }, '<C-`>', custom_toggle, { desc = 'Toggle terminal' })
+      vim.keymap.set({ 'n', 'i', 'v', 'o', 't' }, '<D-j>', custom_toggle, { desc = 'Toggle terminal' })
     end
   },
   {
