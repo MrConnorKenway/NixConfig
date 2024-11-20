@@ -442,11 +442,6 @@ require('lazy').setup({
             delay = 100
           }
         },
-        previewers = {
-          builtin = {
-            treesitter = { enable = true }
-          }
-        },
         keymap = {
           builtin = {
             true,
@@ -455,10 +450,14 @@ require('lazy').setup({
             ['F9'] = 'toggle-preview'
           },
           fzf = {
-            true,
+            false,
             ['Ctrl-u'] = 'preview-half-page-up',
             ['Ctrl-d'] = 'preview-half-page-down',
-            ['F9'] = 'toggle-preview'
+            ['ctrl-a'] = 'beginning-of-line',
+            ['ctrl-e'] = 'end-of-line',
+            ['ctrl-f'] = 'half-page-down',
+            ['ctrl-b'] = 'half-page-up',
+            ['F9']     = 'toggle-preview'
           }
         }
       }
