@@ -34,12 +34,6 @@ return {
     })
 
     local ViMode = {
-      -- get vim current mode, this information will be required by the provider
-      -- and the highlight functions, so we compute it only once per component
-      -- evaluation and store it as a component attribute
-      init = function(self)
-        self.mode = vim.fn.mode(1) -- :h mode()
-      end,
       -- Now we define some dictionaries to map the output of mode() to the
       -- corresponding string and color. We can put these into `static` to compute
       -- them at initialisation time.
@@ -104,23 +98,16 @@ return {
       -- control the padding and make sure our string is always at least 2
       -- characters long. Plus a nice Icon.
       provider = function(self)
-        return ' %2(' .. self.mode_names[self.mode] .. '%) '
+        return ' %2(' .. self.mode_names[vim.fn.mode(1)] .. '%) '
       end,
       -- Same goes for the highlight. Now the foreground will change according to the current mode.
       hl = function(self)
-        local mode = self.mode:sub(1, 1) -- get only the first mode character
+        local mode = vim.fn.mode(1):sub(1, 1) -- get only the first mode character
         return { fg = theme_colors.base, bg = self.mode_bgs[mode], bold = true }
       end,
-      -- Re-evaluate the component only on ModeChanged event
-      -- Also allows the statusline to be re-evaluated when entering operator-pending mode
       update = {
         'ModeChanged',
-        pattern = '*:*',
-        callback = vim.schedule_wrap(function()
-          if not leaving then
-            vim.cmd('redrawstatus')
-          end
-        end),
+        'BufWinEnter',
       },
     }
 
