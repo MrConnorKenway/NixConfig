@@ -24,8 +24,6 @@ return {
       git_change = utils.get_highlight('GitSignsChange').fg,
     }
 
-    require('lsp-progress').setup {}
-
     require('heirline').load_colors(colors)
 
     local leaving = false
