@@ -720,8 +720,16 @@ require('lazy').setup({
   {
     'nvim-telescope/telescope.nvim',
     keys = {
-      { '<leader>p',  function() require('telescope.builtin').buffers() end,              desc = 'Telescope buffers' },
-      { '<D-p>',      function() require('telescope.builtin').buffers() end,              desc = 'Telescope buffers' },
+      {
+        '<leader>p',
+        function() require('telescope.builtin').buffers { sort_lastused = true, ignore_current_buffer = true } end,
+        desc = 'Telescope buffers'
+      },
+      {
+        '<D-p>',
+        function() require('telescope.builtin').buffers { sort_lastused = true, ignore_current_buffer = true } end,
+        desc = 'Telescope buffers'
+      },
       { '<leader>fh', function() require('telescope.builtin').help_tags() end,            desc = 'Telescope help tags' },
       { '<leader>S',  function() require('telescope.builtin').lsp_document_symbols() end, desc = 'Telescope find document symbols' },
       { '<leader>r',  function() require('telescope.builtin').lsp_references() end,       desc = 'Go to references' },
