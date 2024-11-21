@@ -671,7 +671,6 @@ require('lazy').setup({
   },
   {
     'stevearc/conform.nvim',
-    event = 'BufWritePre',
     keys = {
       {
         '<leader>f',
@@ -694,8 +693,7 @@ require('lazy').setup({
         formatters_by_ft = {
           c = { 'clang-format' }
         },
-        format_on_save = {
-          timeout_ms = 500,
+        default_format_opts = {
           lsp_format = 'fallback'
         }
       })
