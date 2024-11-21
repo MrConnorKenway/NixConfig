@@ -280,7 +280,7 @@ require('lazy').setup({
           end
         end
 
-        vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, { callback = on_cursor_moved })
+        vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, { callback = on_cursor_moved, buffer = 0 })
       end, { desc = 'Go to start of parent syntax tree node' })
 
       vim.keymap.set('n', '<M-O>', function()
@@ -313,7 +313,7 @@ require('lazy').setup({
           end
         end
 
-        vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, { callback = on_cursor_moved })
+        vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, { callback = on_cursor_moved, buffer = 0 })
       end, { desc = 'Go to end of parent syntax tree node' })
     end
   },
