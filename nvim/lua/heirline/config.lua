@@ -437,6 +437,15 @@ return {
               hl = self.type_hl[d.type],
             }
           }
+          if i > 4 then -- set max depth
+            table.insert(children, {
+              {
+                provider = '..',
+                hl = { fg = 'bright_fg' },
+              }
+            })
+            break
+          end
           -- add a separator only if needed
           if #data > 1 and i < #data then
             table.insert(child, {
