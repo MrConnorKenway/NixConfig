@@ -431,6 +431,8 @@ require('lazy').setup({
         function() require('fzf-lua').files { cwd = vim.fn.expand('%:h') } end,
         desc = 'FzfLua find files in directory of current buffer'
       },
+      { '<leader>p',  function() require('fzf-lua').buffers() end,                    desc = 'FzfLua switch buffers' },
+      { '<D-p>',      function() require('fzf-lua').buffers() end,                    desc = 'FzfLua switch buffers' },
       { '<leader>fg', function() require('fzf-lua').live_grep_native() end,           desc = 'FzfLua live grep' },
       { '<S-D-f>',    function() require('fzf-lua').live_grep_native() end,           desc = 'FzfLua live grep' },
       { '<S-M-f>',    function() require('fzf-lua').live_grep_native() end,           desc = 'FzfLua live grep' },
@@ -725,16 +727,6 @@ require('lazy').setup({
   {
     'nvim-telescope/telescope.nvim',
     keys = {
-      {
-        '<leader>p',
-        function() require('telescope.builtin').buffers { sort_lastused = true, ignore_current_buffer = true } end,
-        desc = 'Telescope buffers'
-      },
-      {
-        '<D-p>',
-        function() require('telescope.builtin').buffers { sort_lastused = true, ignore_current_buffer = true } end,
-        desc = 'Telescope buffers'
-      },
       { '<leader>fh', function() require('telescope.builtin').help_tags() end,            desc = 'Telescope help tags' },
       { '<leader>S',  function() require('telescope.builtin').lsp_document_symbols() end, desc = 'Telescope find document symbols' },
       { '<leader>r',  function() require('telescope.builtin').lsp_references() end,       desc = 'Go to references' },
