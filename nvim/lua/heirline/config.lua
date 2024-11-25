@@ -406,18 +406,7 @@ return {
           Event = '@keyword',
           Operator = '@operator',
           TypeParameter = '@type',
-        },
-        -- bit operation dark magic, see below...
-        enc = function(line, col, winnr)
-          return bit.bor(bit.lshift(line, 16), bit.lshift(col, 6), winnr)
-        end,
-        -- line: 16 bit (65535); col: 10 bit (1023); winnr: 6 bit (63)
-        dec = function(c)
-          local line = bit.rshift(c, 16)
-          local col = bit.band(bit.rshift(c, 6), 1023)
-          local winnr = bit.band(c, 63)
-          return line, col, winnr
-        end
+        }
       },
       init = function(self)
         local data = require('nvim-navic').get_data() or {}
@@ -449,8 +438,7 @@ return {
           -- add a separator only if needed
           if #data > 1 and i < #data then
             table.insert(child, {
-              provider = ' > ',
-              hl = { fg = 'bright_fg' },
+              provider = '  '
             })
           end
           table.insert(children, child)

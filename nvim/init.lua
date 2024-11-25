@@ -547,33 +547,26 @@ require('lazy').setup({
           Enum = ' ',
           Interface = ' ',
           Function = '󰊕 ',
-          Variable = '󰫧 ',
+          Variable = '󰆧 ',
           Constant = ' ',
           String = ' ',
           Number = ' ',
           Boolean = ' ',
-          Array = ' ',
+          Array = '󰅪 ',
           Object = ' ',
-          Key = ' ',
+          Key = '󰌋 ',
           Null = ' ',
           EnumMember = ' ',
           Struct = ' ',
           Event = ' ',
-          Operator = ' ',
+          Operator = '󰆕 ',
           TypeParameter = ' '
         },
         lsp = {
           auto_attach = true,
           preference = nil,
         },
-        highlight = true,
-        separator = ' > ',
-        safe_output = true,
         lazy_update_context = false,
-        click = false,
-        format_text = function(text)
-          return text
-        end,
       }
     end
   },
