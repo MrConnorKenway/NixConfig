@@ -202,9 +202,9 @@ require('lazy').setup({
           }
           if props.focused then
             local len = 0
-            for _, item in ipairs(navic.get_data(props.buf) or {}) do
+            for i, item in ipairs(navic.get_data(props.buf) or {}) do
               len = len + #item.icon + #item.name
-              if len / vim.api.nvim_win_get_width(0) > 0.45 then
+              if len / vim.api.nvim_win_get_width(0) > 0.45 and i > 1 then
                 table.insert(res, { { '  ..' } })
                 break
               end
