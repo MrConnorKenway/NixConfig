@@ -46,8 +46,6 @@ if os.getenv('SSH_TTY') ~= nil then
   }
 end
 
-vim.keymap.set('n', '[b', '<cmd>bp<cr>', { desc = 'Navigate to previous buffer' })
-vim.keymap.set('n', ']b', '<cmd>bn<cr>', { desc = 'Navigate to next buffer' })
 vim.keymap.set('n', 'q', function()
   if vim.bo.filetype == 'DiffviewFiles' then
     require('diffview').close()
@@ -137,6 +135,13 @@ require('lazy').setup({
     'windwp/nvim-autopairs',
     event = 'InsertEnter',
     config = true
+  },
+  {
+    'ton/vim-bufsurf',
+    config = function()
+      vim.keymap.set('n', '[b', '<cmd>BufSurfBack<cr>', { desc = 'Navigate to previous buffer' })
+      vim.keymap.set('n', ']b', '<cmd>BufSurfForward<cr>', { desc = 'Navigate to next buffer' })
+    end
   },
   {
     'kylechui/nvim-surround',
