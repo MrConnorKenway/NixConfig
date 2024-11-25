@@ -256,8 +256,7 @@ return {
     FileNameBlock = utils.insert(FileNameBlock,
       FileIcon,
       utils.insert(FileNameModifer, FileName), -- a new table where FileName is a child of FileNameModifier
-      FileFlags,
-      { provider = ' %<' }                     -- this means that the statusline is cut here when there's not enough space
+      FileFlags
     )
 
     local FileType = {
@@ -303,6 +302,9 @@ return {
         end,
         hl = { fg = 'git_change' },
       },
+      {
+        provider = ' %<'
+      }
     }
 
     local HelpFileName = {
@@ -334,7 +336,6 @@ return {
 
     local Align = { provider = '%=' }
     local Space = { provider = ' ' }
-    local LongSpace = { provider = '  ' }
 
     local SpecialStatusline = {
       condition = function()
@@ -426,15 +427,6 @@ return {
               hl = self.type_hl[d.type],
             }
           }
-          if i > 4 then -- set max depth
-            table.insert(children, {
-              {
-                provider = '..',
-                hl = { fg = 'bright_fg' },
-              }
-            })
-            break
-          end
           -- add a separator only if needed
           if #data > 1 and i < #data then
             table.insert(child, {
@@ -458,7 +450,7 @@ return {
       FileNameBlock,
       Space,
       Git,
-      LongSpace,
+      Space,
       Navic,
       Align,
       Diagnostics,
@@ -486,7 +478,7 @@ return {
         FileNameBlock,
         Space,
         Git,
-        LongSpace,
+        Space,
         Navic,
         Align,
         Diagnostics,
