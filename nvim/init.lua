@@ -319,6 +319,7 @@ require('lazy').setup({
   },
   {
     'catppuccin/nvim',
+    name = 'catppuccin-colorscheme',
     priority = 1000,
     lazy = false,
     init = function()
