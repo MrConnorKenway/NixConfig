@@ -254,7 +254,7 @@ require('lazy').setup({
   },
   {
     'folke/flash.nvim',
-    event = 'UIEnter',
+    event = 'VeryLazy',
     dependencies = {
       'nvim-treesitter/nvim-treesitter'
     },
@@ -424,7 +424,7 @@ require('lazy').setup({
   },
   {
     'otavioschwanck/arrow.nvim',
-    event = 'VimEnter',
+    event = 'UIEnter',
     keys = {
       { '<C-S-n>', function() require('arrow.persist').next() end, desc = 'Move to next arrow buffer' },
       { '<C-S-p>', function() require('arrow.persist').previous() end, desc = 'Move to previous arrow buffer' }
@@ -482,7 +482,7 @@ require('lazy').setup({
   },
   {
     'stevearc/dressing.nvim',
-    event = 'UIEnter'
+    event = 'VeryLazy'
   },
   {
     'akinsho/toggleterm.nvim',
@@ -670,6 +670,7 @@ require('lazy').setup({
   },
   {
     'williamboman/mason.nvim',
+    event = 'VeryLazy',
     config = true
   },
   {
