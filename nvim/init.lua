@@ -800,13 +800,48 @@ require('lazy').setup({
   {
     'nvim-telescope/telescope.nvim',
     keys = {
-      { '<leader>fh', function() require('telescope.builtin').help_tags() end,            desc = 'Telescope help tags' },
-      { '<leader>S',  function() require('telescope.builtin').lsp_document_symbols() end, desc = 'Telescope find document symbols' },
-      { '<leader>r',  function() require('telescope.builtin').lsp_references() end,       desc = 'Go to references' },
-      { '<leader>h',  function() require('telescope.builtin').command_history() end,      desc = 'Telescope find command history' },
-      { '<S-D-p>',    function() require('telescope.builtin').commands() end,             desc = 'Telescope find commands' },
-      { 'gd',         function() require('telescope.builtin').lsp_definitions() end,      desc = 'Go to definitions' },
-      { 'gy',         function() require('telescope.builtin').lsp_type_definitions() end, desc = 'Go to type definitions' }
+      {
+        '<leader>fh',
+        function() require('telescope.builtin').help_tags() end,
+        desc = 'Telescope help tags'
+      },
+      {
+        '<leader>S',
+        function() require('telescope.builtin').lsp_document_symbols() end,
+        desc = 'Telescope find document symbols'
+      },
+      {
+        '<S-D-o>',
+        function() require('telescope.builtin').lsp_document_symbols() end,
+        desc =
+        'Telescope find document symbols'
+      },
+      {
+        '<leader>r',
+        function() require('telescope.builtin').lsp_references() end,
+        desc = 'Go to references'
+      },
+      {
+        '<leader>h',
+        function() require('telescope.builtin').command_history() end,
+        desc =
+        'Telescope find command history'
+      },
+      {
+        '<S-D-p>',
+        function() require('telescope.builtin').commands() end,
+        desc = 'Telescope find commands'
+      },
+      {
+        'gd',
+        function() require('telescope.builtin').lsp_definitions() end,
+        desc = 'Go to definitions'
+      },
+      {
+        'gy',
+        function() require('telescope.builtin').lsp_type_definitions() end,
+        desc = 'Go to type definitions'
+      }
     },
     dependencies = {
       'nvim-lua/plenary.nvim',
