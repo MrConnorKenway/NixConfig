@@ -670,7 +670,6 @@ require('lazy').setup({
   },
   {
     'williamboman/mason.nvim',
-    event = 'VeryLazy',
     config = true
   },
   {
