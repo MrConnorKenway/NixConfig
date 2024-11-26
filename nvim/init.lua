@@ -197,7 +197,9 @@ require('lazy').setup({
           if filename == '' then
             filename = '[No Name]'
           end
-          local ft_icon, ft_color = devicons.get_icon_color(filename)
+
+          local extension = vim.fn.fnamemodify(filename, ':e')
+          local ft_icon, ft_color = devicons.get_icon_color(filename, extension, { default = true })
           local modified = vim.bo[props.buf].modified
           local res = {
             ft_icon and { ' ', ft_icon, ' ', guibg = ft_color, guifg = helpers.contrast_color(ft_color) } or '',
