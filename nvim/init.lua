@@ -269,6 +269,7 @@ require('lazy').setup({
       { '<c-s>', mode = { 'c' },           function() require('flash').toggle() end,                                                        desc = 'Toggle Flash Search' }
     }
   },
+  { 'akinsho/git-conflict.nvim', config = true },
   {
     'RRethy/vim-illuminate',
     event = 'LspAttach',
