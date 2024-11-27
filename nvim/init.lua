@@ -262,11 +262,14 @@ require('lazy').setup({
       labels = 'asdfjkl;weionmcvgh'
     },
     keys = {
-      { 's',     mode = { 'n', 'x', 'o' }, function() require('flash').jump() end,                                                          desc = 'Flash' },
-      { 'S',     mode = { 'n', 'x', 'o' }, function() require('flash').treesitter({ label = { rainbow = { enabled = true } } }) end,        desc = 'Flash Treesitter' },
-      { 'r',     mode = 'o',               function() require('flash').remote() end,                                                        desc = 'Remote Flash' },
-      { 'R',     mode = { 'o', 'x' },      function() require('flash').treesitter_search({ label = { rainbow = { enabled = true } } }) end, desc = 'Treesitter Search' },
-      { '<c-s>', mode = { 'c' },           function() require('flash').toggle() end,                                                        desc = 'Toggle Flash Search' }
+      {
+        'S',
+        function()
+          require('flash').treesitter({ label = { rainbow = { enabled = true } } })
+        end,
+        desc = 'Flash Treesitter'
+      },
+      { 's', function() require('flash').jump() end, desc = 'Flash' },
     }
   },
   { 'akinsho/git-conflict.nvim', config = true },
