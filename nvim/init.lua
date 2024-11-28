@@ -236,6 +236,16 @@ require('lazy').setup({
     end
   },
   {
+    'folke/noice.nvim',
+    event = 'VeryLazy',
+    dependencies = { 'MunifTanjim/nui.nvim' },
+    config = function()
+      require('noice').setup {
+        lsp = { progress = { enabled = false } }
+      }
+    end
+  },
+  {
     'lewis6991/gitsigns.nvim',
     config = function()
       local gitsigns = require('gitsigns')
