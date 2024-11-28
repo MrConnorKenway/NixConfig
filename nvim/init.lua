@@ -265,12 +265,7 @@ require('lazy').setup({
   {
     'folke/flash.nvim',
     event = 'VeryLazy',
-    dependencies = {
-      'nvim-treesitter/nvim-treesitter'
-    },
-    opts = {
-      labels = 'asdfjkl;weionmcvgh'
-    },
+    opts = { labels = 'asdfjkl;weionmcvgh' },
     keys = {
       {
         'S',
