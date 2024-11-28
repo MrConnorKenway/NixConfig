@@ -47,9 +47,7 @@ if os.getenv('SSH_TTY') ~= nil then
 end
 
 vim.keymap.set('n', 'q', function()
-  if vim.bo.filetype == 'DiffviewFiles' then
-    require('diffview').close()
-  elseif vim.bo.filetype == 'toggleterm' then
+  if vim.bo.filetype == 'toggleterm' then
     vim.cmd('startinsert')
   else
     vim.cmd('q')
@@ -106,6 +104,13 @@ autocmd('BufRead', function(opts)
 end)
 
 autocmd({ 'VimEnter', 'WinEnter', 'BufWinEnter' }, function()
+  if vim.bo.filetype == 'fugitive' or vim.bo.filetype:match('git') then
+    vim.opt.number = false
+    vim.opt.list = false
+    vim.opt.signcolumn = 'no'
+    return
+  end
+
   if vim.o.number then
     vim.opt.cursorline = true
     vim.opt.signcolumn = 'yes'
@@ -118,19 +123,6 @@ end)
 
 require('lazy').setup({
   require('heirline.config'),
-  {
-    'sindrets/diffview.nvim',
-    keys = {
-      {
-        '<leader>d',
-        mode = { 'n' },
-        function()
-          require('diffview').open({ '-uno' }) -- hide untracked files
-        end,
-        desc = 'Open git diffview'
-      }
-    }
-  },
   {
     'windwp/nvim-autopairs',
     event = 'InsertEnter',
@@ -260,6 +252,17 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>b', gitsigns.blame_line, { desc = 'Git blame inline' })
       vim.keymap.set('n', '<leader>a', gitsigns.stage_hunk, { desc = 'Git stage hunk' })
     end
+  },
+  {
+    'tpope/vim-fugitive',
+    keys = {
+      { 'gs',        '<cmd>G<cr>',            desc = 'Git status' },
+      { 'gv',        '<cmd>vertical G<cr>',   desc = 'Git status vertical' },
+      { 'gl',        '<cmd>G log --stat<cr>', desc = 'Git log' },
+      { '<leader>d', '<cmd>Gdiffsplit<cr>',   desc = 'Git diff' },
+      { '<leader>g', ':G ',                   desc = 'Git cmdline' }
+    },
+    event = 'CmdlineEnter'
   },
   {
     'folke/flash.nvim',
