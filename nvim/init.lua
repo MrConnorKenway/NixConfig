@@ -575,7 +575,8 @@ require('lazy').setup({
   {
     'ibhagwan/fzf-lua',
     keys = {
-      { '<leader>o',  function() require('fzf-lua').files() end,                      desc = 'FzfLua find files' },
+      { '<leader>o', function() require('fzf-lua').files() end, desc = 'FzfLua find files' },
+      { '<D-o>',     function() require('fzf-lua').files() end, desc = 'FzfLua find files' },
       {
         '<leader>O',
         function() require('fzf-lua').files { cwd = vim.fn.expand('%:h') } end,
