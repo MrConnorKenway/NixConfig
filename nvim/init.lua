@@ -250,17 +250,18 @@ require('lazy').setup({
       vim.keymap.set('n', '[c', function() gitsigns.nav_hunk('prev') end, { desc = 'Go to previous git change' })
       vim.keymap.set('n', '<leader>u', gitsigns.reset_hunk, { desc = 'Git reset hunk' })
       vim.keymap.set('n', '<leader>b', gitsigns.blame_line, { desc = 'Git blame inline' })
-      vim.keymap.set('n', '<leader>a', gitsigns.stage_hunk, { desc = 'Git stage hunk' })
+      vim.keymap.set('n', 'ga', gitsigns.stage_hunk, { desc = 'Git stage hunk' })
     end
   },
   {
     'tpope/vim-fugitive',
     keys = {
-      { 'gs',        '<cmd>G<cr>',            desc = 'Git status' },
-      { 'gv',        '<cmd>vertical G<cr>',   desc = 'Git status vertical' },
-      { 'gl',        '<cmd>G log --stat<cr>', desc = 'Git log' },
-      { '<leader>d', '<cmd>Gdiffsplit<cr>',   desc = 'Git diff' },
-      { '<leader>g', ':G ',                   desc = 'Git cmdline' }
+      { 'gs',        '<cmd>G<cr>',                  desc = 'Git status' },
+      { 'gv',        '<cmd>vertical G<cr>',         desc = 'Git status vertical' },
+      { 'gl',        '<cmd>G log --stat<cr>',       desc = 'Git log' },
+      { 'gu',        '<cmd>Git! push<cr>',          desc = 'Git push' },
+      { '<leader>d', '<cmd>Gdiffsplit<cr>',         desc = 'Git diff' },
+      { '<leader>g', ':G ',                         desc = 'Git cmdline' }
     },
     event = 'CmdlineEnter'
   },
