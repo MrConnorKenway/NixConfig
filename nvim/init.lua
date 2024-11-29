@@ -15,12 +15,8 @@ if not vim.uv.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
-vim.opt.list = true
-vim.opt.listchars = { tab = '⇥ ', lead = '·', trail = '•', nbsp = '␣', multispace = '·' }
-vim.opt.number = true
 vim.opt.ignorecase = true
 vim.opt.termguicolors = true
-vim.opt.wildmode = 'full:longest'
 vim.opt.smartcase = true
 vim.opt.showmode = false
 
@@ -104,21 +100,25 @@ autocmd('BufRead', function(opts)
 end)
 
 autocmd({ 'VimEnter', 'WinEnter', 'BufWinEnter' }, function()
-  if vim.bo.filetype == 'fugitive' or vim.bo.filetype:match('git') then
-    vim.opt.number = false
-    vim.opt.list = false
-    vim.opt.signcolumn = 'no'
+  if vim.bo.buftype:len() > 0 then
+    -- current buf is special buf
     return
   end
 
-  if vim.o.number then
-    vim.opt.cursorline = true
-    vim.opt.signcolumn = 'yes'
+  if not vim.wo[0][0].number then
+    vim.wo[0][0].number = true
+  end
+
+  if vim.wo[0][0].number then
+    vim.wo[0][0].list = true
+    vim.wo[0][0].listchars = 'tab:⇥ ,lead:·,trail:•,multispace:·'
+    vim.wo[0][0].cursorline = true
+    vim.wo[0][0].signcolumn = 'yes'
   end
 end)
 
 autocmd({ 'WinLeave' }, function()
-  vim.opt.cursorline = false
+  vim.wo[0][0].cursorline = false
 end)
 
 require('lazy').setup({
