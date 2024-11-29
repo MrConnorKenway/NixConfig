@@ -691,6 +691,8 @@ require('lazy').setup({
         },
       },
 
+      completion = { accept = { auto_brackets = { enabled = true } } },
+
       windows = {
         autocomplete = {
           cycle = { from_top = false }, -- cycle at bottom, but not at the top
@@ -707,6 +709,8 @@ require('lazy').setup({
           border = 'rounded' -- TODO: border not changable
         }
       },
+
+      trigger = { signature_help = { enabled = true } }
     },
     -- allows extending the enabled_providers array elsewhere in your config
     -- without having to redefine it
