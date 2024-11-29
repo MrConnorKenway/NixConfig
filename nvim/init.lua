@@ -756,7 +756,9 @@ require('lazy').setup({
       })
 
       local lspconfig = require('lspconfig')
-      lspconfig.clangd.setup {}
+      lspconfig.clangd.setup {
+        cmd = { 'clangd', '--header-insertion=never' }
+      }
       lspconfig.nixd.setup {}
       lspconfig.lua_ls.setup {}
       lspconfig.pylsp.setup {}
