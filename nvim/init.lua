@@ -678,10 +678,6 @@ require('lazy').setup({
       },
 
       appearance = {
-        -- Sets the fallback highlight groups to nvim-cmp's highlight groups
-        -- Useful for when your theme doesn't support blink.cmp
-        -- will be removed in a future release
-        use_nvim_cmp_as_default = false,
         -- Set to 'mono' for 'Nerd Font Mono' or 'normal' for 'Nerd Font'
         -- Adjusts spacing to ensure icons are aligned
         nerd_font_variant = 'mono'
@@ -698,14 +694,16 @@ require('lazy').setup({
       windows = {
         autocomplete = {
           cycle = { from_top = false }, -- cycle at bottom, but not at the top
+          winhighlight = 'Normal:Normal,FloatBorder:FloatBorder,CursorLine:BlinkCmpMenuSelection,Search:None',
           border = 'rounded'
         },
         documentation = {
           auto_show = true,
-          auto_show_delay_ms = 250,
+          winhighlight = 'Normal:Normal,FloatBorder:FloatBorder,CursorLine:BlinkCmpDocCursorLine,Search:None',
           border = 'rounded'
         },
         signature_help = {
+          winhighlight = 'Normal:Normal,FloatBorder:FloatBorder,CursorLine:BlinkCmpDocCursorLine,Search:None',
           border = 'rounded' -- TODO: border not changable
         }
       },
