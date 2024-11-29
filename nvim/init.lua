@@ -232,7 +232,11 @@ require('lazy').setup({
     dependencies = { 'MunifTanjim/nui.nvim' },
     config = function()
       require('noice').setup {
-        lsp = { progress = { enabled = false } }
+        lsp = {
+          progress = { enabled = false },
+          hover = { enabled = false },
+          signature = { enabled = false }
+        },
       }
     end
   },
