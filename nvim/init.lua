@@ -42,13 +42,7 @@ if os.getenv('SSH_TTY') ~= nil then
   }
 end
 
-vim.keymap.set('n', 'q', function()
-  if vim.bo.filetype == 'toggleterm' then
-    vim.cmd('startinsert')
-  else
-    vim.cmd('q')
-  end
-end, { desc = 'Close window' })
+vim.keymap.set('n', 'q', '<cmd>q<cr>', { desc = 'Close window' })
 vim.keymap.set('n', '<leader>w', '<cmd>wa<cr>', { desc = 'Save workspace without quit' })
 vim.keymap.set({ 'i', 'n' }, '<C-s>', '<cmd>wa<cr>', { desc = 'Save workspace without quit' })
 vim.keymap.set({ 'i', 'n' }, '<D-s>', '<cmd>wa<cr>', { desc = 'Save workspace without quit' })
@@ -115,6 +109,29 @@ autocmd({ 'VimEnter', 'WinEnter', 'BufWinEnter' }, function()
     vim.wo[0][0].cursorline = true
     vim.wo[0][0].signcolumn = 'yes'
   end
+end)
+
+vim.api.nvim_create_autocmd({ 'BufEnter' }, {
+  callback = function()
+    if vim.g.termmode == 't' then
+      vim.cmd('startinsert')
+    end
+  end,
+  pattern = { 'term://*' },
+})
+
+vim.api.nvim_create_autocmd({ 'WinLeave' }, {
+  callback = function()
+    vim.g.termmode = vim.fn.mode(1)
+  end,
+  pattern = { 'term://*' },
+})
+
+autocmd('TermOpen', function()
+  vim.wo[0][0].number = false
+  vim.wo[0][0].list = false
+  vim.wo[0][0].cursorline = false
+  vim.wo[0][0].signcolumn = 'no'
 end)
 
 autocmd({ 'WinLeave' }, function()
@@ -513,61 +530,37 @@ require('lazy').setup({
     event = 'VeryLazy'
   },
   {
-    'akinsho/toggleterm.nvim',
+    'jaimecgomezz/here.term',
     keys = {
       {
-        '<leader>t',
-        function() require('toggleterm').toggle(nil, nil, nil, 'float', nil) end,
-        desc = 'Toggle floating terminal'
-      },
-      {
         '<D-j>',
-        function() require('toggleterm').toggle() end,
-        mode = { 'n', 'o', 'x', 't', 'i', 'v' },
-        desc = 'Toggle terminal'
+        mode = { 'n', 'i', 't' },
+        function() require('here-term').toggle_terminal() end,
+        desc = 'Toggle terminal at current window'
       },
       {
         '<C-`>',
-        function() require('toggleterm').toggle() end,
-        mode = { 'n', 'o', 'x', 't', 'i', 'v' },
-        desc = 'Toggle terminal'
-      }
+        mode = { 'n', 'i', 't' },
+        function() require('here-term').toggle_terminal() end,
+        desc = 'Toggle terminal at current window'
+      },
+      {
+        '<D-S-k>',
+        mode = { 'n', 'i', 't' },
+        function() require('here-term').kill_terminal() end,
+        desc = 'Kill here-term'
+      },
     },
     config = function()
-      require('toggleterm').setup {
-        size = 16,
-        shade_terminals = true,
-        float_opts = { border = 'rounded' },
-        on_create = function()
-          local vsplit_term = function()
-            local terminals = require('toggleterm.terminal').get_all()
-            local idx = 0
-
-            for _, t in pairs(terminals) do
-              if idx < t.id then
-                idx = t.id
-              end
-            end
-
-            require('toggleterm').toggle(idx + 1)
-          end
-
-          vim.opt.cursorline = false
-
-          vim.keymap.set({ 'n', 't' }, [[<M-\>]], vsplit_term, { desc = 'Split terminals in vertical', buffer = true })
-          vim.keymap.set({ 'n', 't' }, [[<D-\>]], vsplit_term, { desc = 'Split terminals in vertical', buffer = true })
-        end,
-        persist_mode = false, -- always open terminal in insert mode
-        close_on_exit = false,
-        on_exit = function(term)
-          term:close() -- hack toggleterm's normal exit procedure to prevent mode changing
-          if vim.api.nvim_buf_is_loaded(term.bufnr) then
-            vim.defer_fn(function() vim.api.nvim_buf_delete(term.bufnr, { force = true }) end, 10)
-          end
-        end
+      require('here-term').setup {
+        mappings = {
+          enable = false
+        },
+        extra_mappings = {
+          enable = true,
+          escape = '<C-s>'
+        }
       }
-
-      vim.keymap.set('t', '<C-s>', [[<C-\><C-n>]], { desc = 'Exit to terminal normal mode' })
     end
   },
   {
