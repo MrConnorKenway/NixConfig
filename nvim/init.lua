@@ -43,6 +43,9 @@ if os.getenv('SSH_TTY') ~= nil then
 end
 
 vim.keymap.set('n', 'q', '<cmd>q<cr>', { desc = 'Close window' })
+vim.keymap.set('n', 'cq', '<cmd>cclose<cr>', { desc = 'Close quickfix' })
+vim.keymap.set('n', '[q', '<cmd>cprevious<cr>', { desc = 'Previous quickfix' })
+vim.keymap.set('n', ']q', '<cmd>cnext<cr>', { desc = 'Next quickfix' })
 vim.keymap.set('n', '<leader>w', '<cmd>wa<cr>', { desc = 'Save workspace without quit' })
 vim.keymap.set({ 'i', 'n' }, '<C-s>', '<cmd>wa<cr>', { desc = 'Save workspace without quit' })
 vim.keymap.set({ 'i', 'n' }, '<D-s>', '<cmd>wa<cr>', { desc = 'Save workspace without quit' })
@@ -306,6 +309,7 @@ require('lazy').setup({
     },
     event = 'CmdlineEnter'
   },
+  { 'tpope/vim-dispatch', },
   {
     'folke/flash.nvim',
     event = 'VeryLazy',
