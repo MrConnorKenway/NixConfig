@@ -93,6 +93,14 @@ autocmd('BufRead', function(opts)
   })
 end)
 
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'floggraph',
+  callback = function()
+    vim.wo[0][0].number = false
+    vim.wo[0][0].list = false
+  end
+})
+
 autocmd({ 'VimEnter', 'WinEnter', 'BufWinEnter' }, function()
   if vim.bo.buftype:len() > 0 then
     -- current buf is special buf
@@ -484,6 +492,16 @@ require('lazy').setup({
         border = 'rounded'
       }
     }
+  },
+  {
+    'rbong/vim-flog',
+    cmd = { 'Flog', 'Flogsplit', 'Floggit' },
+    keys = {
+      { '<S-M-l>', function() vim.cmd('vertical Flogsplit') end, desc = 'Display git graph' }
+    },
+    dependencies = {
+      'tpope/vim-fugitive',
+    },
   },
   {
     'dgagn/diagflow.nvim',
