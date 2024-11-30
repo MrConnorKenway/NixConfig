@@ -108,6 +108,12 @@ return {
       update = {
         'ModeChanged',
         'BufWinEnter',
+        pattern = '*:*',
+        callback = function()
+          if not leaving then
+            vim.cmd('redrawstatus')
+          end
+        end
       },
     }
 
