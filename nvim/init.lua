@@ -297,12 +297,12 @@ require('lazy').setup({
   {
     'tpope/vim-fugitive',
     keys = {
-      { 'gs',        '<cmd>G<cr>',                  desc = 'Git status' },
-      { 'gv',        '<cmd>vertical G<cr>',         desc = 'Git status vertical' },
-      { 'gl',        '<cmd>G log --stat<cr>',       desc = 'Git log' },
-      { 'gu',        '<cmd>Git! push<cr>',          desc = 'Git push' },
-      { '<leader>d', '<cmd>Gdiffsplit<cr>',         desc = 'Git diff' },
-      { '<leader>g', ':G ',                         desc = 'Git cmdline' }
+      { 'gs',        '<cmd>G<cr>',            desc = 'Git status' },
+      { 'gv',        '<cmd>vertical G<cr>',   desc = 'Git status vertical' },
+      { 'gl',        '<cmd>G log --stat<cr>', desc = 'Git log' },
+      { 'gu',        '<cmd>Git! push<cr>',    desc = 'Git push' },
+      { '<leader>d', '<cmd>Gdiffsplit<cr>',   desc = 'Git diff' },
+      { '<leader>g', ':G ',                   desc = 'Git cmdline' }
     },
     event = 'CmdlineEnter'
   },
