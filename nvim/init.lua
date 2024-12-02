@@ -501,7 +501,8 @@ require('lazy').setup({
     'rbong/vim-flog',
     cmd = { 'Flog', 'Flogsplit', 'Floggit' },
     keys = {
-      { '<S-M-l>', function() vim.cmd('vertical Flogsplit') end, desc = 'Display git graph' }
+      { '<S-M-l>', function() vim.cmd('vertical Flogsplit') end, desc = 'Display git graph' },
+      { '<S-D-l>', function() vim.cmd('vertical Flogsplit') end, desc = 'Display git graph' }
     },
     dependencies = {
       'tpope/vim-fugitive',
