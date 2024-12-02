@@ -654,6 +654,12 @@ require('lazy').setup({
         desc = 'FzfLua live grep'
       },
       {
+        '<D-t>',
+        mode = { 'n', 'i' },
+        function() require('fzf-lua').lsp_live_workspace_symbols() end,
+        desc = 'FzfLua find workspace symbols'
+      },
+      {
         '<leader>s',
         function() require('fzf-lua').lsp_live_workspace_symbols() end,
         desc = 'FzfLua find workspace symbols'
