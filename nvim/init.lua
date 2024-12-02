@@ -615,19 +615,49 @@ require('lazy').setup({
   {
     'ibhagwan/fzf-lua',
     keys = {
-      { '<leader>o', function() require('fzf-lua').files() end, desc = 'FzfLua find files' },
-      { '<D-o>',     function() require('fzf-lua').files() end, desc = 'FzfLua find files' },
+      { '<leader>o', function() require('fzf-lua').files() end,   desc = 'FzfLua find files' },
+      {
+        '<D-o>',
+        mode = { 'n', 't', 'i' },
+        function() require('fzf-lua').files() end,
+        desc = 'FzfLua find files'
+      },
       {
         '<leader>O',
         function() require('fzf-lua').files { cwd = vim.fn.expand('%:h') } end,
         desc = 'FzfLua find files in directory of current buffer'
       },
-      { '<leader>p',  function() require('fzf-lua').buffers() end,                    desc = 'FzfLua switch buffers' },
-      { '<D-p>',      function() require('fzf-lua').buffers() end,                    desc = 'FzfLua switch buffers' },
-      { '<leader>fg', function() require('fzf-lua').live_grep_native() end,           desc = 'FzfLua live grep' },
-      { '<S-D-f>',    function() require('fzf-lua').live_grep_native() end,           desc = 'FzfLua live grep' },
-      { '<S-M-f>',    function() require('fzf-lua').live_grep_native() end,           desc = 'FzfLua live grep' },
-      { '<leader>s',  function() require('fzf-lua').lsp_live_workspace_symbols() end, desc = 'FzfLua find workspace symbols' },
+      { '<leader>p', function() require('fzf-lua').buffers() end, desc = 'FzfLua switch buffers' },
+      {
+        '<D-p>',
+        mode = { 'n', 't', 'i' },
+        function() require('fzf-lua').buffers() end,
+        desc = 'FzfLua switch buffers'
+      },
+      {
+        '<leader>fg',
+        function()
+          require('fzf-lua').live_grep_native()
+        end,
+        desc = 'FzfLua live grep'
+      },
+      {
+        '<S-D-f>',
+        mode = { 'n', 't', 'i' },
+        function() require('fzf-lua').live_grep_native() end,
+        desc = 'FzfLua live grep'
+      },
+      {
+        '<S-M-f>',
+        mode = { 'n', 't', 'i' },
+        function() require('fzf-lua').live_grep_native() end,
+        desc = 'FzfLua live grep'
+      },
+      {
+        '<leader>s',
+        function() require('fzf-lua').lsp_live_workspace_symbols() end,
+        desc = 'FzfLua find workspace symbols'
+      }
     },
     dependencies = { 'nvim-tree/nvim-web-devicons', 'junegunn/fzf' },
     config = function()
