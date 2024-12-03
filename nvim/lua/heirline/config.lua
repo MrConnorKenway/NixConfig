@@ -369,17 +369,18 @@ return {
       Align,
     }
 
-    local LSPMessages = {
-      provider = function() return require('lsp-progress').progress() end,
-      update = {
-        'User',
-        pattern = 'LspProgressStatusUpdated',
-        callback = vim.schedule_wrap(function()
-          if not leaving then
-            vim.cmd('redrawstatus')
-          end
-        end),
-      },
+    local LSPActive = {
+      condition = conditions.lsp_attached,
+      update = { 'LspAttach', 'LspDetach' },
+
+      -- Or complicate things a bit and get the servers names
+      provider = function()
+        local names = {}
+        for _, server in pairs(vim.lsp.get_clients({ bufnr = 0 })) do
+          table.insert(names, server.name)
+        end
+        return " " .. table.concat(names, " ")
+      end,
       hl = { fg = theme_colors.green, bold = true },
     }
 
@@ -392,7 +393,7 @@ return {
       Align,
       Diagnostics,
       Space,
-      LSPMessages,
+      LSPActive,
       Space,
       Ruler,
       Space,
@@ -418,7 +419,7 @@ return {
         Align,
         Diagnostics,
         Space,
-        LSPMessages,
+        LSPActive,
         Space,
         Ruler,
         Space

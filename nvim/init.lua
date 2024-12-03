@@ -151,6 +151,51 @@ autocmd({ 'WinLeave' }, function()
   vim.wo[0][0].cursorline = false
 end)
 
+---@type table<number, {token:lsp.ProgressToken, msg:string, done:boolean}[]>
+local progress = vim.defaulttable()
+vim.api.nvim_create_autocmd("LspProgress", {
+  ---@param ev {data: {client_id: integer, params: lsp.ProgressParams}}
+  callback = function(ev)
+    local client = vim.lsp.get_client_by_id(ev.data.client_id)
+    local value = ev.data.params
+        .value --[[@as {percentage?: number, title?: string, message?: string, kind: "begin" | "report" | "end"}]]
+    if not client or type(value) ~= "table" then
+      return
+    end
+    local p = progress[client.id]
+
+    for i = 1, #p + 1 do
+      if i == #p + 1 or p[i].token == ev.data.params.token then
+        p[i] = {
+          token = ev.data.params.token,
+          msg = ("[%3d%%] %s%s"):format(
+            value.kind == "end" and 100 or value.percentage or 100,
+            value.title or "",
+            value.message and (" **%s**"):format(value.message) or ""
+          ),
+          done = value.kind == "end",
+        }
+        break
+      end
+    end
+
+    local msg = {} ---@type string[]
+    progress[client.id] = vim.tbl_filter(function(v)
+      return table.insert(msg, v.msg) or not v.done
+    end, p)
+
+    local spinner = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" }
+    vim.notify(table.concat(msg, "\n"), "info", {
+      id = "lsp_progress",
+      title = client.name,
+      opts = function(notif)
+        notif.icon = #progress[client.id] == 0 and " "
+            or spinner[math.floor(vim.uv.hrtime() / (1e6 * 80)) % #spinner + 1]
+      end,
+    })
+  end,
+})
+
 require('lazy').setup({
   require('heirline.config'),
   {
@@ -559,6 +604,22 @@ require('lazy').setup({
     event = 'VeryLazy'
   },
   {
+    'folke/snacks.nvim',
+    priority = 1000,
+    lazy = false,
+    keys = {
+      { '<leader>n', function() Snacks.notifier.show_history() end, desc = 'Notification History' }
+    },
+    opts = {
+      notifier = {
+        enabled = true,
+        top_down = false,
+        timeout = 1000,
+      }
+    },
+    config = true
+  },
+  {
     'jaimecgomezz/here.term',
     keys = {
       {
@@ -919,65 +980,6 @@ require('lazy').setup({
       lspconfig.nixd.setup {}
       lspconfig.lua_ls.setup {}
       lspconfig.pylsp.setup {}
-    end
-  },
-  {
-    'linrongbin16/lsp-progress.nvim',
-    config = function()
-      require('lsp-progress').setup {
-        client_format = function(client_name, spinner, series_messages)
-          if #series_messages == 0 then
-            return nil
-          end
-          return {
-            name = client_name,
-            body = spinner .. ' ' .. table.concat(series_messages, ', '),
-          }
-        end,
-        format = function(client_messages)
-          --- @param name string
-          --- @param msg string?
-          --- @return string
-          local function stringify(name, msg)
-            return msg and string.format('%s %s', name, msg) or name
-          end
-
-          local sign = '' -- nf-fa-gear \uf013
-          local lsp_clients = vim.lsp.get_clients { bufnr = 0 }
-          local messages_map = {}
-          for _, climsg in ipairs(client_messages) do
-            messages_map[climsg.name] = climsg.body
-          end
-
-          if #lsp_clients > 0 then
-            table.sort(lsp_clients, function(a, b)
-              return a.name < b.name
-            end)
-            local builder = {}
-            for _, cli in ipairs(lsp_clients) do
-              if
-                  type(cli) == 'table'
-                  and type(cli.name) == 'string'
-                  and string.len(cli.name) > 0
-              then
-                if messages_map[cli.name] then
-                  table.insert(
-                    builder,
-                    stringify(cli.name, messages_map[cli.name])
-                  )
-                else
-                  table.insert(builder, stringify(cli.name))
-                end
-              end
-            end
-            if #builder > 0 then
-              return sign .. ' ' .. table.concat(builder, ', ')
-            end
-          end
-          return ''
-        end,
-        max_size = 40
-      }
     end
   },
   {
