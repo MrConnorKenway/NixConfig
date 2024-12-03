@@ -659,7 +659,7 @@ require('lazy').setup({
         ['<CR>'] = { 'accept', 'fallback' },
         ['<Tab>'] = {
           function(cmp)
-            if cmp.is_in_snippet() then
+            if cmp.snippet_active() then
               return cmp.accept()
             else
               return cmp.select_and_accept()
@@ -691,26 +691,28 @@ require('lazy').setup({
         },
       },
 
-      completion = { accept = { auto_brackets = { enabled = true } } },
-
-      windows = {
-        autocomplete = {
-          cycle = { from_top = false }, -- cycle at bottom, but not at the top
+      completion = {
+        accept = { auto_brackets = { enabled = true } },
+        menu = {
           winhighlight = 'Normal:Normal,FloatBorder:FloatBorder,CursorLine:BlinkCmpMenuSelection,Search:None',
           border = 'rounded'
         },
         documentation = {
           auto_show = true,
-          winhighlight = 'Normal:Normal,FloatBorder:FloatBorder,CursorLine:BlinkCmpDocCursorLine,Search:None',
-          border = 'rounded'
-        },
-        signature_help = {
-          winhighlight = 'Normal:Normal,FloatBorder:FloatBorder,CursorLine:BlinkCmpDocCursorLine,Search:None',
-          border = 'rounded' -- TODO: border not changable
+          window = {
+            winhighlight = 'Normal:Normal,FloatBorder:FloatBorder,CursorLine:BlinkCmpDocCursorLine,Search:None',
+            border = 'rounded'
+          }
         }
       },
 
-      trigger = { signature_help = { enabled = true } }
+      signature = {
+        enabled = true,
+        window = {
+          winhighlight = 'Normal:Normal,FloatBorder:FloatBorder,CursorLine:BlinkCmpDocCursorLine,Search:None',
+          border = 'rounded'
+        }
+      }
     },
     -- allows extending the enabled_providers array elsewhere in your config
     -- without having to redefine it

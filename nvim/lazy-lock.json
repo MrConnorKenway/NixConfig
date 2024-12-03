@@ -1,7 +1,7 @@
 {
   "arrow.nvim": { "branch": "master", "commit": "5438c977e729a29d96bd54c8da3103154e80dbd1" },
   "auto-session": { "branch": "main", "commit": "8d2eddb14ef66ed1019c92251e2d31bb7a2a2f87" },
-  "blink.cmp": { "branch": "main", "commit": "12d9ecd98055423fa76dfcf05b856967129b8847" },
+  "blink.cmp": { "branch": "main", "commit": "6e9fb6254bb49eaf014a48049ff511bbfd6a66a3" },
   "catppuccin-colorscheme": { "branch": "main", "commit": "faf15ab0201b564b6368ffa47b56feefc92ce3f4" },
   "cmp-cmdline": { "branch": "main", "commit": "d250c63aa13ead745e3a40f61fdd3470efde3923" },
   "conform.nvim": { "branch": "master", "commit": "a203480a350b03092e473bf3001733d547160a73" },
