@@ -676,7 +676,7 @@ require('lazy').setup({
         },
         winopts = {
           preview = {
-            default = 'bat_native',
+            default = vim.fn.executable('bat') == 0 and 'builtin' or 'bat_native',
             delay = 100
           }
         },
