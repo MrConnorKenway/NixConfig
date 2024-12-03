@@ -637,8 +637,6 @@ require('lazy').setup({
   {
     'saghen/blink.cmp',
     lazy = false, -- lazy loading handled internally
-    -- optional: provides snippets for the snippet source
-    dependencies = 'rafamadriz/friendly-snippets',
 
     -- use a release tag to download pre-built binaries
     version = 'v0.*',
@@ -687,7 +685,7 @@ require('lazy').setup({
       -- elsewhere in your config, without redefining it, via `opts_extend`
       sources = {
         completion = {
-          enabled_providers = { 'lsp', 'path', 'snippets' },
+          enabled_providers = { 'lsp', 'path' },
         },
       },
 
