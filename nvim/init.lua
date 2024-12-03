@@ -157,13 +157,6 @@ require('lazy').setup({
     config = true
   },
   {
-    'ton/vim-bufsurf',
-    config = function()
-      vim.keymap.set('n', '[b', '<cmd>BufSurfBack<cr>', { desc = 'Navigate to previous buffer' })
-      vim.keymap.set('n', ']b', '<cmd>BufSurfForward<cr>', { desc = 'Navigate to next buffer' })
-    end
-  },
-  {
     'kylechui/nvim-surround',
     event = 'VeryLazy',
     config = function()
