@@ -15,6 +15,8 @@ if not vim.uv.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
+vim.o.sessionoptions = 'blank,buffers,curdir,folds,help,tabpages,winsize'
+
 vim.opt.ignorecase = true
 vim.opt.termguicolors = true
 vim.opt.smartcase = true
