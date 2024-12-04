@@ -153,13 +153,13 @@ end)
 
 ---@type table<number, {token:lsp.ProgressToken, msg:string, done:boolean}[]>
 local progress = vim.defaulttable()
-vim.api.nvim_create_autocmd("LspProgress", {
+vim.api.nvim_create_autocmd('LspProgress', {
   ---@param ev {data: {client_id: integer, params: lsp.ProgressParams}}
   callback = function(ev)
     local client = vim.lsp.get_client_by_id(ev.data.client_id)
     local value = ev.data.params
-        .value --[[@as {percentage?: number, title?: string, message?: string, kind: "begin" | "report" | "end"}]]
-    if not client or type(value) ~= "table" then
+        .value --[[@as {percentage?: number, title?: string, message?: string, kind: 'begin' | 'report' | 'end'}]]
+    if not client or type(value) ~= 'table' then
       return
     end
     local p = progress[client.id]
@@ -168,12 +168,12 @@ vim.api.nvim_create_autocmd("LspProgress", {
       if i == #p + 1 or p[i].token == ev.data.params.token then
         p[i] = {
           token = ev.data.params.token,
-          msg = ("[%3d%%] %s%s"):format(
-            value.kind == "end" and 100 or value.percentage or 100,
-            value.title or "",
-            value.message and (" **%s**"):format(value.message) or ""
+          msg = ('[%3d%%] %s%s'):format(
+            value.kind == 'end' and 100 or value.percentage or 100,
+            value.title or '',
+            value.message and (' **%s**'):format(value.message) or ''
           ),
-          done = value.kind == "end",
+          done = value.kind == 'end',
         }
         break
       end
@@ -184,12 +184,12 @@ vim.api.nvim_create_autocmd("LspProgress", {
       return table.insert(msg, v.msg) or not v.done
     end, p)
 
-    local spinner = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" }
-    vim.notify(table.concat(msg, "\n"), "info", {
-      id = "lsp_progress",
+    local spinner = { '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏' }
+    vim.notify(table.concat(msg, '\n'), 'info', {
+      id = 'lsp_progress',
       title = client.name,
       opts = function(notif)
-        notif.icon = #progress[client.id] == 0 and " "
+        notif.icon = #progress[client.id] == 0 and ' '
             or spinner[math.floor(vim.uv.hrtime() / (1e6 * 80)) % #spinner + 1]
       end,
     })
@@ -382,8 +382,16 @@ require('lazy').setup({
   {
     'rmagatti/goto-preview',
     keys = {
-      { 'gp', mode = { 'n' }, function() require('goto-preview').goto_preview_definition {} end, desc = 'Preview LSP definition in popup' },
-      { 'gr', mode = { 'n' }, function() require('goto-preview').goto_preview_references {} end, desc = 'Preview LSP references in popup' },
+      {
+        'gp',
+        function() require('goto-preview').goto_preview_definition {} end,
+        desc = 'Preview LSP definition in popup'
+      },
+      {
+        'gr',
+        function() require('goto-preview').goto_preview_references {} end,
+        desc = 'Preview LSP references in popup'
+      },
     },
     config = function()
       require('goto-preview').setup {
@@ -528,7 +536,7 @@ require('lazy').setup({
     'otavioschwanck/arrow.nvim',
     event = 'UIEnter',
     keys = {
-      { '<C-S-n>', function() require('arrow.persist').next() end, desc = 'Move to next arrow buffer' },
+      { '<C-S-n>', function() require('arrow.persist').next() end,     desc = 'Move to next arrow buffer' },
       { '<C-S-p>', function() require('arrow.persist').previous() end, desc = 'Move to previous arrow buffer' }
     },
     dependencies = {
@@ -562,10 +570,10 @@ require('lazy').setup({
         max_width = 60,     -- The maximum width of the diagnostic messages
         max_height = 10,    -- the maximum height per diagnostics
         severity_colors = { -- The highlight groups to use for each diagnostic severity level
-          error = "DiagnosticFloatingError",
-          warning = "DiagnosticFloatingWarn",
-          info = "DiagnosticFloatingInfo",
-          hint = "DiagnosticFloatingHint",
+          error = 'DiagnosticFloatingError',
+          warning = 'DiagnosticFloatingWarn',
+          info = 'DiagnosticFloatingInfo',
+          hint = 'DiagnosticFloatingHint',
         },
         format = function(diagnostic)
           return diagnostic.message
@@ -603,7 +611,7 @@ require('lazy').setup({
     lazy = false,
     keys = {
       { '<leader>n', function() Snacks.notifier.show_history() end, desc = 'Notification History' },
-      { '<leader>c', function() Snacks.bufdelete.delete() end, desc = 'Close buffer' }
+      { '<leader>c', function() Snacks.bufdelete.delete() end,      desc = 'Close buffer' }
     },
     opts = {
       notifier = {
@@ -872,7 +880,7 @@ require('lazy').setup({
     },
     -- allows extending the enabled_providers array elsewhere in your config
     -- without having to redefine it
-    opts_extend = { "sources.completion.enabled_providers" }
+    opts_extend = { 'sources.completion.enabled_providers' }
   },
   {
     'hrsh7th/nvim-cmp',
