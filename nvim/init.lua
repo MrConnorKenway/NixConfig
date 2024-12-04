@@ -373,6 +373,13 @@ require('lazy').setup({
   },
   { 'akinsho/git-conflict.nvim', config = true },
   {
+    'nvimdev/hlsearch.nvim',
+    event = 'BufRead',
+    config = function()
+      require('hlsearch').setup()
+    end
+  },
+  {
     'RRethy/vim-illuminate',
     event = 'LspAttach',
     config = function()
