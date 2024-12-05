@@ -260,10 +260,6 @@ require('lazy').setup({
           margin = { horizontal = 0, vertical = 1 },
         },
         render = function(props)
-          if vim.bo.buftype == 'terminal' then
-            return {}
-          end
-
           local filename = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(props.buf), ':t')
           if filename == '' then
             filename = '[No Name]'
