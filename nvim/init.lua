@@ -646,35 +646,26 @@ require('lazy').setup({
     config = true
   },
   {
-    'jaimecgomezz/here.term',
+    'akinsho/toggleterm.nvim',
     keys = {
       {
         '<D-j>',
         mode = { 'n', 'i', 't' },
-        function() require('here-term').toggle_terminal() end,
+        function() require('toggleterm').toggle(nil, nil, nil, 'float', nil) end,
         desc = 'Toggle terminal at current window'
       },
       {
         '<C-`>',
         mode = { 'n', 'i', 't' },
-        function() require('here-term').toggle_terminal() end,
+        function() require('toggleterm').toggle(nil, nil, nil, 'float', nil) end,
         desc = 'Toggle terminal at current window'
-      },
-      {
-        '<D-S-k>',
-        mode = { 'n', 'i', 't' },
-        function() require('here-term').kill_terminal() end,
-        desc = 'Kill here-term'
       },
     },
     config = function()
-      require('here-term').setup {
-        mappings = {
-          enable = false
-        },
-        extra_mappings = {
-          enable = false
-        }
+      require('toggleterm').setup {
+        size = 16,
+        shade_terminals = true,
+        float_opts = { border = 'rounded' }
       }
     end
   },
