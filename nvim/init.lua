@@ -1115,6 +1115,50 @@ require('lazy').setup({
     end
   },
   {
+    'leath-dub/snipe.nvim',
+    init = function()
+      vim.cmd [[nnoremap <C-I> <C-I>]] -- distinguish <C-I> and <tab>, also need to remap <C-I> to '\u001b[105;5u' in terminal config
+    end,
+    keys = {
+      {
+        '<tab>',
+        function()
+          require('snipe').open_buffer_menu()
+        end,
+        desc = 'Open Snipe buffer menu'
+      }
+    },
+    opts = {
+      ui = {
+        max_height = 10,
+        position = 'center',
+        open_win_override = {
+          title = '',
+          border = 'rounded'
+        },
+        preselect = function(bs)
+          for i, b in ipairs(bs) do
+            -- if buffer is not displayed on any window
+            if #vim.fn.win_findbuf(b.id) == 0 then
+              return i
+            end
+          end
+          return 2
+        end
+      },
+      hints = {
+        dictionary = 'jklio12wse'
+      },
+      navigate = {
+        open_vsplit = 'v',
+        open_split = 'h',
+        close_buffer = 'x',
+        cancel_snipe = '<tab>'
+      },
+      sort = 'last'
+    }
+  },
+  {
     'nvim-telescope/telescope-fzf-native.nvim',
     build = 'make',
     lazy = true
