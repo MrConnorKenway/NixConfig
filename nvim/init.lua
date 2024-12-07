@@ -733,6 +733,18 @@ require('lazy').setup({
         desc = 'FzfLua live grep'
       },
       {
+        '<D-f>',
+        mode = { 'n', 'i' },
+        function() require('fzf-lua').lgrep_curbuf() end,
+        desc = 'FzfLua regex search current buffer'
+      },
+      {
+        '<M-f>',
+        mode = { 'n', 'i' },
+        function() require('fzf-lua').lgrep_curbuf() end,
+        desc = 'FzfLua regex search current buffer'
+      },
+      {
         '<D-t>',
         mode = { 'n', 'i' },
         function() require('fzf-lua').lsp_live_workspace_symbols() end,
