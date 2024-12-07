@@ -354,7 +354,16 @@ require('lazy').setup({
       { '<leader>d', '<cmd>Gdiffsplit<cr>',   desc = 'Git diff' },
       { '<leader>g', ':G ',                   desc = 'Git cmdline' }
     },
-    event = 'CmdlineEnter'
+    event = 'CmdlineEnter',
+    init = function()
+      vim.api.nvim_create_autocmd('FileType', {
+        pattern = { 'fugitive', 'git' },
+        callback = function()
+          vim.keymap.set('n', '<C-p>', function() vim.api.nvim_feedkeys('(', 't', true) end, { buffer = true })
+          vim.keymap.set('n', '<C-n>', function() vim.api.nvim_feedkeys(')', 't', true) end, { buffer = true })
+        end
+      })
+    end
   },
   {
     'tpope/vim-dispatch',
