@@ -1001,6 +1001,7 @@ require('lazy').setup({
             vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf })
           end, { desc = 'Toggle LSP inlay hint' })
           vim.keymap.set('n', '<F2>', vim.lsp.buf.rename, { desc = 'LSP Rename' })
+          vim.keymap.set('n', 'g.', vim.lsp.buf.code_action, { desc = 'LSP code actions' })
 
           local signs = { Error = ' ', Warn = ' ', Hint = ' ', Info = ' ' }
           for type, icon in pairs(signs) do
