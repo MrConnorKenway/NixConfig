@@ -49,12 +49,11 @@ vim.keymap.set('n', 'cq', '<cmd>cclose<cr>', { desc = 'Close quickfix' })
 vim.keymap.set('n', '[q', '<cmd>cprevious<cr>', { desc = 'Previous quickfix' })
 vim.keymap.set('n', ']q', '<cmd>cnext<cr>', { desc = 'Next quickfix' })
 vim.keymap.set('n', '<leader>w', '<cmd>wa<cr>', { desc = 'Save workspace without quit' })
-vim.keymap.set({ 'i', 'n' }, '<C-s>', '<cmd>wa<cr>', { desc = 'Save workspace without quit' })
 vim.keymap.set({ 'i', 'n' }, '<D-s>', '<cmd>wa<cr>', { desc = 'Save workspace without quit' })
 vim.keymap.set('n', '<leader>x', '<cmd>xa<cr>', { desc = 'Save and quit workspace' })
 vim.keymap.set('n', '<leader>q', '<cmd>qa<cr>', { desc = 'Quit workspace without save' })
 vim.keymap.set('v', '<leader>c', '"+y', { desc = 'OSC52 copy' })
-vim.keymap.set('t', '<C-s>', vim.api.nvim_replace_termcodes('<C-\\><C-N>', true, true, true),
+vim.keymap.set('t', '<C-;>', vim.api.nvim_replace_termcodes('<C-\\><C-N>', true, true, true),
   { silent = true, desc = 'Exit terminal mode' })
 
 vim.cmd [[nnoremap <silent>  * :let @/='\C\<' . expand('<cword>') . '\>'<CR>:let v:searchforward=1<CR>n]]
