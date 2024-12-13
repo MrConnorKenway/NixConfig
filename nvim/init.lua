@@ -428,7 +428,8 @@ require('lazy').setup({
     },
     config = function()
       require('goto-preview').setup {
-        border = { '╭', '─', '╮', '│', '╯', '─', '╰', '│' }
+        border = { '╭', '─', '╮', '│', '╯', '─', '╰', '│' },
+        zindex = 100
       }
     end
   },
