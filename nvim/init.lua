@@ -742,6 +742,12 @@ require('lazy').setup({
         desc = 'FzfLua find workspace symbols'
       },
       {
+        '<leader>h',
+        function() require('fzf-lua').command_history() end,
+        desc =
+        'FzfLua find command history'
+      },
+      {
         '<leader>s',
         function() require('fzf-lua').lsp_live_workspace_symbols() end,
         desc = 'FzfLua find workspace symbols'
@@ -1143,12 +1149,6 @@ require('lazy').setup({
         '<leader>r',
         function() require('telescope.builtin').lsp_references() end,
         desc = 'Go to references'
-      },
-      {
-        '<leader>h',
-        function() require('telescope.builtin').command_history() end,
-        desc =
-        'Telescope find command history'
       },
       {
         '<S-D-p>',
