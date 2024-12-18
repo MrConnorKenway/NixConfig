@@ -814,6 +814,15 @@ require('lazy').setup({
     event = 'InsertEnter'
   },
   {
+    'nanozuki/tabby.nvim',
+    event = 'TabNew',
+    config = function()
+      require('tabby').setup {
+        preset = 'active_wins_at_tail'
+      }
+    end
+  },
+  {
     'saghen/blink.cmp',
     lazy = false, -- lazy loading handled internally
 
