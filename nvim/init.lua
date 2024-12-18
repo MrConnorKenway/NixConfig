@@ -204,6 +204,7 @@ vim.api.nvim_create_autocmd('LspProgress', {
 
 require('lazy').setup({
   require('heirline.config'),
+  { 'mbbill/undotree' },
   {
     'windwp/nvim-autopairs',
     event = 'InsertEnter',
