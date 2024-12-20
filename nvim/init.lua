@@ -751,6 +751,127 @@ require('lazy').setup({
         '<leader>s',
         function() require('fzf-lua').lsp_live_workspace_symbols() end,
         desc = 'FzfLua find workspace symbols'
+      },
+      {
+        'gh',
+        function()
+          local M = {}
+
+          M.toggle_regex = function(_, opts)
+            opts.__ACT_TO {
+              resume = true,
+            }
+          end
+
+          local fzf_lua = require('fzf-lua')
+          local common_opts = {
+            winopts = { title = ' Git Hunks ', title_pos = 'center' },
+            actions = fzf_lua.defaults.actions.files,
+            file_icons = true,
+            color_icons = true,
+            previewer = 'bat_native',
+            field_index_expr = '{1}',
+            line_field_index = '{2}',
+            multiprocess = true,
+            fzf_opts = {
+              ["--multi"] = true
+            }
+          }
+          common_opts.actions['ctrl-g'] = { fn = M.toggle_regex, noclose = true }
+
+          local fn_transform = function(x)
+            return fzf_lua.make_entry.file(x, common_opts)
+          end
+
+          -- diffn parses git diff and produces line number for each hunk
+          local diffn = function(fzf_cb, live_query)
+            local diff_text = vim.fn.system('git diff')
+            local file_name = nil
+            local line_number = nil
+            local counter = 0
+
+            for line in diff_text:gmatch('([^\n]+)') do
+              if counter < 3 then
+                counter = counter + 1
+                goto continue
+              end
+
+              if counter == 3 then
+                -- +++ b/
+                file_name = line:match('^%+%+%+ b/(.*)')
+                counter = counter + 1
+                goto continue
+              end
+
+              local char = line:sub(1, 1)
+
+              if char == '-' then
+                if not live_query or line:match(live_query) then
+                  fzf_cb(fn_transform(file_name) .. ':' .. line_number .. ':' .. ' \27[31m' .. line .. '\27[m')
+                end
+                goto continue
+              end
+
+              if char == '+' then
+                if not live_query or line:match(live_query) then
+                  fzf_cb(fn_transform(file_name) .. ':' .. line_number .. ':' .. ' \27[32m' .. line .. '\27[m')
+                end
+                line_number = line_number + 1
+                goto continue
+              end
+
+              if char == ' ' then
+                line_number = line_number + 1
+                goto continue
+              end
+
+              local new_line_number = line:match('^@@ %-%d+,%d+ %+(%d+),%d+ @@')
+              if new_line_number then
+                line_number = new_line_number
+                goto continue
+              end
+
+              counter = 1
+              ::continue::
+            end
+
+            fzf_cb()
+          end
+
+          M.fuzzy_hunks = function(opts)
+            opts = opts or {}
+            opts = vim.tbl_deep_extend('keep', opts, common_opts)
+            opts.__ACT_TO = M.lgrep_hunks
+            opts.prompt = 'fuzzy> '
+            opts = require('fzf-lua.config').normalize_opts(opts, {}, "hunk")
+
+            fzf_lua.fzf_exec(function(fzf_cb)
+              diffn(fzf_cb)
+            end, opts)
+          end
+
+          M.lgrep_hunks = function(opts)
+            opts = opts or {}
+
+            opts = vim.tbl_deep_extend('keep', opts, common_opts)
+            opts.__ACT_TO = M.fuzzy_hunks
+            opts.prompt = 'lgrep> '
+            opts.exec_empty_query = true
+            opts = require('fzf-lua.config').normalize_opts(opts, {}, "hunk")
+
+            fzf_lua.fzf_live(
+              function(query)
+                return function(fzf_cb)
+                  diffn(fzf_cb, query)
+                end
+              end,
+
+              opts
+            )
+          end
+
+          M.fuzzy_hunks()
+        end
       }
     },
     dependencies = { 'nvim-tree/nvim-web-devicons', 'junegunn/fzf' },
@@ -993,7 +1114,6 @@ require('lazy').setup({
             border = 'rounded'
           })
 
-          vim.keymap.set('n', 'gh', vim.lsp.buf.hover, { desc = 'Display LSP hover' })
           vim.keymap.set('n', '<leader>i', function()
             vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf })
           end, { desc = 'Toggle LSP inlay hint' })
