@@ -806,14 +806,14 @@ require('lazy').setup({
               local char = line:sub(1, 1)
 
               if char == '-' then
-                if not live_query or line:match(live_query) then
+                if not live_query or vim.regex(live_query):match_str(line) then
                   fzf_cb(fn_transform(file_name) .. ':' .. line_number .. ':' .. ' \27[31m' .. line .. '\27[m')
                 end
                 goto continue
               end
 
               if char == '+' then
-                if not live_query or line:match(live_query) then
+                if not live_query or vim.regex(live_query):match_str(line) then
                   fzf_cb(fn_transform(file_name) .. ':' .. line_number .. ':' .. ' \27[32m' .. line .. '\27[m')
                 end
                 line_number = line_number + 1
