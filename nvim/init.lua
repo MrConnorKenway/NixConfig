@@ -947,8 +947,7 @@ require('lazy').setup({
       }
     end,
     dependencies = { -- These are optional
-      'nvim-treesitter/nvim-treesitter',
-      'hrsh7th/nvim-cmp'
+      'nvim-treesitter/nvim-treesitter'
     },
     opt = true, -- Set this to true if the plugin is optional
     event = 'InsertEnter'
@@ -1001,6 +1000,9 @@ require('lazy').setup({
         ['<C-n>'] = { 'select_next', 'fallback' },
         ['<C-b>'] = { 'scroll_documentation_up', 'fallback' },
         ['<C-f>'] = { 'scroll_documentation_down', 'fallback' },
+        cmdline = {
+          preset = 'super-tab'
+        }
       },
 
       appearance = {
@@ -1012,9 +1014,7 @@ require('lazy').setup({
       -- default list of enabled providers defined so that you can extend it
       -- elsewhere in your config, without redefining it, via `opts_extend`
       sources = {
-        completion = {
-          enabled_providers = { 'lsp', 'path' },
-        },
+        default = { 'lsp', 'path' },
       },
 
       completion = {
@@ -1040,36 +1040,6 @@ require('lazy').setup({
         }
       }
     },
-    -- allows extending the enabled_providers array elsewhere in your config
-    -- without having to redefine it
-    opts_extend = { 'sources.completion.enabled_providers' }
-  },
-  {
-    'hrsh7th/nvim-cmp',
-    dependencies = {
-      'hrsh7th/cmp-cmdline'
-    },
-    event = { 'InsertEnter', 'CmdlineEnter' },
-    config = function()
-      local cmp = require('cmp')
-      cmp.setup.cmdline(':', {
-        sources = {
-          { name = 'cmdline' }
-        },
-        window = {
-          completion = cmp.config.window.bordered(),
-        },
-        mapping = cmp.mapping.preset.cmdline(),
-        matching = {
-          disallow_partial_matching = false,
-          disallow_prefix_unmatching = false,
-          disallow_fuzzy_matching = false,
-          disallow_fullfuzzy_matching = false,
-          disallow_partial_fuzzy_matching = false,
-          disallow_symbol_nonprefix_matching = false
-        }
-      })
-    end
   },
   {
     'williamboman/mason.nvim',
