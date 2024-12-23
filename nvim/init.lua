@@ -783,6 +783,19 @@ require('lazy').setup({
             return fzf_lua.make_entry.file(x, common_opts)
           end
 
+          local check_pattern = function(pattern, line)
+            if not pattern then
+              return true
+            end
+
+            local ok, ret = pcall(string.match, line, pattern)
+            if ok and ret then
+              return true
+            end
+
+            return false
+          end
+
           -- diffn parses git diff and produces line number for each hunk
           local diffn = function(fzf_cb, live_query)
             local diff_text = vim.fn.system('git diff')
@@ -806,14 +819,14 @@ require('lazy').setup({
               local char = line:sub(1, 1)
 
               if char == '-' then
-                if not live_query or vim.regex(live_query):match_str(line) then
+                if check_pattern(live_query, line) then
                   fzf_cb(fn_transform(file_name) .. ':' .. line_number .. ':' .. ' \27[31m' .. line .. '\27[m')
                 end
                 goto continue
               end
 
               if char == '+' then
-                if not live_query or vim.regex(live_query):match_str(line) then
+                if check_pattern(live_query, line) then
                   fzf_cb(fn_transform(file_name) .. ':' .. line_number .. ':' .. ' \27[32m' .. line .. '\27[m')
                 end
                 line_number = line_number + 1
