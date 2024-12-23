@@ -959,7 +959,7 @@ require('lazy').setup({
     event = 'TabNew',
     config = function()
       require('tabby').setup {
-        preset = 'active_wins_at_tail'
+        preset = 'tab_only'
       }
     end
   },
