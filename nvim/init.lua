@@ -899,6 +899,9 @@ require('lazy').setup({
             delay = 100
           }
         },
+        grep = {
+          rg_opts = '--column --line-number --no-heading --no-ignore --color=always --smart-case --max-columns=4096 -e'
+        },
         keymap = {
           builtin = {
             true,
