@@ -513,6 +513,9 @@ require('lazy').setup({
     config = function()
       vim.diagnostic.config({ virtual_text = false })
       require('tiny-inline-diagnostic').setup {
+        options = {
+          use_icons_from_diagnostic = true
+        },
         signs = {
           left = " ",
           right = " ",
@@ -1025,11 +1028,16 @@ require('lazy').setup({
           vim.keymap.set('n', '<F2>', vim.lsp.buf.rename, { desc = 'LSP Rename' })
           vim.keymap.set('n', 'g.', vim.lsp.buf.code_action, { desc = 'LSP code actions' })
 
-          local signs = { Error = ' ', Warn = ' ', Hint = ' ', Info = ' ' }
-          for type, icon in pairs(signs) do
-            local hl = 'DiagnosticSign' .. type
-            vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
-          end
+          vim.diagnostic.config({
+            signs = {
+              text = {
+                [vim.diagnostic.severity.ERROR] = '',
+                [vim.diagnostic.severity.WARN] = '󰔶',
+                [vim.diagnostic.severity.INFO] = '',
+                [vim.diagnostic.severity.HINT] = '',
+              }
+            }
+          })
         end
       })
 
