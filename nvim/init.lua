@@ -813,6 +813,12 @@ require('lazy').setup({
             delay = 100
           }
         },
+        manpages = { previewer = 'man_native' },
+        previewers = {
+          man_native = {
+            cmd = 'bash -l -c "man %s | col -bx" | bat --color=always -p -l man'
+          }
+        },
         grep = {
           rg_opts = '--column --line-number --no-heading --no-ignore --color=always --smart-case --max-columns=4096 -e'
         },
