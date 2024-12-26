@@ -292,7 +292,7 @@ require('lazy').setup({
             end
             return res
           end
-          return { ' ' }
+          return {}
         end,
       }
     end
