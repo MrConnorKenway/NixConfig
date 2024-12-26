@@ -810,8 +810,17 @@ require('lazy').setup({
           git_icons = false
         },
         winopts = {
+          treesitter = {
+            enabled = true,
+            fzf_colors = false
+          },
+          backdrop = 100,
+          height = 0.85,
+          width = 0.85,
+          row = 0.40,
           preview = {
             default = vim.fn.executable('bat') == 0 and 'builtin' or 'bat_native',
+            horizontal = 'right:52%',
             delay = 100
           }
         },
