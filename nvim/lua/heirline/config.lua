@@ -132,7 +132,7 @@ return {
 
     local ScrollBar = {
       static = {
-        sbar = { '▁', '▂', '▃', '▄', '▅', '▆', '▇', '█' }
+        sbar = { '🭶', '🭷', '🭸', '🭹', '🭺', '🭻' }
       },
       provider = function(self)
         local curr_line = vim.api.nvim_win_get_cursor(0)[1]
