@@ -632,16 +632,16 @@ require('lazy').setup({
         desc = 'FzfLua regex search current buffer'
       },
       {
-        '<D-t>',
-        mode = { 'n', 'i' },
-        function() require('fzf-lua').lsp_live_workspace_symbols() end,
-        desc = 'FzfLua find workspace symbols'
-      },
-      {
         '<leader>h',
         function() require('fzf-lua').command_history() end,
         desc =
         'FzfLua find command history'
+      },
+      {
+        '<D-t>',
+        mode = { 'n', 'i' },
+        function() require('fzf-lua').lsp_live_workspace_symbols() end,
+        desc = 'FzfLua find workspace symbols'
       },
       {
         '<leader>s',
