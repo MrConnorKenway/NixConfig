@@ -208,14 +208,12 @@ require('lazy').setup({
   {
     'windwp/nvim-autopairs',
     event = 'InsertEnter',
-    config = true
+    opts = {}
   },
   {
     'kylechui/nvim-surround',
     event = 'VeryLazy',
-    config = function()
-      require('nvim-surround').setup()
-    end
+    opts = {}
   },
   {
     'b0o/incline.nvim',
@@ -300,22 +298,18 @@ require('lazy').setup({
   {
     'folke/lazydev.nvim',
     ft = 'lua', -- only load on lua files
-    config = function()
-      require('lazydev').setup()
-    end
+    opts = {}
   },
   {
     'folke/noice.nvim',
     dependencies = { 'MunifTanjim/nui.nvim' },
-    config = function()
-      require('noice').setup {
-        lsp = {
-          progress = { enabled = false },
-          hover = { enabled = false },
-          signature = { enabled = false }
-        },
+    opts = {
+      lsp = {
+        progress = { enabled = false },
+        hover = { enabled = false },
+        signature = { enabled = false }
       }
-    end
+    }
   },
   {
     'lewis6991/gitsigns.nvim',
@@ -398,9 +392,7 @@ require('lazy').setup({
   {
     'nvimdev/hlsearch.nvim',
     event = 'BufRead',
-    config = function()
-      require('hlsearch').setup()
-    end
+    opts = {}
   },
   {
     'RRethy/vim-illuminate',
@@ -425,28 +417,24 @@ require('lazy').setup({
         desc = 'Preview LSP references in popup'
       },
     },
-    config = function()
-      require('goto-preview').setup {
-        border = { '╭', '─', '╮', '│', '╯', '─', '╰', '│' }
-      }
-    end
+    opts = {
+      border = { '╭', '─', '╮', '│', '╯', '─', '╰', '│' }
+    }
   },
   {
     'nvim-treesitter/nvim-treesitter',
-    config = function()
-      require('nvim-treesitter.configs').setup {
-        modules = {},
-        ignore_install = {},
-        auto_install = false,
-        sync_install = false,
-        highlight = { enable = false },
-        indent = { enable = false },
-        ensure_installed = {
-          'c', 'lua', 'vim', 'vimdoc', 'query', 'markdown', 'markdown_inline',
-          'nix', 'asm', 'cpp', 'make', 'python', 'bash', 'rust', 'zig'
-        }
+    opts = {
+      modules = {},
+      ignore_install = {},
+      auto_install = false,
+      sync_install = false,
+      highlight = { enable = false },
+      indent = { enable = false },
+      ensure_installed = {
+        'c', 'lua', 'vim', 'vimdoc', 'query', 'markdown', 'markdown_inline',
+        'nix', 'asm', 'cpp', 'make', 'python', 'bash', 'rust', 'zig'
       }
-    end
+    }
   },
   {
     'catppuccin/nvim',
@@ -548,8 +536,7 @@ require('lazy').setup({
       bufdelete = {
         enabled = true
       },
-    },
-    config = true
+    }
   },
   {
     'akinsho/toggleterm.nvim',
@@ -567,27 +554,21 @@ require('lazy').setup({
         desc = 'Toggle terminal at current window'
       },
     },
-    config = function()
-      require('toggleterm').setup {
-        size = 16,
-        shade_terminals = true,
-        float_opts = { border = 'rounded' }
-      }
-    end
+    opts = {
+      size = 16,
+      shade_terminals = true,
+      float_opts = { border = 'rounded' }
+    }
   },
   {
     'nmac427/guess-indent.nvim',
-    config = function()
-      require('guess-indent').setup {}
-    end
+    opts = {}
   },
   { 'nvim-tree/nvim-web-devicons' },
   {
     'prichrd/netrw.nvim',
     ft = 'netrw', -- only load on netrw files
-    config = function()
-      require('netrw').setup()
-    end
+    opts = {}
   },
   {
     'junegunn/fzf',
@@ -803,83 +784,79 @@ require('lazy').setup({
       }
     },
     dependencies = { 'nvim-tree/nvim-web-devicons', 'junegunn/fzf' },
-    config = function()
-      require('fzf-lua').setup {
-        'default-title',
-        files = {
-          git_icons = false
+    opts = {
+      'default-title',
+      files = {
+        git_icons = false
+      },
+      winopts = {
+        treesitter = {
+          enabled = true,
+          fzf_colors = false
         },
-        winopts = {
-          treesitter = {
-            enabled = true,
-            fzf_colors = false
-          },
-          backdrop = 100,
-          height = 0.85,
-          width = 0.85,
-          row = 0.40,
-          preview = {
-            default = vim.fn.executable('bat') == 0 and 'builtin' or 'bat_native',
-            horizontal = 'right:52%',
-            delay = 100
-          }
+        backdrop = 100,
+        height = 0.85,
+        width = 0.85,
+        row = 0.40,
+        preview = {
+          default = vim.fn.executable('bat') == 0 and 'builtin' or 'bat_native',
+          horizontal = 'right:52%',
+          delay = 100
+        }
+      },
+      manpages = { previewer = 'man_native' },
+      previewers = {
+        man_native = {
+          cmd = 'bash -l -c "man %s | col -bx" | bat --color=always -p -l man'
+        }
+      },
+      grep = {
+        rg_opts = '--column --line-number --no-heading --no-ignore --color=always --smart-case --max-columns=4096 -e'
+      },
+      keymap = {
+        builtin = {
+          true,
+          ['<C-u>'] = 'preview-half-page-up',
+          ['<C-d>'] = 'preview-half-page-down',
+          ['F9'] = 'toggle-preview'
         },
-        manpages = { previewer = 'man_native' },
-        previewers = {
-          man_native = {
-            cmd = 'bash -l -c "man %s | col -bx" | bat --color=always -p -l man'
-          }
-        },
-        grep = {
-          rg_opts = '--column --line-number --no-heading --no-ignore --color=always --smart-case --max-columns=4096 -e'
-        },
-        keymap = {
-          builtin = {
-            true,
-            ['<C-u>'] = 'preview-half-page-up',
-            ['<C-d>'] = 'preview-half-page-down',
-            ['F9'] = 'toggle-preview'
-          },
-          fzf = {
-            false,
-            ['Ctrl-u'] = 'preview-half-page-up',
-            ['Ctrl-d'] = 'preview-half-page-down',
-            ['ctrl-a'] = 'beginning-of-line',
-            ['ctrl-e'] = 'end-of-line',
-            ['ctrl-f'] = 'half-page-down',
-            ['ctrl-b'] = 'half-page-up',
-            ['F9']     = 'toggle-preview'
-          }
+        fzf = {
+          false,
+          ['Ctrl-u'] = 'preview-half-page-up',
+          ['Ctrl-d'] = 'preview-half-page-down',
+          ['ctrl-a'] = 'beginning-of-line',
+          ['ctrl-e'] = 'end-of-line',
+          ['ctrl-f'] = 'half-page-down',
+          ['ctrl-b'] = 'half-page-up',
+          ['F9']     = 'toggle-preview'
         }
       }
-    end
+    }
   },
   {
     'abecodes/tabout.nvim',
-    config = function()
-      require('tabout').setup {
-        tabkey = '<Tab>',             -- key to trigger tabout, set to an empty string to disable
-        backwards_tabkey = '<S-Tab>', -- key to trigger backwards tabout, set to an empty string to disable
-        act_as_tab = true,            -- shift content if tab out is not possible
-        act_as_shift_tab = false,     -- reverse shift content if tab out is not possible (if your keyboard/terminal supports <S-Tab>)
-        default_tab = '<C-t>',        -- shift default action (only at the beginning of a line, otherwise <TAB> is used)
-        default_shift_tab = '<C-d>',  -- reverse shift default action,
-        enable_backwards = true,      -- well ...
-        completion = false,           -- if the tabkey is used in a completion pum
-        tabouts = {
-          { open = "'", close = "'" },
-          { open = '"', close = '"' },
-          { open = '`', close = '`' },
-          { open = '(', close = ')' },
-          { open = '[', close = ']' },
-          { open = '<', close = '>' },
-          { open = '{', close = '}' }
-        },
-        ignore_beginning = false, -- only tabout if at beginning of configured tabout chars
-        exclude = {}              -- tabout will ignore these filetypes
-      }
-    end,
-    dependencies = { -- These are optional
+    opts = {
+      tabkey = '<Tab>',             -- key to trigger tabout, set to an empty string to disable
+      backwards_tabkey = '<S-Tab>', -- key to trigger backwards tabout, set to an empty string to disable
+      act_as_tab = true,            -- shift content if tab out is not possible
+      act_as_shift_tab = false,     -- reverse shift content if tab out is not possible (if your keyboard/terminal supports <S-Tab>)
+      default_tab = '<C-t>',        -- shift default action (only at the beginning of a line, otherwise <TAB> is used)
+      default_shift_tab = '<C-d>',  -- reverse shift default action,
+      enable_backwards = true,      -- well ...
+      completion = false,           -- if the tabkey is used in a completion pum
+      tabouts = {
+        { open = "'", close = "'" },
+        { open = '"', close = '"' },
+        { open = '`', close = '`' },
+        { open = '(', close = ')' },
+        { open = '[', close = ']' },
+        { open = '<', close = '>' },
+        { open = '{', close = '}' }
+      },
+      ignore_beginning = false, -- only tabout if at beginning of configured tabout chars
+      exclude = {}              -- tabout will ignore these filetypes
+    },
+    dependencies = {            -- These are optional
       'nvim-treesitter/nvim-treesitter'
     },
     opt = true, -- Set this to true if the plugin is optional
@@ -888,11 +865,9 @@ require('lazy').setup({
   {
     'nanozuki/tabby.nvim',
     event = 'TabNew',
-    config = function()
-      require('tabby').setup {
-        preset = 'tab_only'
-      }
-    end
+    opts = {
+      preset = 'tab_only'
+    }
   },
   {
     'saghen/blink.cmp',
@@ -976,47 +951,45 @@ require('lazy').setup({
   },
   {
     'williamboman/mason.nvim',
-    config = true
+    opts = {}
   },
   {
     'SmiteshP/nvim-navic',
-    config = function()
-      require('nvim-navic').setup {
-        icons = {
-          File = ' ',
-          Module = ' ',
-          Namespace = ' ',
-          Package = ' ',
-          Class = ' ',
-          Method = ' ',
-          Property = ' ',
-          Field = ' ',
-          Constructor = ' ',
-          Enum = ' ',
-          Interface = ' ',
-          Function = '󰊕 ',
-          Variable = '󰆧 ',
-          Constant = ' ',
-          String = ' ',
-          Number = ' ',
-          Boolean = ' ',
-          Array = '󰅪 ',
-          Object = ' ',
-          Key = '󰌋 ',
-          Null = ' ',
-          EnumMember = ' ',
-          Struct = ' ',
-          Event = ' ',
-          Operator = '󰆕 ',
-          TypeParameter = ' '
-        },
-        lsp = {
-          auto_attach = true,
-          preference = nil,
-        },
-        lazy_update_context = false,
-      }
-    end
+    opts = {
+      icons = {
+        File = ' ',
+        Module = ' ',
+        Namespace = ' ',
+        Package = ' ',
+        Class = ' ',
+        Method = ' ',
+        Property = ' ',
+        Field = ' ',
+        Constructor = ' ',
+        Enum = ' ',
+        Interface = ' ',
+        Function = '󰊕 ',
+        Variable = '󰆧 ',
+        Constant = ' ',
+        String = ' ',
+        Number = ' ',
+        Boolean = ' ',
+        Array = '󰅪 ',
+        Object = ' ',
+        Key = '󰌋 ',
+        Null = ' ',
+        EnumMember = ' ',
+        Struct = ' ',
+        Event = ' ',
+        Operator = '󰆕 ',
+        TypeParameter = ' '
+      },
+      lsp = {
+        auto_attach = true,
+        preference = nil,
+      },
+      lazy_update_context = false,
+    }
   },
   {
     'neovim/nvim-lspconfig',
@@ -1093,16 +1066,14 @@ require('lazy').setup({
         desc = 'LSP format current buffer'
       }
     },
-    config = function()
-      require('conform').setup({
-        formatters_by_ft = {
-          c = { 'clang-format' }
-        },
-        default_format_opts = {
-          lsp_format = 'fallback'
-        }
-      })
-    end
+    opts = {
+      formatters_by_ft = {
+        c = { 'clang-format' }
+      },
+      default_format_opts = {
+        lsp_format = 'fallback'
+      }
+    }
   },
   {
     'mrjones2014/smart-splits.nvim',
@@ -1156,11 +1127,9 @@ require('lazy').setup({
         desc = 'Resize window right'
       }
     },
-    config = function()
-      require('smart-splits').setup {
-        default_amount = 3
-      }
-    end
+    opts = {
+      default_amount = 3
+    }
   },
   {
     'nvim-telescope/telescope-fzf-native.nvim',
