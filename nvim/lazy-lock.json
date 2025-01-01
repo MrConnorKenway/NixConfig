@@ -17,7 +17,6 @@
   "incline.nvim": { "branch": "main", "commit": "16fc9c073e3ea4175b66ad94375df6d73fc114c0" },
   "lazy.nvim": { "branch": "main", "commit": "7e6c863bc7563efbdd757a310d17ebc95166cef3" },
   "lazydev.nvim": { "branch": "main", "commit": "8620f82ee3f59ff2187647167b6b47387a13a018" },
-  "lsp-progress.nvim": { "branch": "main", "commit": "f3df1df8f5ea33d082db047b5d2d2b83cc01cd8a" },
   "mason.nvim": { "branch": "main", "commit": "e2f7f9044ec30067bc11800a9e266664b88cda22" },
   "netrw.nvim": { "branch": "master", "commit": "90501c62b9b816ed3ed1e912ae9db9af5671a1b2" },
   "noice.nvim": { "branch": "main", "commit": "eaed6cc9c06aa2013b5255349e4f26a6b17ab70f" },

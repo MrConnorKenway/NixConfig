@@ -2,7 +2,6 @@ return {
   'rebelot/heirline.nvim',
   lazy = false,
   priority = 999,
-  dependencies = { 'linrongbin16/lsp-progress.nvim' },
   config = function()
     local conditions = require('heirline.conditions')
     local utils = require('heirline.utils')
