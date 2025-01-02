@@ -808,7 +808,7 @@ require('lazy').setup({
       previewers = {
         man_native = {
           cmd = 'bash -l -c "man %s | col -bx" | ' ..
-          (vim.fn.executable('bat') == 0 and 'cat' or 'bat --color=always -p -l man')
+              (vim.fn.executable('bat') == 0 and 'cat' or 'bat --color=always -p -l man')
         }
       },
       grep = {
