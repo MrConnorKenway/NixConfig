@@ -448,6 +448,11 @@ require('lazy').setup({
     end,
     config = function()
       require('catppuccin').setup {
+        custom_highlights = function()
+          return {
+            BlinkCmpLabelMatch = { italic = true, bold = true, fg = 'NONE' }
+          }
+        end,
         integrations = {
           blink_cmp = true
         }
@@ -932,6 +937,9 @@ require('lazy').setup({
         accept = { auto_brackets = { enabled = true } },
         menu = {
           winhighlight = 'Normal:Normal,FloatBorder:FloatBorder,CursorLine:BlinkCmpMenuSelection,Search:None',
+          draw = {
+            treesitter = { 'lsp' }
+          },
           border = 'rounded'
         },
         documentation = {
