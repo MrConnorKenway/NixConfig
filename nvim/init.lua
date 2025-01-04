@@ -429,7 +429,7 @@ require('lazy').setup({
         ignore_install = {},
         auto_install = false,
         sync_install = false,
-        highlight = { enable = false },
+        highlight = { enable = true },
         indent = { enable = false },
         ensure_installed = {
           'c', 'lua', 'vim', 'vimdoc', 'query', 'markdown', 'markdown_inline',
