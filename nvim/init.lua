@@ -395,10 +395,11 @@ require('lazy').setup({
     opts = {}
   },
   {
-    'RRethy/vim-illuminate',
+    'MrConnorKenway/vim-illuminate',
     event = 'LspAttach',
     config = function()
       require('illuminate').configure {
+        modes_allowlist = { 'n' },
         providers = { 'lsp' }
       }
     end
