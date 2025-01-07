@@ -1,9 +1,9 @@
 {
   "arrow.nvim": { "branch": "master", "commit": "5438c977e729a29d96bd54c8da3103154e80dbd1" },
   "auto-session": { "branch": "main", "commit": "021b64ed7d4ac68a37be3ad28d8e1cba5bec582c" },
+  "blink.cmp": { "branch": "main", "commit": "5b0f52d42ecbb374695da1a93fa40eca4dc7a7ff" },
   "catppuccin-colorscheme": { "branch": "main", "commit": "faf15ab0201b564b6368ffa47b56feefc92ce3f4" },
   "conform.nvim": { "branch": "master", "commit": "339b3e4519ec49312d34fcfa275aa15bfaa67025" },
-  "blink.cmp": { "branch": "main", "commit": "5b0f52d42ecbb374695da1a93fa40eca4dc7a7ff" },
   "dressing.nvim": { "branch": "master", "commit": "3a45525bb182730fe462325c99395529308f431e" },
   "flash.nvim": { "branch": "main", "commit": "34c7be146a91fec3555c33fe89c7d643f6ef5cf1" },
   "fzf": { "branch": "master", "commit": "2b7f168571d53a19f4c60fcb6b3e20e2b688b28f" },
