@@ -484,6 +484,9 @@ require('lazy').setup({
   },
   {
     'rbong/vim-flog',
+    init = function()
+      vim.g.flog_enable_extended_chars = true
+    end,
     cmd = { 'Flog', 'Flogsplit', 'Floggit' },
     keys = {
       { '<S-M-l>', function() vim.cmd('vertical Flogsplit') end, desc = 'Display git graph' },
