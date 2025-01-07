@@ -56,11 +56,6 @@ vim.keymap.set('v', '<leader>c', '"+y', { desc = 'OSC52 copy' })
 vim.keymap.set('t', '<C-;>', vim.api.nvim_replace_termcodes('<C-\\><C-N>', true, true, true),
   { silent = true, desc = 'Exit terminal mode' })
 
-vim.cmd [[nnoremap <silent>  * :let @/='\C\<' . expand('<cword>') . '\>'<CR>:let v:searchforward=1<CR>n]]
-vim.cmd [[nnoremap <silent>  # :let @/='\C\<' . expand('<cword>') . '\>'<CR>:let v:searchforward=0<CR>n]]
-vim.cmd [[nnoremap <silent> g* :let @/='\C'   . expand('<cword>')       <CR>:let v:searchforward=1<CR>n]]
-vim.cmd [[nnoremap <silent> g# :let @/='\C'   . expand('<cword>')       <CR>:let v:searchforward=0<CR>n]]
-
 -- copy from https://github.com/neovim/neovim/pull/28176/files#diff-49225a49c226c2f1b36f966d0178c556e204cdc0b660c80db9e4568e03f6ef99R126
 -- WARN: may change as neovim updates
 vim.keymap.set('n', '<C-/>', function() return require('vim._comment').operator() .. '_' end,
@@ -389,11 +384,7 @@ require('lazy').setup({
     }
   },
   { 'akinsho/git-conflict.nvim', config = true },
-  {
-    'nvimdev/hlsearch.nvim',
-    event = 'BufRead',
-    opts = {}
-  },
+  { 'romainl/vim-cool' },
   {
     'MrConnorKenway/vim-illuminate',
     event = 'LspAttach',
