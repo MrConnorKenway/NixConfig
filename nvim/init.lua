@@ -1034,7 +1034,7 @@ require('lazy').setup({
       }
       lspconfig.nixd.setup {}
       lspconfig.lua_ls.setup {}
-      lspconfig.pylsp.setup {}
+      lspconfig.basedpyright.setup {}
     end
   },
   {
@@ -1074,7 +1074,8 @@ require('lazy').setup({
     },
     opts = {
       formatters_by_ft = {
-        c = { 'clang-format' }
+        c = { 'clang-format' },
+        python = { 'black' }
       },
       default_format_opts = {
         lsp_format = 'fallback'
