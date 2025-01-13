@@ -200,17 +200,7 @@ vim.api.nvim_create_autocmd('LspProgress', {
 require('lazy').setup({
   { import = 'plugins.ui' },
   { import = 'plugins.lsp' },
-  { 'mbbill/undotree' },
-  {
-    'windwp/nvim-autopairs',
-    event = 'InsertEnter',
-    opts = {}
-  },
-  {
-    'kylechui/nvim-surround',
-    event = 'VeryLazy',
-    opts = {}
-  },
+  { import = 'plugins.edit' },
   {
     'lewis6991/gitsigns.nvim',
     config = function()
@@ -272,21 +262,6 @@ require('lazy').setup({
     init = function()
       vim.g.dispatch_no_maps = 1
     end
-  },
-  {
-    'folke/flash.nvim',
-    event = 'VeryLazy',
-    opts = { labels = 'asdfjkl;weionmcvgh' },
-    keys = {
-      {
-        'S',
-        function()
-          require('flash').treesitter({ label = { rainbow = { enabled = true } } })
-        end,
-        desc = 'Flash Treesitter'
-      },
-      { 's', function() require('flash').jump() end, desc = 'Flash' },
-    }
   },
   { 'akinsho/git-conflict.nvim', config = true },
   {
@@ -372,10 +347,6 @@ require('lazy').setup({
       shade_terminals = true,
       float_opts = { border = 'rounded' }
     }
-  },
-  {
-    'nmac427/guess-indent.nvim',
-    opts = {}
   },
   {
     'prichrd/netrw.nvim',
@@ -643,163 +614,6 @@ require('lazy').setup({
           ['ctrl-b'] = 'half-page-up',
           ['F9']     = 'toggle-preview'
         }
-      }
-    }
-  },
-  {
-    'abecodes/tabout.nvim',
-    opts = {
-      tabkey = '<Tab>',             -- key to trigger tabout, set to an empty string to disable
-      backwards_tabkey = '<S-Tab>', -- key to trigger backwards tabout, set to an empty string to disable
-      act_as_tab = true,            -- shift content if tab out is not possible
-      act_as_shift_tab = false,     -- reverse shift content if tab out is not possible (if your keyboard/terminal supports <S-Tab>)
-      default_tab = '<C-t>',        -- shift default action (only at the beginning of a line, otherwise <TAB> is used)
-      default_shift_tab = '<C-d>',  -- reverse shift default action,
-      enable_backwards = true,      -- well ...
-      completion = false,           -- if the tabkey is used in a completion pum
-      tabouts = {
-        { open = "'", close = "'" },
-        { open = '"', close = '"' },
-        { open = '`', close = '`' },
-        { open = '(', close = ')' },
-        { open = '[', close = ']' },
-        { open = '<', close = '>' },
-        { open = '{', close = '}' }
-      },
-      ignore_beginning = false, -- only tabout if at beginning of configured tabout chars
-      exclude = {}              -- tabout will ignore these filetypes
-    },
-    dependencies = {            -- These are optional
-      'nvim-treesitter/nvim-treesitter'
-    },
-    opt = true, -- Set this to true if the plugin is optional
-    event = 'InsertEnter'
-  },
-  {
-    'saghen/blink.cmp',
-    lazy = false, -- lazy loading handled internally
-
-    -- use a release tag to download pre-built binaries
-    version = 'v0.*',
-    -- OR build from source, requires nightly: https://rust-lang.github.io/rustup/concepts/channels.html#working-with-nightly-rust
-    -- build = 'cargo build --release',
-    -- If you use nix, you can build from source using latest nightly rust with:
-    -- build = 'nix run .#build-plugin',
-
-    opts = {
-      -- 'default' for mappings similar to built-in completion
-      -- 'super-tab' for mappings similar to vscode (tab to accept, arrow keys to navigate)
-      -- 'enter' for mappings similar to 'super-tab' but with 'enter' to accept
-      -- see the "default configuration" section below for full documentation on how to define
-      -- your own keymap.
-      keymap = {
-        ['<C-space>'] = { 'show', 'show_documentation', 'hide_documentation' },
-        ['<C-e>'] = { 'hide', 'fallback' },
-        ['<CR>'] = { 'accept', 'fallback' },
-        ['<Tab>'] = {
-          function(cmp)
-            if cmp.snippet_active() then
-              return cmp.accept()
-            else
-              return cmp.select_and_accept()
-            end
-          end,
-          'snippet_forward',
-          'fallback'
-        },
-        ['<S-Tab>'] = { 'snippet_backward', 'fallback' },
-        ['<Up>'] = { 'select_prev', 'fallback' },
-        ['<Down>'] = { 'select_next', 'fallback' },
-        ['<C-p>'] = { 'select_prev', 'fallback' },
-        ['<C-n>'] = { 'select_next', 'fallback' },
-        ['<C-b>'] = { 'scroll_documentation_up', 'fallback' },
-        ['<C-f>'] = { 'scroll_documentation_down', 'fallback' },
-        cmdline = {
-          preset = 'super-tab'
-        }
-      },
-
-      appearance = {
-        -- Set to 'mono' for 'Nerd Font Mono' or 'normal' for 'Nerd Font'
-        -- Adjusts spacing to ensure icons are aligned
-        nerd_font_variant = 'mono'
-      },
-
-      -- default list of enabled providers defined so that you can extend it
-      -- elsewhere in your config, without redefining it, via `opts_extend`
-      sources = {
-        default = { 'lsp', 'path' },
-      },
-
-      completion = {
-        accept = { auto_brackets = { enabled = true } },
-        menu = {
-          winhighlight = 'Normal:Normal,FloatBorder:FloatBorder,CursorLine:BlinkCmpMenuSelection,Search:None',
-          draw = {
-            treesitter = { 'lsp' }
-          },
-          border = 'rounded'
-        },
-        documentation = {
-          auto_show = true,
-          window = {
-            winhighlight = 'Normal:Normal,FloatBorder:FloatBorder,CursorLine:BlinkCmpDocCursorLine,Search:None',
-            border = 'rounded'
-          }
-        }
-      },
-
-      signature = {
-        enabled = true,
-        window = {
-          winhighlight = 'Normal:Normal,FloatBorder:FloatBorder,CursorLine:BlinkCmpDocCursorLine,Search:None',
-          border = 'rounded'
-        }
-      }
-    },
-  },
-  {
-    'stevearc/conform.nvim',
-    keys = {
-      {
-        '<leader>f',
-        mode = 'v',
-        function()
-          require('conform').format({ async = true }, function(err)
-            if not err then
-              local mode = vim.api.nvim_get_mode().mode
-              if vim.startswith(string.lower(mode), 'v') then
-                vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'n', true)
-              end
-            end
-          end)
-        end,
-        desc = 'LSP range format'
-      },
-      {
-        '<S-D-i>',
-        mode = { 'n', 'i' },
-        function()
-          require('conform').format({ async = true })
-        end,
-        desc = 'LSP format current buffer'
-      },
-      {
-        '<S-M-i>',
-        mode = { 'n', 'i' },
-        function()
-          require('conform').format({ async = true })
-        end,
-        desc = 'LSP format current buffer'
-      }
-    },
-    opts = {
-      formatters_by_ft = {
-        c = { 'clang-format' },
-        python = { 'black' }
-      },
-      default_format_opts = {
-        lsp_format = 'fallback'
       }
     }
   },
