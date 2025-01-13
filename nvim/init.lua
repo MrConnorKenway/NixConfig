@@ -199,59 +199,9 @@ vim.api.nvim_create_autocmd('LspProgress', {
 
 require('lazy').setup({
   { import = 'plugins.ui' },
+  { import = 'plugins.git' },
   { import = 'plugins.lsp' },
   { import = 'plugins.edit' },
-  {
-    'lewis6991/gitsigns.nvim',
-    config = function()
-      local gitsigns = require('gitsigns')
-      gitsigns.setup {
-        sign_priority = 100,
-        preview_config = {
-          border = 'rounded'
-        }
-      }
-      vim.keymap.set('n', ']c', function()
-        if vim.api.nvim_buf_get_name(0):match('fugitive://') then
-          vim.cmd('normal! ]c | zz')
-        else
-          gitsigns.nav_hunk('next')
-        end
-      end, { desc = 'Go to next git change' })
-      vim.keymap.set('n', '[c', function()
-        if vim.api.nvim_buf_get_name(0):match('fugitive://') then
-          vim.cmd('normal! [c | zz')
-        else
-          gitsigns.nav_hunk('prev')
-        end
-      end, { desc = 'Go to previous git change' })
-      vim.keymap.set('n', '<leader>u', gitsigns.reset_hunk, { desc = 'Git reset hunk' })
-      vim.keymap.set('n', '<leader>b', gitsigns.blame_line, { desc = 'Git blame inline' })
-      vim.keymap.set('n', 'ga', gitsigns.stage_hunk, { desc = 'Git stage hunk' })
-    end
-  },
-  {
-    'tpope/vim-fugitive',
-    keys = {
-      { 'gs',        '<cmd>G<cr>',               desc = 'Git status' },
-      { 'gv',        '<cmd>vertical G<cr>',      desc = 'Git status vertical' },
-      { 'gl',        '<cmd>G log --stat<cr>',    desc = 'Git log' },
-      { 'gu',        '<cmd>Git! push<cr>',       desc = 'Git push' },
-      { '<leader>d', '<cmd>Gdiffsplit<cr>',      desc = 'Git diff' },
-      { '<leader>D', '<cmd>Gvdiffsplit @:%<cr>', desc = 'Git diff with staged' },
-      { '<leader>g', ':G ',                      desc = 'Git cmdline' }
-    },
-    event = 'CmdlineEnter',
-    init = function()
-      vim.api.nvim_create_autocmd('FileType', {
-        pattern = { 'fugitive', 'git' },
-        callback = function()
-          vim.keymap.set('n', '<C-p>', function() vim.api.nvim_feedkeys('(', 't', true) end, { buffer = true })
-          vim.keymap.set('n', '<C-n>', function() vim.api.nvim_feedkeys(')', 't', true) end, { buffer = true })
-        end
-      })
-    end
-  },
   {
     'tpope/vim-dispatch',
     keys = {
@@ -263,7 +213,6 @@ require('lazy').setup({
       vim.g.dispatch_no_maps = 1
     end
   },
-  { 'akinsho/git-conflict.nvim', config = true },
   {
     'nvim-treesitter/nvim-treesitter',
     config = function()
@@ -311,20 +260,6 @@ require('lazy').setup({
         border = 'rounded'
       }
     }
-  },
-  {
-    'rbong/vim-flog',
-    init = function()
-      vim.g.flog_enable_extended_chars = true
-    end,
-    cmd = { 'Flog', 'Flogsplit', 'Floggit' },
-    keys = {
-      { '<S-M-l>', function() vim.cmd('vertical Flogsplit') end, desc = 'Display git graph' },
-      { '<S-D-l>', function() vim.cmd('vertical Flogsplit') end, desc = 'Display git graph' }
-    },
-    dependencies = {
-      'tpope/vim-fugitive',
-    },
   },
   {
     'akinsho/toggleterm.nvim',
