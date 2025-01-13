@@ -198,7 +198,7 @@ vim.api.nvim_create_autocmd('LspProgress', {
 })
 
 require('lazy').setup({
-  require('heirline.config'),
+  { import = 'plugins.ui' },
   { 'mbbill/undotree' },
   {
     'windwp/nvim-autopairs',
@@ -211,100 +211,9 @@ require('lazy').setup({
     opts = {}
   },
   {
-    'b0o/incline.nvim',
-    dependencies = { 'SmiteshP/nvim-navic', 'nvim-tree/nvim-web-devicons' },
-    event = 'VeryLazy',
-    config = function()
-      local helpers = require 'incline.helpers'
-      local navic = require 'nvim-navic'
-      local devicons = require 'nvim-web-devicons'
-      local type_hl = {
-        File = 'Directory',
-        Module = '@include',
-        Namespace = '@namespace',
-        Package = '@include',
-        Class = '@structure',
-        Method = '@method',
-        Property = '@property',
-        Field = '@field',
-        Constructor = '@constructor',
-        Enum = '@field',
-        Interface = '@type',
-        Function = '@function',
-        Variable = '@variable',
-        Constant = '@constant',
-        String = '@string',
-        Number = '@number',
-        Boolean = '@boolean',
-        Array = '@field',
-        Object = '@type',
-        Key = '@keyword',
-        Null = '@comment',
-        EnumMember = '@field',
-        Struct = '@structure',
-        Event = '@keyword',
-        Operator = '@operator',
-        TypeParameter = '@type',
-      }
-
-      require('incline').setup {
-        window = {
-          padding = 0,
-          margin = { horizontal = 0, vertical = 1 },
-        },
-        hide = {
-          cursorline = 'focused_win',
-        },
-        render = function(props)
-          if props.focused then
-            local filename = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(props.buf), ':t')
-            if filename == '' then
-              filename = '[No Name]'
-            end
-            local extension = vim.fn.fnamemodify(filename, ':e')
-            local ft_icon, ft_color = devicons.get_icon_color(filename, extension, { default = true })
-            local modified = vim.bo[props.buf].modified
-            local res = {
-              ft_icon and { ' ', ft_icon, ' ', guibg = ft_color, guifg = helpers.contrast_color(ft_color) } or '',
-              ' ',
-              { filename, gui = modified and 'bold,italic' or 'bold' },
-              guibg = require('catppuccin.palettes').get_palette().surface0
-            }
-            local len = 0
-            for i, item in ipairs(navic.get_data(props.buf) or {}) do
-              len = len + #item.icon + #item.name
-              if len / vim.api.nvim_win_get_width(0) > 0.45 and i > 1 then
-                table.insert(res, { { '  ..' } })
-                break
-              end
-              table.insert(res, {
-                { '  ', group = 'NavicSeparator' },
-                { item.icon, group = type_hl[item.type] },
-                { item.name, group = type_hl[item.type] }
-              })
-            end
-            return res
-          end
-          return {}
-        end,
-      }
-    end
-  },
-  {
     'folke/lazydev.nvim',
     ft = 'lua', -- only load on lua files
     opts = {}
-  },
-  {
-    'folke/noice.nvim',
-    dependencies = { 'MunifTanjim/nui.nvim' },
-    opts = {
-      lsp = {
-        progress = { enabled = false },
-        hover = { enabled = false },
-        signature = { enabled = false }
-      }
-    }
   },
   {
     'lewis6991/gitsigns.nvim',
@@ -384,7 +293,6 @@ require('lazy').setup({
     }
   },
   { 'akinsho/git-conflict.nvim', config = true },
-  { 'romainl/vim-cool' },
   {
     'MrConnorKenway/vim-illuminate',
     event = 'LspAttach',
@@ -426,27 +334,6 @@ require('lazy').setup({
         ensure_installed = {
           'c', 'lua', 'vim', 'vimdoc', 'query', 'markdown', 'markdown_inline',
           'nix', 'asm', 'cpp', 'make', 'python', 'bash', 'rust', 'zig'
-        }
-      }
-    end
-  },
-  {
-    'catppuccin/nvim',
-    name = 'catppuccin-colorscheme',
-    priority = 1000,
-    lazy = false,
-    init = function()
-      vim.cmd.colorscheme('catppuccin-mocha')
-    end,
-    config = function()
-      require('catppuccin').setup {
-        custom_highlights = function()
-          return {
-            BlinkCmpLabelMatch = { italic = true, bold = true, fg = 'NONE' }
-          }
-        end,
-        integrations = {
-          blink_cmp = true
         }
       }
     end
@@ -497,50 +384,6 @@ require('lazy').setup({
     },
   },
   {
-    'rachartier/tiny-inline-diagnostic.nvim',
-    event = 'VeryLazy',
-    config = function()
-      vim.diagnostic.config({ virtual_text = false })
-      require('tiny-inline-diagnostic').setup {
-        options = {
-          use_icons_from_diagnostic = true
-        },
-        signs = {
-          left = " ",
-          right = " ",
-          diag = "●",
-          arrow = "    ",
-          up_arrow = "    ",
-          vertical = " │",
-          vertical_end = " └",
-        }
-      }
-    end
-  },
-  {
-    'stevearc/dressing.nvim',
-    event = 'VeryLazy'
-  },
-  {
-    'folke/snacks.nvim',
-    priority = 1000,
-    lazy = false,
-    keys = {
-      { '<leader>n', function() Snacks.notifier.show_history() end, desc = 'Notification History' },
-      { '<leader>c', function() Snacks.bufdelete.delete() end,      desc = 'Close buffer' }
-    },
-    opts = {
-      notifier = {
-        enabled = true,
-        top_down = false,
-        timeout = 1000,
-      },
-      bufdelete = {
-        enabled = true
-      },
-    }
-  },
-  {
     'akinsho/toggleterm.nvim',
     keys = {
       {
@@ -566,7 +409,6 @@ require('lazy').setup({
     'nmac427/guess-indent.nvim',
     opts = {}
   },
-  { 'nvim-tree/nvim-web-devicons' },
   {
     'prichrd/netrw.nvim',
     ft = 'netrw', -- only load on netrw files
@@ -866,13 +708,6 @@ require('lazy').setup({
     event = 'InsertEnter'
   },
   {
-    'nanozuki/tabby.nvim',
-    event = 'TabNew',
-    opts = {
-      preset = 'tab_only'
-    }
-  },
-  {
     'saghen/blink.cmp',
     lazy = false, -- lazy loading handled internally
 
@@ -958,44 +793,6 @@ require('lazy').setup({
   {
     'williamboman/mason.nvim',
     opts = {}
-  },
-  {
-    'SmiteshP/nvim-navic',
-    opts = {
-      icons = {
-        File = ' ',
-        Module = ' ',
-        Namespace = ' ',
-        Package = ' ',
-        Class = ' ',
-        Method = ' ',
-        Property = ' ',
-        Field = ' ',
-        Constructor = ' ',
-        Enum = ' ',
-        Interface = ' ',
-        Function = '󰊕 ',
-        Variable = '󰆧 ',
-        Constant = ' ',
-        String = ' ',
-        Number = ' ',
-        Boolean = ' ',
-        Array = '󰅪 ',
-        Object = ' ',
-        Key = '󰌋 ',
-        Null = ' ',
-        EnumMember = ' ',
-        Struct = ' ',
-        Event = ' ',
-        Operator = '󰆕 ',
-        TypeParameter = ' '
-      },
-      lsp = {
-        auto_attach = true,
-        preference = nil,
-      },
-      lazy_update_context = false,
-    }
   },
   {
     'neovim/nvim-lspconfig',
