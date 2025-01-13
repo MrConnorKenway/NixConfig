@@ -199,6 +199,7 @@ vim.api.nvim_create_autocmd('LspProgress', {
 
 require('lazy').setup({
   { import = 'plugins.ui' },
+  { import = 'plugins.lsp' },
   { 'mbbill/undotree' },
   {
     'windwp/nvim-autopairs',
@@ -208,11 +209,6 @@ require('lazy').setup({
   {
     'kylechui/nvim-surround',
     event = 'VeryLazy',
-    opts = {}
-  },
-  {
-    'folke/lazydev.nvim',
-    ft = 'lua', -- only load on lua files
     opts = {}
   },
   {
@@ -293,34 +289,6 @@ require('lazy').setup({
     }
   },
   { 'akinsho/git-conflict.nvim', config = true },
-  {
-    'MrConnorKenway/vim-illuminate',
-    event = 'LspAttach',
-    config = function()
-      require('illuminate').configure {
-        modes_allowlist = { 'n' },
-        providers = { 'lsp' }
-      }
-    end
-  },
-  {
-    'rmagatti/goto-preview',
-    keys = {
-      {
-        'gp',
-        function() require('goto-preview').goto_preview_definition {} end,
-        desc = 'Preview LSP definition in popup'
-      },
-      {
-        'gr',
-        function() require('goto-preview').goto_preview_references {} end,
-        desc = 'Preview LSP references in popup'
-      },
-    },
-    opts = {
-      border = { '╭', '─', '╮', '│', '╯', '─', '╰', '│' }
-    }
-  },
   {
     'nvim-treesitter/nvim-treesitter',
     config = function()
@@ -789,50 +757,6 @@ require('lazy').setup({
         }
       }
     },
-  },
-  {
-    'williamboman/mason.nvim',
-    opts = {}
-  },
-  {
-    'neovim/nvim-lspconfig',
-    config = function()
-      vim.api.nvim_create_autocmd('LspAttach', {
-        callback = function(event)
-          vim.lsp.handlers['textDocument/hover'] = vim.lsp.with(vim.lsp.handlers.hover, {
-            border = 'rounded'
-          })
-          vim.lsp.handlers['textDocument/signatureHelp'] = vim.lsp.with(vim.lsp.handlers.signature_help, {
-            border = 'rounded'
-          })
-
-          vim.keymap.set('n', '<leader>i', function()
-            vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf })
-          end, { desc = 'Toggle LSP inlay hint' })
-          vim.keymap.set('n', '<F2>', vim.lsp.buf.rename, { desc = 'LSP Rename' })
-          vim.keymap.set('n', 'g.', vim.lsp.buf.code_action, { desc = 'LSP code actions' })
-
-          vim.diagnostic.config({
-            signs = {
-              text = {
-                [vim.diagnostic.severity.ERROR] = '',
-                [vim.diagnostic.severity.WARN] = '󰔶',
-                [vim.diagnostic.severity.INFO] = '',
-                [vim.diagnostic.severity.HINT] = '',
-              }
-            }
-          })
-        end
-      })
-
-      local lspconfig = require('lspconfig')
-      lspconfig.clangd.setup {
-        cmd = { 'clangd', '--header-insertion=never' }
-      }
-      lspconfig.nixd.setup {}
-      lspconfig.lua_ls.setup {}
-      lspconfig.basedpyright.setup {}
-    end
   },
   {
     'stevearc/conform.nvim',
