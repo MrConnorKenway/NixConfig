@@ -197,14 +197,15 @@ vim.api.nvim_create_autocmd('LspProgress', {
   end,
 })
 
-require('lazy').setup({
-  { import = 'plugins.ui' },
-  { import = 'plugins.git' },
-  { import = 'plugins.lsp' },
-  { import = 'plugins.edit' },
-  { import = 'plugins.utils' },
-  { import = 'plugins.picker' }
-}, {
+require('lazy').setup {
+  spec = {
+    { import = 'plugins.ui' },
+    { import = 'plugins.git' },
+    { import = 'plugins.lsp' },
+    { import = 'plugins.edit' },
+    { import = 'plugins.utils' },
+    { import = 'plugins.picker' }
+  },
   ui = {
     border = 'rounded'
   },
@@ -215,6 +216,6 @@ require('lazy').setup({
       }
     }
   }
-})
+}
 
 vim.keymap.set('n', '<leader>l', function() require('lazy.view').show('home') end, { desc = 'Display lazy' })
