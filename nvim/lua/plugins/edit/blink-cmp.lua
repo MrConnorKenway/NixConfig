@@ -55,7 +55,7 @@ return {
     },
 
     completion = {
-      accept = { auto_brackets = { enabled = true } },
+      accept = { auto_brackets = { enabled = false } },
       menu = {
         winhighlight = 'Normal:Normal,FloatBorder:FloatBorder,CursorLine:BlinkCmpMenuSelection,Search:None',
         draw = {
