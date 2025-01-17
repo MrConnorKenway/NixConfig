@@ -383,6 +383,53 @@ return {
       hl = { fg = theme_colors.green, bold = true },
     }
 
+    local function pad(child)
+      return {
+        Space,
+        condition = child.condition,
+        child,
+      }
+    end
+    local function OverseerTasksForStatus(status)
+      return {
+        condition = function(self)
+          return self.tasks[status]
+        end,
+        provider = function(self)
+          return string.format('%s%d', self.symbols[status], #self.tasks[status])
+        end,
+        hl = function()
+          return {
+            fg = utils.get_highlight(string.format('Overseer%s', status)).fg,
+          }
+        end,
+      }
+    end
+
+    local Overseer = {
+      condition = function()
+        return package.loaded.overseer
+      end,
+      init = function(self)
+        local tasks = require('overseer.task_list').list_tasks({ unique = true })
+        local tasks_by_status = require('overseer.util').tbl_group_by(tasks, 'status')
+        self.tasks = tasks_by_status
+      end,
+      static = {
+        symbols = {
+          ['CANCELED'] = ' ',
+          ['FAILURE'] = '󰅚 ',
+          ['SUCCESS'] = '󰄴 ',
+          ['RUNNING'] = '󰑮 ',
+        },
+      },
+
+      pad(OverseerTasksForStatus('CANCELED')),
+      pad(OverseerTasksForStatus('RUNNING')),
+      pad(OverseerTasksForStatus('SUCCESS')),
+      pad(OverseerTasksForStatus('FAILURE')),
+    }
+
     local DefaultStatusline = {
       ViMode,
       Space,
@@ -390,6 +437,7 @@ return {
       Space,
       Git,
       Align,
+      Overseer,
       Diagnostics,
       Space,
       LSPActive,
