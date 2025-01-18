@@ -77,10 +77,6 @@ vim.keymap.set('i', '<C-a>', '<Home>', { silent = true })
 vim.keymap.set('i', '<C-e>', '<End>', { silent = true })
 
 
-local function autocmd(events, ...)
-  vim.api.nvim_create_autocmd(events, { callback = ... })
-end
-
 vim.api.nvim_create_autocmd('FileType', {
   pattern = 'floggraph',
   callback = function()
@@ -89,25 +85,27 @@ vim.api.nvim_create_autocmd('FileType', {
   end
 })
 
-autocmd('BufWinEnter', function()
-  if vim.bo.buftype:len() > 0 then
-    -- current buf is special buf
-    return
-  end
+vim.api.nvim_create_autocmd('BufWinEnter', {
+  callback = function()
+    if vim.bo.buftype:len() > 0 then
+      -- current buf is special buf
+      return
+    end
 
-  if not vim.wo[0][0].number then
-    vim.wo[0][0].number = true
-  end
+    if not vim.wo[0][0].number then
+      vim.wo[0][0].number = true
+    end
 
-  if vim.wo[0][0].number then
-    vim.wo[0][0].list = true
-    vim.wo[0][0].listchars = 'tab:⇥ ,lead:·,trail:•,multispace:·'
-    vim.wo[0][0].cursorline = true
-    vim.wo[0][0].signcolumn = 'yes'
+    if vim.wo[0][0].number then
+      vim.wo[0][0].list = true
+      vim.wo[0][0].listchars = 'tab:⇥ ,lead:·,trail:•,multispace:·'
+      vim.wo[0][0].cursorline = true
+      vim.wo[0][0].signcolumn = 'yes'
+    end
   end
-end)
+})
 
-vim.api.nvim_create_autocmd({ 'BufEnter' }, {
+vim.api.nvim_create_autocmd('BufEnter', {
   callback = function()
     if vim.g.termmode == 't' then
       vim.cmd('startinsert')
@@ -116,23 +114,27 @@ vim.api.nvim_create_autocmd({ 'BufEnter' }, {
   pattern = { 'term://*' },
 })
 
-vim.api.nvim_create_autocmd({ 'WinLeave' }, {
+vim.api.nvim_create_autocmd('WinLeave', {
   callback = function()
     vim.g.termmode = vim.fn.mode(1)
   end,
   pattern = { 'term://*' },
 })
 
-autocmd('TermOpen', function()
-  vim.wo[0][0].number = false
-  vim.wo[0][0].list = false
-  vim.wo[0][0].cursorline = false
-  vim.wo[0][0].signcolumn = 'no'
-end)
+vim.api.nvim_create_autocmd('TermOpen', {
+  callback = function()
+    vim.wo[0][0].number = false
+    vim.wo[0][0].list = false
+    vim.wo[0][0].cursorline = false
+    vim.wo[0][0].signcolumn = 'no'
+  end
+})
 
-autocmd({ 'WinLeave' }, function()
-  vim.wo[0][0].cursorline = false
-end)
+vim.api.nvim_create_autocmd('WinLeave', {
+  callback = function()
+    vim.wo[0][0].cursorline = false
+  end
+})
 
 ---@type table<number, {token:lsp.ProgressToken, msg:string, done:boolean}[]>
 local progress = vim.defaulttable()
