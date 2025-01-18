@@ -89,7 +89,7 @@ vim.api.nvim_create_autocmd('FileType', {
   end
 })
 
-autocmd({ 'VimEnter', 'WinEnter', 'BufWinEnter' }, function()
+autocmd('BufWinEnter', function()
   if vim.bo.buftype:len() > 0 then
     -- current buf is special buf
     return
