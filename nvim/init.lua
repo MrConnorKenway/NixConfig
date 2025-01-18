@@ -107,7 +107,7 @@ vim.api.nvim_create_autocmd('BufWinEnter', {
 
 vim.api.nvim_create_autocmd('BufEnter', {
   callback = function()
-    if vim.g.termmode == 't' then
+    if vim.b.termmode == 't' then
       vim.cmd('startinsert')
     end
   end,
@@ -116,7 +116,7 @@ vim.api.nvim_create_autocmd('BufEnter', {
 
 vim.api.nvim_create_autocmd('WinLeave', {
   callback = function()
-    vim.g.termmode = vim.fn.mode(1)
+    vim.b.termmode = vim.fn.mode(1)
   end,
   pattern = { 'term://*' },
 })
