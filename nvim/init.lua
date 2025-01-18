@@ -78,6 +78,26 @@ vim.keymap.set('i', '<C-a>', '<Home>', { silent = true })
 vim.keymap.set('i', '<C-e>', '<End>', { silent = true })
 
 
+vim.api.nvim_create_autocmd('BufRead', {
+  callback = function(opts)
+    vim.api.nvim_create_autocmd('BufWinEnter', {
+      once = true,
+      buffer = opts.buf,
+      callback = function()
+        local ft = vim.bo[opts.buf].filetype
+        local last_known_line = vim.api.nvim_buf_get_mark(opts.buf, '"')[1]
+        if
+            not (ft:match('gitcommit') or ft:match('gitrebase'))
+            and last_known_line > 1
+            and last_known_line <= vim.api.nvim_buf_line_count(opts.buf)
+        then
+          vim.api.nvim_feedkeys([[g`"]], 'nx', false)
+        end
+      end,
+    })
+  end
+})
+
 vim.api.nvim_create_autocmd('FileType', {
   pattern = 'floggraph',
   callback = function()
