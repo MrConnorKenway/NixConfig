@@ -13,5 +13,10 @@ return { 'echasnovski/mini.files',
     { '<leader>E', function() require('mini.files').open() end, desc = 'Open mini.files menu at CWD' },
     { '<S-D-e>', function() require('mini.files').open() end, desc = 'Open mini.files menu at CWD' },
   },
-  opts = {}
+  opts = {
+    mappings = {
+      go_in = '<cr>',
+      go_out = '-'
+    }
+  }
 }
