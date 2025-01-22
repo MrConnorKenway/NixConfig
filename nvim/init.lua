@@ -101,6 +101,7 @@ vim.api.nvim_create_autocmd('BufRead', {
 vim.api.nvim_create_autocmd('FileType', {
   pattern = 'floggraph',
   callback = function()
+    vim.wo[0][0].cursorline = true
     vim.wo[0][0].number = false
     vim.wo[0][0].list = false
   end
@@ -110,6 +111,9 @@ vim.api.nvim_create_autocmd({ 'WinEnter', 'BufWinEnter' }, {
   callback = function()
     if vim.bo.buftype:len() > 0 then
       -- current buf is special buf
+      if vim.bo.filetype == 'floggraph' then
+        vim.wo[0][0].cursorline = true
+      end
       return
     end
 
