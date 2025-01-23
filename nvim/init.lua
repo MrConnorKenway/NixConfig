@@ -70,12 +70,14 @@ vim.keymap.set('v', '<D-/>', function() return require('vim._comment').operator(
 
 
 -- readline-style keybindings
-vim.keymap.set('i', '<C-b>', '<Left>', { silent = true })
-vim.keymap.set('i', '<C-f>', '<Right>', { silent = true })
-vim.keymap.set('i', '<C-p>', '<Up>', { silent = true })
-vim.keymap.set('i', '<C-n>', '<Down>', { silent = true })
-vim.keymap.set('i', '<C-a>', '<Home>', { silent = true })
-vim.keymap.set('i', '<C-e>', '<End>', { silent = true })
+vim.keymap.set({ 'c', 'i' }, '<C-b>', '<Left>')
+vim.keymap.set({ 'c', 'i' }, '<C-f>', '<Right>')
+vim.keymap.set('i', '<C-p>', '<Up>')
+vim.keymap.set('i', '<C-n>', '<Down>')
+vim.keymap.set({ 'c', 'i' }, '<C-a>', '<Home>')
+vim.keymap.set('i', '<C-e>', '<End>')
+vim.keymap.set({ 'c', 'i' }, '<M-b>', '<S-Left>')
+vim.keymap.set({ 'c', 'i' }, '<M-f>', '<S-Right>')
 
 
 vim.api.nvim_create_autocmd('BufRead', {

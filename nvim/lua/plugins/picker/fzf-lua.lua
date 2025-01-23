@@ -47,7 +47,7 @@ return {
     },
     {
       '<M-f>',
-      mode = { 'n', 'i' },
+      mode = { 'n' },
       function() require('fzf-lua').lgrep_curbuf() end,
       desc = 'FzfLua regex search current buffer'
     },
