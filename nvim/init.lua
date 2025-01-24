@@ -16,6 +16,7 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 vim.o.sessionoptions = 'blank,buffers,curdir,folds,help,tabpages,winsize'
+vim.o.equalalways = false
 
 vim.opt.ignorecase = true
 vim.opt.termguicolors = true
