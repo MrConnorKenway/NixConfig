@@ -20,6 +20,9 @@ local task_list = {}
 ---@class Sidebar
 local sidebar
 
+---@type integer?
+local empty_task_output_buf
+
 --TODO: make configurable
 local tasklist_width = 32
 local tasklist_height = 12
@@ -224,9 +227,16 @@ M.setup = function()
         sidebar = new_sidebar()
         render_sidebar()
       end
-      vim.cmd [[botright split | enew]]
-      sidebar.taskout_winid = vim.api.nvim_get_current_win()
-      vim.cmd [[vsplit]]
+      if not empty_task_output_buf then
+        empty_task_output_buf = vim.api.nvim_create_buf(false, true)
+        vim.api.nvim_buf_set_name(empty_task_output_buf, 'Task Output')
+        vim.bo[empty_task_output_buf].buftype = 'nofile'
+        vim.bo[empty_task_output_buf].bufhidden = 'hide'
+        vim.bo[empty_task_output_buf].buflisted = false
+        vim.bo[empty_task_output_buf].swapfile = false
+        vim.bo[empty_task_output_buf].modifiable = false
+      end
+      vim.cmd [[botright split]]
       local tasklist_winid = vim.api.nvim_get_current_win()
       vim.api.nvim_win_set_height(tasklist_winid, tasklist_height)
       vim.api.nvim_win_set_width(tasklist_winid, tasklist_width)
@@ -245,6 +255,8 @@ M.setup = function()
         vim.api.nvim_set_option_value(k, v, { scope = 'local', win = tasklist_winid })
       end
       sidebar.tasklist_winid = tasklist_winid
+      sidebar.taskout_winid = vim.api.nvim_open_win(empty_task_output_buf, false,
+        { split = 'right', width = vim.o.columns - tasklist_width })
     end,
     {
       nargs = 0,
