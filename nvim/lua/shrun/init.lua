@@ -38,10 +38,6 @@ local tasklist_width = 32
 local tasklist_height = 12
 local separator_stem = '─'
 
-M.get = function()
-  return sidebar
-end
-
 local task_nr = 0
 
 local function highlight_focused()
