@@ -118,7 +118,9 @@ local function sidebar_on_cursor_move(bufnr)
   -- })
   sidebar.focused_task_id = task.id
   if vim.api.nvim_win_is_valid(sidebar.taskout_winid) then
+    vim.wo[sidebar.taskout_winid].winfixbuf = false
     vim.api.nvim_win_set_buf(sidebar.taskout_winid, task.buf_id)
+    vim.wo[sidebar.taskout_winid].winfixbuf = true
   end
 
   highlight_focused()
@@ -131,6 +133,7 @@ local function new_task_output_window(buf_id)
   local default_opts = {
     winfixwidth = true,
     winfixheight = true,
+    winfixbuf = true,
     number = false,
     signcolumn = 'no',
     foldcolumn = '0',
