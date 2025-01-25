@@ -27,6 +27,8 @@ return {
       { desc = 'Git reset hunk of visual selected range', silent = true })
     vim.keymap.set('n', '<leader>b', gitsigns.blame_line, { desc = 'Git blame inline' })
     vim.keymap.set('n', 'ga', gitsigns.stage_hunk, { desc = 'Git stage hunk' })
+    vim.keymap.set('v', 'ga', ":'<,>'Gitsigns stage_hunk<cr>",
+      { desc = 'Git stage hunk of visual selected range', silent = true })
     vim.keymap.set('n', 'gi', gitsigns.preview_hunk_inline, { desc = 'Git preview hunk inline' })
   end
 }
