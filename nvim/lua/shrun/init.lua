@@ -7,12 +7,17 @@ local M = {}
 ---@field term_id integer
 ---@field job_id integer
 
+---@class TaskRange
+---@field start_line integer
+---@field end_line integer
+---@field task_id integer
+
 ---@type Task[]
 local task_list = {}
 
 ---@class Sidebar
 ---@field bufnr integer
----@field task_lines {[1]: integer, [2]: Task} -- map from line number to task
+---@field task_ranges TaskRange[] -- map from line range to task
 ---@field focused_task_id integer?
 ---@field tasklist_winid integer?
 ---@field taskout_winid integer?
@@ -39,16 +44,13 @@ local function highlight_focused()
   vim.api.nvim_buf_clear_namespace(sidebar.bufnr, ns, 0, -1)
   if not sidebar.focused_task_id then return end
 
-  local start_lnum = 1
-  for _, v in ipairs(sidebar.task_lines) do
-    local end_lnum, task = v[1], v[2]
-    if task.id == sidebar.focused_task_id then
-      vim.api.nvim_buf_set_extmark(sidebar.bufnr, ns, start_lnum - 1, 0, {
+  for _, task_range in ipairs(sidebar.task_ranges) do
+    if task_range.task_id == sidebar.focused_task_id then
+      vim.api.nvim_buf_set_extmark(sidebar.bufnr, ns, task_range.start_line - 1, 0, {
         line_hl_group = "CursorLine",
-        end_row = end_lnum - 1,
+        end_row = task_range.end_line - 1,
       })
     end
-    start_lnum = end_lnum + 2 -- 2: we have a separator
   end
 end
 
@@ -63,11 +65,14 @@ local function render_sidebar()
   local lines = {}
   local separator = string.rep(separator_stem, vim.o.columns)
 
-  sidebar.task_lines = {}
+  sidebar.task_ranges = {}
   for i = #task_list, 1, -1 do
     local task = task_list[i]
+    ---@type TaskRange
+    local task_range = { start_line = #lines + 1, end_line = -1, task_id = task.id }
     render_task(lines, task)
-    table.insert(sidebar.task_lines, { #lines, task })
+    task_range.end_line = #lines
+    table.insert(sidebar.task_ranges, task_range)
     if i > 1 then
       table.insert(lines, separator)
     end
@@ -84,10 +89,9 @@ end
 ---@param lnum integer
 ---@return Task?
 local function sidebar_get_task_from_line(lnum)
-  for _, v in ipairs(sidebar.task_lines) do
-    -- end_lnum, task = v[1], v[2]
-    if v[1] >= lnum then
-      return v[2]
+  for _, task_range in ipairs(sidebar.task_ranges) do
+    if task_range.end_line >= lnum then
+      return task_list[task_range.task_id]
     end
   end
   return nil
