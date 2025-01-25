@@ -77,6 +77,18 @@ local function render_sidebar()
   highlight_focused()
 end
 
+---@param lnum integer
+---@return Task?
+local function sidebar_get_task_from_line(lnum)
+  for _, v in ipairs(sidebar.task_lines) do
+    -- end_lnum, task = v[1], v[2]
+    if v[1] >= lnum then
+      return v[2]
+    end
+  end
+  return nil
+end
+
 local function sidebar_on_cursor_move(bufnr)
   local winid
   if vim.api.nvim_get_current_buf() == bufnr then
@@ -86,22 +98,10 @@ local function sidebar_on_cursor_move(bufnr)
   end
 
   local lnum = vim.api.nvim_win_get_cursor(winid)[1]
-  ---@type Task
-  local task
+  ---@type Task?
+  local task = sidebar_get_task_from_line(lnum)
 
-  -- get task from line
-  for _, v in ipairs(sidebar.task_lines) do
-    local end_lnum = v[1]
-    if end_lnum >= lnum then
-      task = v[2]
-      if task.id == sidebar.focused_task_id then
-        return
-      end
-      break
-    end
-  end
-
-  if not task then
+  if not task or task.id == sidebar.focused_task_id then
     return
   end
 
@@ -113,7 +113,9 @@ local function sidebar_on_cursor_move(bufnr)
   --   },
   -- })
   sidebar.focused_task_id = task.id
-  vim.api.nvim_win_set_buf(sidebar.taskout_winid, task.buf_id)
+  if vim.api.nvim_win_is_valid(sidebar.taskout_winid) then
+    vim.api.nvim_win_set_buf(sidebar.taskout_winid, task.buf_id)
+  end
 
   highlight_focused()
 end
@@ -130,6 +132,20 @@ local function new_sidebar()
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].swapfile = false
   vim.bo[bufnr].modifiable = false
+
+  vim.keymap.set('n', '<cr>', function()
+    if vim.api.nvim_win_is_valid(sidebar.taskout_winid) then
+      vim.api.nvim_set_current_win(sidebar.taskout_winid)
+    else
+      -- open task output panel if window is closed
+      local lnum = vim.api.nvim_win_get_cursor(0)[1]
+      local task = sidebar_get_task_from_line(lnum)
+      if task then
+        sidebar.taskout_winid = vim.api.nvim_open_win(task.buf_id, false,
+          { split = 'right', width = vim.o.columns - tasklist_width })
+      end
+    end
+  end, { buffer = bufnr })
 
   vim.api.nvim_create_autocmd('BufHidden', {
     buffer = bufnr,
