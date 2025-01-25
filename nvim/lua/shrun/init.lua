@@ -121,17 +121,17 @@ local function sidebar_on_cursor_move(bufnr)
 end
 
 local function new_sidebar()
-  local bufnr = vim.api.nvim_create_buf(false, true)
+  local tasklist_bufnr = vim.api.nvim_create_buf(false, true)
   local task_lines = {}
 
-  vim.api.nvim_buf_set_name(bufnr, 'TaskList')
+  vim.api.nvim_buf_set_name(tasklist_bufnr, 'TaskList')
 
-  vim.bo[bufnr].filetype = 'tasklist'
-  vim.bo[bufnr].buftype = 'nofile'
-  vim.bo[bufnr].bufhidden = 'hide'
-  vim.bo[bufnr].buflisted = false
-  vim.bo[bufnr].swapfile = false
-  vim.bo[bufnr].modifiable = false
+  vim.bo[tasklist_bufnr].filetype = 'tasklist'
+  vim.bo[tasklist_bufnr].buftype = 'nofile'
+  vim.bo[tasklist_bufnr].bufhidden = 'hide'
+  vim.bo[tasklist_bufnr].buflisted = false
+  vim.bo[tasklist_bufnr].swapfile = false
+  vim.bo[tasklist_bufnr].modifiable = false
 
   vim.keymap.set('n', '<cr>', function()
     if vim.api.nvim_win_is_valid(sidebar.taskout_winid) then
@@ -145,10 +145,10 @@ local function new_sidebar()
           { split = 'right', width = vim.o.columns - tasklist_width })
       end
     end
-  end, { buffer = bufnr })
+  end, { buffer = tasklist_bufnr })
 
   vim.api.nvim_create_autocmd('BufHidden', {
-    buffer = bufnr,
+    buffer = tasklist_bufnr,
     callback = function()
       if vim.api.nvim_win_is_valid(sidebar.taskout_winid) then
         vim.api.nvim_win_close(sidebar.taskout_winid, false)
@@ -157,10 +157,10 @@ local function new_sidebar()
   })
 
   vim.api.nvim_create_autocmd('CursorMoved', {
-    buffer = bufnr,
+    buffer = tasklist_bufnr,
     nested = false, -- TODO: do we need nested?
     callback = function()
-      sidebar_on_cursor_move(bufnr)
+      sidebar_on_cursor_move(tasklist_bufnr)
     end
   })
 
@@ -172,7 +172,7 @@ local function new_sidebar()
   })
 
   return {
-    bufnr = bufnr,
+    bufnr = tasklist_bufnr,
     task_lines = task_lines
   }
 end
