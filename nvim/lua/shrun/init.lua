@@ -248,12 +248,13 @@ M.setup = function()
         on_stdout = function(job_id, out)
           vim.api.nvim_chan_send(task.term_id, table.concat(out, '\r\n'))
         end,
-        on_exit = function(job_id, data, event)
-          if data == 0 then
+        on_exit = function(job_id, exit_code, event)
+          if exit_code == 0 then
             vim.notify(job_id .. ' success', vim.log.levels.TRACE)
           else
             vim.notify(job_id .. ' failed', vim.log.levels.ERROR)
           end
+          vim.api.nvim_chan_send(task.term_id, string.format('\n[ Process exited with %d ]', exit_code))
         end
       })
       vim.api.nvim_buf_set_name(task.buf_id, string.format('task %d:%s', task.job_id, cmd.args))
