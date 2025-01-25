@@ -13,7 +13,7 @@ local task_list = {}
 ---@class Sidebar
 ---@field bufnr integer
 ---@field task_lines {[1]: integer, [2]: Task} -- map from line number to task
----@field focused_task_id integer
+---@field focused_task_id integer?
 ---@field tasklist_winid integer?
 ---@field taskout_winid integer?
 
@@ -124,6 +124,26 @@ local function sidebar_on_cursor_move(bufnr)
   highlight_focused()
 end
 
+---@param buf_id integer the bufnr of task output buffer, i.e., Task.buf_id
+local function new_task_output_window(buf_id)
+  local winid = vim.api.nvim_open_win(buf_id, false,
+    { split = 'right', width = vim.o.columns - tasklist_width })
+  local default_opts = {
+    winfixwidth = true,
+    winfixheight = true,
+    number = false,
+    signcolumn = 'no',
+    foldcolumn = '0',
+    relativenumber = false,
+    wrap = false,
+    spell = false,
+  }
+  for k, v in pairs(default_opts) do
+    vim.api.nvim_set_option_value(k, v, { scope = 'local', win = winid })
+  end
+  return winid
+end
+
 local function new_sidebar()
   local tasklist_bufnr = vim.api.nvim_create_buf(false, true)
   local task_lines = {}
@@ -145,8 +165,7 @@ local function new_sidebar()
       local lnum = vim.api.nvim_win_get_cursor(0)[1]
       local task = sidebar_get_task_from_line(lnum)
       if task then
-        sidebar.taskout_winid = vim.api.nvim_open_win(task.buf_id, false,
-          { split = 'right', width = vim.o.columns - tasklist_width })
+        sidebar.taskout_winid = new_task_output_window(task.buf_id)
       end
     end
   end, { buffer = tasklist_bufnr })
@@ -188,8 +207,8 @@ M.setup = function()
     function(cmd)
       ---@class Task
       local task = {}
-      task.id = task_nr
       task_nr = task_nr + 1
+      task.id = task_nr
       task.cmd = cmd.args
       task.buf_id = vim.api.nvim_create_buf(false, true)
 
@@ -260,8 +279,11 @@ M.setup = function()
         vim.api.nvim_set_option_value(k, v, { scope = 'local', win = tasklist_winid })
       end
       sidebar.tasklist_winid = tasklist_winid
-      sidebar.taskout_winid = vim.api.nvim_open_win(empty_task_output_buf, false,
-        { split = 'right', width = vim.o.columns - tasklist_width })
+      if sidebar.focused_task_id then
+        sidebar.taskout_winid = new_task_output_window(task_list[sidebar.focused_task_id].buf_id)
+      else
+        sidebar.taskout_winid = new_task_output_window(empty_task_output_buf)
+      end
     end,
     {
       nargs = 0,
