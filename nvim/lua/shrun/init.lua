@@ -202,6 +202,30 @@ local function new_sidebar()
   }
 end
 
+---Currently when calling `vim.api.nvim_open_term`, neovim's libvterm will use
+---the width of current window to render terminal output, thus we have to create
+---a temporary fullscreen window to mitigate such issu
+---@param bufnr integer
+---@param fn fun()
+local function run_in_fullscreen_win(bufnr, fn)
+  local start_winid = vim.api.nvim_get_current_win()
+  local winid = vim.api.nvim_open_win(bufnr, false, {
+    relative = 'editor',
+    width = vim.o.columns,
+    height = vim.o.lines,
+    row = 0,
+    col = 0,
+    noautocmd = true,
+  })
+  vim.api.nvim_set_current_win(winid)
+  local ok, err = xpcall(fn, debug.traceback)
+  if not ok then
+    vim.api.nvim_err_writeln(err)
+  end
+  vim.api.nvim_win_close(winid, false)
+  vim.api.nvim_set_current_win(start_winid)
+end
+
 M.setup = function()
   vim.api.nvim_create_user_command('Task',
     function(cmd)
@@ -212,11 +236,13 @@ M.setup = function()
       task.cmd = cmd.args
       task.buf_id = vim.api.nvim_create_buf(false, true)
 
-      task.term_id = vim.api.nvim_open_term(task.buf_id, {
-        on_input = function(_, _, _, data)
-          vim.api.nvim_chan_send(task.job_id, data)
-        end
-      })
+      run_in_fullscreen_win(task.buf_id, function()
+        task.term_id = vim.api.nvim_open_term(task.buf_id, {
+          on_input = function(_, _, _, data)
+            vim.api.nvim_chan_send(task.job_id, data)
+          end
+        })
+      end)
       task.job_id = vim.fn.jobstart(task.cmd, {
         pty = true,
         on_stdout = function(job_id, out)
