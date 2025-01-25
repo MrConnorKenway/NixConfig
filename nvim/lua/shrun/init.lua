@@ -15,10 +15,15 @@ local M = {}
 ---@type Task[]
 local task_list = {}
 
+---@param range TaskRange
+local function task_range_to_bufnr(range)
+  return task_list[range.task_id].buf_id
+end
+
 ---@class Sidebar
 ---@field bufnr integer
 ---@field task_ranges TaskRange[] -- map from line range to task
----@field focused_task_id integer?
+---@field focused_task_range TaskRange?
 ---@field tasklist_winid integer?
 ---@field taskout_winid integer?
 
@@ -42,16 +47,14 @@ local task_nr = 0
 local function highlight_focused()
   local ns = vim.api.nvim_create_namespace('tasklist_focus')
   vim.api.nvim_buf_clear_namespace(sidebar.bufnr, ns, 0, -1)
-  if not sidebar.focused_task_id then return end
 
-  for _, task_range in ipairs(sidebar.task_ranges) do
-    if task_range.task_id == sidebar.focused_task_id then
-      vim.api.nvim_buf_set_extmark(sidebar.bufnr, ns, task_range.start_line - 1, 0, {
-        line_hl_group = "CursorLine",
-        end_row = task_range.end_line - 1,
-      })
-    end
-  end
+  local task_range = sidebar.focused_task_range
+  if not task_range then return end
+
+  vim.api.nvim_buf_set_extmark(sidebar.bufnr, ns, task_range.start_line - 1, 0, {
+    line_hl_group = "CursorLine",
+    end_row = task_range.end_line - 1,
+  })
 end
 
 ---@param lines string[]
@@ -87,11 +90,11 @@ local function render_sidebar()
 end
 
 ---@param lnum integer
----@return Task?
-local function sidebar_get_task_from_line(lnum)
+---@return TaskRange?
+local function sidebar_get_task_range_from_line(lnum)
   for _, task_range in ipairs(sidebar.task_ranges) do
     if task_range.end_line >= lnum then
-      return task_list[task_range.task_id]
+      return task_range
     end
   end
   return nil
@@ -106,10 +109,14 @@ local function sidebar_on_cursor_move(bufnr)
   end
 
   local lnum = vim.api.nvim_win_get_cursor(winid)[1]
-  ---@type Task?
-  local task = sidebar_get_task_from_line(lnum)
+  ---@type TaskRange?
+  local range = sidebar_get_task_range_from_line(lnum)
 
-  if not task or task.id == sidebar.focused_task_id then
+  if not range then
+    return
+  end
+
+  if sidebar.focused_task_range and sidebar.focused_task_range == range then
     return
   end
 
@@ -120,10 +127,10 @@ local function sidebar_on_cursor_move(bufnr)
   --     task_id = task.id,
   --   },
   -- })
-  sidebar.focused_task_id = task.id
+  sidebar.focused_task_range = range
   if vim.api.nvim_win_is_valid(sidebar.taskout_winid) then
     vim.wo[sidebar.taskout_winid].winfixbuf = false
-    vim.api.nvim_win_set_buf(sidebar.taskout_winid, task.buf_id)
+    vim.api.nvim_win_set_buf(sidebar.taskout_winid, task_range_to_bufnr(range))
     vim.wo[sidebar.taskout_winid].winfixbuf = true
   end
 
@@ -170,9 +177,9 @@ local function new_sidebar()
     else
       -- open task output panel if window is closed
       local lnum = vim.api.nvim_win_get_cursor(0)[1]
-      local task = sidebar_get_task_from_line(lnum)
-      if task then
-        sidebar.taskout_winid = new_task_output_window(task.buf_id)
+      local range = sidebar_get_task_range_from_line(lnum)
+      if range then
+        sidebar.taskout_winid = new_task_output_window(task_range_to_bufnr(range))
       end
     end
   end, { buffer = tasklist_bufnr })
@@ -313,8 +320,9 @@ M.setup = function()
         vim.api.nvim_set_option_value(k, v, { scope = 'local', win = tasklist_winid })
       end
       sidebar.tasklist_winid = tasklist_winid
-      if sidebar.focused_task_id then
-        sidebar.taskout_winid = new_task_output_window(task_list[sidebar.focused_task_id].buf_id)
+      if sidebar.focused_task_range then
+        local bufnr = task_range_to_bufnr(sidebar.focused_task_range)
+        sidebar.taskout_winid = new_task_output_window(bufnr)
       else
         sidebar.taskout_winid = new_task_output_window(empty_task_output_buf)
       end
