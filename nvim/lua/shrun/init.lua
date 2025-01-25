@@ -20,6 +20,10 @@ local task_list = {}
 ---@class Sidebar
 local sidebar
 
+--TODO: make configurable
+local tasklist_width = 32
+local tasklist_height = 12
+
 M.get = function()
   return sidebar
 end
@@ -207,8 +211,8 @@ M.setup = function()
       sidebar.taskout_winid = vim.api.nvim_get_current_win()
       vim.cmd [[vsplit]]
       local tasklist_winid = vim.api.nvim_get_current_win()
-      vim.api.nvim_win_set_height(tasklist_winid, 12)
-      vim.api.nvim_win_set_width(tasklist_winid, 32)
+      vim.api.nvim_win_set_height(tasklist_winid, tasklist_height)
+      vim.api.nvim_win_set_width(tasklist_winid, tasklist_width)
       vim.api.nvim_win_set_buf(tasklist_winid, sidebar.bufnr)
       local default_opts = {
         winfixwidth = true,
