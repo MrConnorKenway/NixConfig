@@ -8,8 +8,8 @@ local M = {}
 ---@field job_id integer
 
 ---@class TaskRange
----@field start_line integer
----@field end_line integer
+---@field start_line integer?
+---@field end_line integer?
 ---@field task_id integer
 
 ---@type Task[]
@@ -46,6 +46,16 @@ local function highlight_focused()
 
   local task_range = sidebar.focused_task_range
   if not task_range then return end
+
+  if not task_range.end_line then
+    -- slow path
+    for _, r in ipairs(sidebar.task_ranges) do
+      if r.task_id == task_range.task_id then
+        task_range = r
+        break
+      end
+    end
+  end
 
   vim.api.nvim_buf_set_extmark(sidebar.bufnr, ns, task_range.start_line - 1, 0, {
     line_hl_group = "CursorLine",
@@ -270,6 +280,17 @@ M.setup = function()
       vim.api.nvim_buf_set_name(task.buf_id, string.format('task %d:%s', task.job_id, cmd.args))
       table.insert(task_list, task)
       if sidebar then
+        if vim.api.nvim_get_current_buf() == sidebar.bufnr then
+          -- move cursor to the first line, and the CursorMoved autocmd will do
+          -- the work for us
+          vim.api.nvim_win_set_cursor(sidebar.tasklist_winid, { 1, 0 })
+        else
+          sidebar.focused_task_range = {
+            start_line = nil,
+            end_line = nil,
+            task_id = task.id
+          }
+        end
         render_sidebar()
       end
       vim.notify(vim.inspect(task_list), vim.log.levels.DEBUG)
