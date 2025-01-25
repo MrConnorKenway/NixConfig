@@ -135,7 +135,7 @@ local function new_task_output_window(buf_id)
     signcolumn = 'no',
     foldcolumn = '0',
     relativenumber = false,
-    wrap = false,
+    wrap = true,
     spell = false,
   }
   for k, v in pairs(default_opts) do
