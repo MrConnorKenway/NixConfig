@@ -14,8 +14,8 @@ local task_list = {}
 ---@field bufnr integer
 ---@field task_lines {[1]: integer, [2]: Task} -- map from line number to task
 ---@field focused_task_id integer
----@field tasklist_winid integer
----@field taskout_winid integer
+---@field tasklist_winid integer?
+---@field taskout_winid integer?
 
 ---@class Sidebar
 local sidebar
@@ -157,6 +157,8 @@ local function new_sidebar()
       if vim.api.nvim_win_is_valid(sidebar.taskout_winid) then
         vim.api.nvim_win_close(sidebar.taskout_winid, false)
       end
+      sidebar.tasklist_winid = nil
+      sidebar.taskout_winid = nil
     end
   })
 
@@ -226,6 +228,9 @@ M.setup = function()
       if not sidebar then
         sidebar = new_sidebar()
         render_sidebar()
+      end
+      if sidebar.tasklist_winid then
+        return
       end
       if not empty_task_output_buf then
         empty_task_output_buf = vim.api.nvim_create_buf(false, true)
