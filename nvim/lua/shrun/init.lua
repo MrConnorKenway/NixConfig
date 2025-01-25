@@ -23,6 +23,7 @@ local sidebar
 --TODO: make configurable
 local tasklist_width = 32
 local tasklist_height = 12
+local separator_stem = '─'
 
 M.get = function()
   return sidebar
@@ -57,7 +58,7 @@ end
 
 local function render_sidebar()
   local lines = {}
-  local separator = string.rep('─', vim.o.columns)
+  local separator = string.rep(separator_stem, vim.o.columns)
 
   sidebar.task_lines = {}
   for i = #task_list, 1, -1 do
