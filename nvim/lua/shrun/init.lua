@@ -138,6 +138,13 @@ local function sidebar_get_task_range_from_line(lnum)
   return nil
 end
 
+local function scroll_terminal_to_tail()
+  local winid = vim.api.nvim_get_current_win()
+  vim.api.nvim_set_current_win(sidebar.taskout_winid)
+  vim.cmd [[normal! G]]
+  vim.api.nvim_set_current_win(winid)
+end
+
 local function sidebar_on_cursor_move(bufnr)
   local winid
   if vim.api.nvim_get_current_buf() == bufnr then
@@ -173,6 +180,7 @@ local function sidebar_on_cursor_move(bufnr)
   end
 
   highlight_focused()
+  scroll_terminal_to_tail()
 end
 
 ---@param buf_id integer the bufnr of task output buffer, i.e., Task.buf_id
@@ -198,10 +206,11 @@ end
 
 ---Currently when calling `vim.api.nvim_open_term`, neovim's libvterm will use
 ---the width of current window to render terminal output, thus we have to create
----a temporary fullscreen window to mitigate such issu
+---a temporary window that has equal size with task output panel to mitigate such
+---issue
 ---@param bufnr integer
 ---@param fn fun()
-local function run_in_fullscreen_win(bufnr, fn)
+local function run_in_tmp_win(bufnr, fn)
   local start_winid = vim.api.nvim_get_current_win()
   local winid = vim.api.nvim_open_win(bufnr, false, {
     relative = 'editor',
@@ -225,7 +234,7 @@ local function start_task(task)
   task.buf_id = vim.api.nvim_create_buf(false, true)
   task.status = 'RUNNING'
 
-  run_in_fullscreen_win(task.buf_id, function()
+  run_in_tmp_win(task.buf_id, function()
     task.term_id = vim.api.nvim_open_term(task.buf_id, {
       on_input = function(_, _, _, data)
         pcall(vim.api.nvim_chan_send, task.job_id, data)
@@ -291,6 +300,7 @@ local function new_sidebar()
       vim.wo[sidebar.taskout_winid].winfixbuf = false
       vim.api.nvim_win_set_buf(sidebar.taskout_winid, task.buf_id)
       vim.wo[sidebar.taskout_winid].winfixbuf = true
+      scroll_terminal_to_tail()
 
       vim.cmd(string.format('call chanclose(%d)', old_term))
       vim.api.nvim_buf_delete(old_bufnr, {})
