@@ -180,7 +180,6 @@ local function sidebar_on_cursor_move(bufnr)
     switch_task_out_panel(task_range_to_bufnr(range))
   end
   highlight_focused()
-  scroll_terminal_to_tail()
 end
 
 ---@param buf_id integer the bufnr of task output buffer, i.e., Task.buf_id
@@ -364,6 +363,7 @@ M.setup = function()
           }
         end
         render_sidebar()
+        scroll_terminal_to_tail()
       end
     end,
     {
