@@ -120,6 +120,10 @@ local function render_sidebar()
     vim.api.nvim_buf_add_highlight(sidebar.bufnr, ns, group, lnum - 1, col_start, col_end)
   end
 
+  if not sidebar.tasklist_winid then
+    return
+  end
+
   highlight_focused()
 end
 
