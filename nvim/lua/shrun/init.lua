@@ -304,11 +304,15 @@ M.setup = function()
         on_exit = function(job_id, exit_code, event)
           if exit_code == 0 then
             task.status = 'SUCCESS'
-            render_sidebar()
+            if sidebar then
+              render_sidebar()
+            end
             vim.notify(job_id .. ' success', vim.log.levels.TRACE)
           else
             task.status = 'FAILED'
-            render_sidebar()
+            if sidebar then
+              render_sidebar()
+            end
             vim.notify(job_id .. ' failed', vim.log.levels.ERROR)
           end
           vim.api.nvim_chan_send(task.term_id, string.format('\n[ Process exited with %d ]', exit_code))
