@@ -259,7 +259,7 @@ M.setup = function()
       run_in_fullscreen_win(task.buf_id, function()
         task.term_id = vim.api.nvim_open_term(task.buf_id, {
           on_input = function(_, _, _, data)
-            vim.api.nvim_chan_send(task.job_id, data)
+            pcall(vim.api.nvim_chan_send, task.job_id, data)
           end
         })
       end)
