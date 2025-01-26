@@ -196,6 +196,69 @@ local function new_task_output_window(buf_id)
   return winid
 end
 
+---Currently when calling `vim.api.nvim_open_term`, neovim's libvterm will use
+---the width of current window to render terminal output, thus we have to create
+---a temporary fullscreen window to mitigate such issu
+---@param bufnr integer
+---@param fn fun()
+local function run_in_fullscreen_win(bufnr, fn)
+  local start_winid = vim.api.nvim_get_current_win()
+  local winid = vim.api.nvim_open_win(bufnr, false, {
+    relative = 'editor',
+    width = vim.o.columns - tasklist_width,
+    height = tasklist_height,
+    row = 0,
+    col = 0,
+    noautocmd = true,
+  })
+  vim.api.nvim_set_current_win(winid)
+  local ok, err = xpcall(fn, debug.traceback)
+  if not ok then
+    vim.api.nvim_err_writeln(err)
+  end
+  vim.api.nvim_win_close(winid, false)
+  vim.api.nvim_set_current_win(start_winid)
+end
+
+---@param task Task
+local function start_task(task)
+  task.buf_id = vim.api.nvim_create_buf(false, true)
+  task.status = 'RUNNING'
+
+  run_in_fullscreen_win(task.buf_id, function()
+    task.term_id = vim.api.nvim_open_term(task.buf_id, {
+      on_input = function(_, _, _, data)
+        pcall(vim.api.nvim_chan_send, task.job_id, data)
+      end
+    })
+  end)
+
+  task.job_id = vim.fn.jobstart(task.cmd, {
+    pty = true,
+    on_stdout = function(job_id, out)
+      vim.api.nvim_chan_send(task.term_id, table.concat(out, '\r\n'))
+    end,
+    on_exit = function(job_id, exit_code, event)
+      if exit_code == 0 then
+        task.status = 'SUCCESS'
+        if sidebar then
+          render_sidebar()
+        end
+        vim.notify(job_id .. ' success', vim.log.levels.TRACE)
+      else
+        task.status = 'FAILED'
+        if sidebar then
+          render_sidebar()
+        end
+        vim.notify(job_id .. ' failed', vim.log.levels.ERROR)
+      end
+      vim.api.nvim_chan_send(task.term_id, string.format('\n[ Process exited with %d ]', exit_code))
+    end
+  })
+
+  vim.api.nvim_buf_set_name(task.buf_id, string.format('task %d:%s', task.job_id, task.cmd))
+end
+
 local function new_sidebar()
   local tasklist_bufnr = vim.api.nvim_create_buf(false, true)
   local task_lines = {}
@@ -210,15 +273,30 @@ local function new_sidebar()
   vim.bo[tasklist_bufnr].modifiable = false
 
   vim.keymap.set('n', '<cr>', function()
+    local lnum = vim.api.nvim_win_get_cursor(0)[1]
+    local range = sidebar_get_task_range_from_line(lnum)
+
+    if not range then return end
+
     if vim.api.nvim_win_is_valid(sidebar.taskout_winid) then
-      vim.api.nvim_set_current_win(sidebar.taskout_winid)
+      local task = task_list[range.task_id]
+      if task.status == 'RUNNING' then
+        return
+      end
+
+      local old_bufnr = task.buf_id
+      local old_term = task.term_id
+
+      start_task(task)
+      vim.wo[sidebar.taskout_winid].winfixbuf = false
+      vim.api.nvim_win_set_buf(sidebar.taskout_winid, task.buf_id)
+      vim.wo[sidebar.taskout_winid].winfixbuf = true
+
+      vim.cmd(string.format('call chanclose(%d)', old_term))
+      vim.api.nvim_buf_delete(old_bufnr, {})
     else
       -- open task output panel if window is closed
-      local lnum = vim.api.nvim_win_get_cursor(0)[1]
-      local range = sidebar_get_task_range_from_line(lnum)
-      if range then
-        sidebar.taskout_winid = new_task_output_window(task_range_to_bufnr(range))
-      end
+      sidebar.taskout_winid = new_task_output_window(task_range_to_bufnr(range))
     end
   end, { buffer = tasklist_bufnr })
 
@@ -254,30 +332,6 @@ local function new_sidebar()
   }
 end
 
----Currently when calling `vim.api.nvim_open_term`, neovim's libvterm will use
----the width of current window to render terminal output, thus we have to create
----a temporary fullscreen window to mitigate such issu
----@param bufnr integer
----@param fn fun()
-local function run_in_fullscreen_win(bufnr, fn)
-  local start_winid = vim.api.nvim_get_current_win()
-  local winid = vim.api.nvim_open_win(bufnr, false, {
-    relative = 'editor',
-    width = vim.o.columns,
-    height = vim.o.lines,
-    row = 0,
-    col = 0,
-    noautocmd = true,
-  })
-  vim.api.nvim_set_current_win(winid)
-  local ok, err = xpcall(fn, debug.traceback)
-  if not ok then
-    vim.api.nvim_err_writeln(err)
-  end
-  vim.api.nvim_win_close(winid, false)
-  vim.api.nvim_set_current_win(start_winid)
-end
-
 M.setup = function()
   vim.api.nvim_create_user_command('Task',
     function(cmd)
@@ -286,39 +340,8 @@ M.setup = function()
       task_nr = task_nr + 1
       task.id = task_nr
       task.cmd = cmd.args
-      task.buf_id = vim.api.nvim_create_buf(false, true)
-      task.status = 'RUNNING'
 
-      run_in_fullscreen_win(task.buf_id, function()
-        task.term_id = vim.api.nvim_open_term(task.buf_id, {
-          on_input = function(_, _, _, data)
-            pcall(vim.api.nvim_chan_send, task.job_id, data)
-          end
-        })
-      end)
-      task.job_id = vim.fn.jobstart(task.cmd, {
-        pty = true,
-        on_stdout = function(job_id, out)
-          vim.api.nvim_chan_send(task.term_id, table.concat(out, '\r\n'))
-        end,
-        on_exit = function(job_id, exit_code, event)
-          if exit_code == 0 then
-            task.status = 'SUCCESS'
-            if sidebar then
-              render_sidebar()
-            end
-            vim.notify(job_id .. ' success', vim.log.levels.TRACE)
-          else
-            task.status = 'FAILED'
-            if sidebar then
-              render_sidebar()
-            end
-            vim.notify(job_id .. ' failed', vim.log.levels.ERROR)
-          end
-          vim.api.nvim_chan_send(task.term_id, string.format('\n[ Process exited with %d ]', exit_code))
-        end
-      })
-      vim.api.nvim_buf_set_name(task.buf_id, string.format('task %d:%s', task.job_id, cmd.args))
+      start_task(task)
       table.insert(task_list, task)
       if sidebar then
         if vim.api.nvim_get_current_buf() == sidebar.bufnr then
