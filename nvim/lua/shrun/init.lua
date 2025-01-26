@@ -3,6 +3,7 @@ local M = {}
 ---@class Task
 ---@field id integer
 ---@field cmd string
+---@field status string
 ---@field buf_id integer
 ---@field term_id integer
 ---@field job_id integer
@@ -37,6 +38,12 @@ local empty_task_output_buf
 local tasklist_width = 32
 local tasklist_height = 12
 local separator_stem = '─'
+local out_prefix = 'out: '
+local default_highlights = {
+  TaskRUNNING = 'Constant',
+  TaskSUCCESS = 'DiagnosticOk',
+  TaskFAILED = 'DiagnosticError'
+}
 
 local task_nr = 0
 
@@ -64,14 +71,29 @@ local function highlight_focused()
 end
 
 ---@param lines string[]
+---@param highlights {[1]: string, [2]: integer, [3]: integer, [4]: integer}
+---                   group name,  start row,    start col,    end col
 ---@param task Task
-local function render_task(lines, task)
-  table.insert(lines, 'RUNNING: ' .. task.cmd)
-  table.insert(lines, 'out: ')
+local function render_task(lines, highlights, task)
+  local status_len = string.len(task.status)
+  local cmd_offset = status_len + 2 -- 2 == len(': ')
+
+  table.insert(lines, task.status .. ': ' .. task.cmd)
+  table.insert(highlights, {
+    default_highlights['Task' .. task.status],
+    #lines, 0, status_len
+  })
+  table.insert(highlights, {
+    'Title', #lines, cmd_offset, cmd_offset + string.len(task.cmd)
+  })
+  table.insert(lines, out_prefix)
+  table.insert(highlights, { 'Comment', #lines, 0, string.len(out_prefix) })
 end
 
 local function render_sidebar()
+  local ns = vim.api.nvim_create_namespace('shrun_sidebar')
   local lines = {}
+  local highlights = {}
   local separator = string.rep(separator_stem, vim.o.columns)
 
   sidebar.task_ranges = {}
@@ -79,11 +101,12 @@ local function render_sidebar()
     local task = task_list[i]
     ---@type TaskRange
     local task_range = { start_line = #lines + 1, end_line = -1, task_id = task.id }
-    render_task(lines, task)
+    render_task(lines, highlights, task)
     task_range.end_line = #lines
     table.insert(sidebar.task_ranges, task_range)
     if i > 1 then
       table.insert(lines, separator)
+      table.insert(highlights, { 'FloatBorder', #lines, 0, vim.o.columns })
     end
   end
 
@@ -91,6 +114,11 @@ local function render_sidebar()
   vim.api.nvim_buf_set_lines(sidebar.bufnr, 0, -1, true, lines)
   vim.bo[sidebar.bufnr].modifiable = false
   vim.bo[sidebar.bufnr].modified = false
+
+  for _, hl in ipairs(highlights) do
+    local group, lnum, col_start, col_end = unpack(hl)
+    vim.api.nvim_buf_add_highlight(sidebar.bufnr, ns, group, lnum - 1, col_start, col_end)
+  end
 
   highlight_focused()
 end
@@ -255,6 +283,7 @@ M.setup = function()
       task.id = task_nr
       task.cmd = cmd.args
       task.buf_id = vim.api.nvim_create_buf(false, true)
+      task.status = 'RUNNING'
 
       run_in_fullscreen_win(task.buf_id, function()
         task.term_id = vim.api.nvim_open_term(task.buf_id, {
@@ -270,8 +299,12 @@ M.setup = function()
         end,
         on_exit = function(job_id, exit_code, event)
           if exit_code == 0 then
+            task.status = 'SUCCESS'
+            render_sidebar()
             vim.notify(job_id .. ' success', vim.log.levels.TRACE)
           else
+            task.status = 'FAILED'
+            render_sidebar()
             vim.notify(job_id .. ' failed', vim.log.levels.ERROR)
           end
           vim.api.nvim_chan_send(task.term_id, string.format('\n[ Process exited with %d ]', exit_code))
