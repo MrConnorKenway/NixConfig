@@ -165,13 +165,6 @@ local function sidebar_on_cursor_move(bufnr)
     return
   end
 
-  -- vim.api.nvim_exec_autocmds('User', {
-  --   pattern = 'ListTaskHover',
-  --   modeline = false,
-  --   data = {
-  --     task_id = task.id,
-  --   },
-  -- })
   sidebar.focused_task_range = range
   if vim.api.nvim_win_is_valid(sidebar.taskout_winid) then
     vim.wo[sidebar.taskout_winid].winfixbuf = false
@@ -367,7 +360,6 @@ M.setup = function()
         end
         render_sidebar()
       end
-      vim.notify(vim.inspect(task_list), vim.log.levels.DEBUG)
     end,
     {
       complete = vim.fn.has('nvim-0.11') == 0 and 'shellcmd' or 'shellcmdline',
