@@ -90,6 +90,13 @@ local function render_task(lines, highlights, task)
   table.insert(highlights, { 'Comment', #lines, 0, string.len(out_prefix) })
 end
 
+---@param bufnr integer
+local function switch_task_out_panel(bufnr)
+  vim.wo[sidebar.taskout_winid].winfixbuf = false
+  vim.api.nvim_win_set_buf(sidebar.taskout_winid, bufnr)
+  vim.wo[sidebar.taskout_winid].winfixbuf = true
+end
+
 local function render_sidebar()
   local ns = vim.api.nvim_create_namespace('shrun_sidebar')
   local lines = {}
@@ -125,6 +132,9 @@ local function render_sidebar()
   end
 
   highlight_focused()
+  if sidebar.taskout_winid and sidebar.focused_task_range then
+    switch_task_out_panel(task_range_to_bufnr(sidebar.focused_task_range))
+  end
 end
 
 ---@param lnum integer
@@ -166,12 +176,9 @@ local function sidebar_on_cursor_move(bufnr)
   end
 
   sidebar.focused_task_range = range
-  if vim.api.nvim_win_is_valid(sidebar.taskout_winid) then
-    vim.wo[sidebar.taskout_winid].winfixbuf = false
-    vim.api.nvim_win_set_buf(sidebar.taskout_winid, task_range_to_bufnr(range))
-    vim.wo[sidebar.taskout_winid].winfixbuf = true
+  if sidebar.taskout_winid then
+    switch_task_out_panel(task_range_to_bufnr(range))
   end
-
   highlight_focused()
   scroll_terminal_to_tail()
 end
@@ -280,7 +287,7 @@ local function new_sidebar()
 
     if not range then return end
 
-    if vim.api.nvim_win_is_valid(sidebar.taskout_winid) then
+    if sidebar.taskout_winid then
       local task = task_list[range.task_id]
       if task.status == 'RUNNING' then
         return
@@ -290,9 +297,7 @@ local function new_sidebar()
       local old_term = task.term_id
 
       start_task(task)
-      vim.wo[sidebar.taskout_winid].winfixbuf = false
-      vim.api.nvim_win_set_buf(sidebar.taskout_winid, task.buf_id)
-      vim.wo[sidebar.taskout_winid].winfixbuf = true
+      switch_task_out_panel(task_range_to_bufnr(range))
       scroll_terminal_to_tail()
 
       vim.cmd(string.format('call chanclose(%d)', old_term))
