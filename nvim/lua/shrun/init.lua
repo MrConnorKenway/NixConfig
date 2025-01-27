@@ -442,10 +442,23 @@ M.test = function()
       winid = vim.api.nvim_get_current_win()
     end,
     'ListTask',
+    'Task sleep 1 && echo done',
     'Task ls',
     '+2',
     'Task python --version',
     'Task tree',
+    'normal! G',
+    [[ call feedkeys("\<cr>") ]],
+    function()
+      -- if <cr> does restart the first task, then it should be running now
+      assert(sidebar.focused_task_range.task_id == 1)
+      local task = all_tasks[sidebar.focused_task_range.task_id]
+      local header = vim.api.nvim_buf_get_lines(sidebar.bufnr, sidebar.focused_task_range.start_line - 1,
+        sidebar.focused_task_range.end_line, true)
+      assert(task.cmd:match('^sleep'))
+      assert(task.status == 'RUNNING')
+      assert(header[1]:match('^RUNNING: sleep'))
+    end,
     '+5',
     'Task make',
     function()
