@@ -421,18 +421,32 @@ end
 M.test = function()
   local timer = vim.uv.new_timer()
   local delay = 300
+  local winid
 
   if not timer then
     return
   end
 
   local idx = 0
+
+  --- The following commands will be executed sequentially with a delay of `delay`
+  --- milliseconds in between. The string command will be called by `vim.cmd`.
+  ---@type (string|function)[]
   local commands = {
+    'tabnew',
+    function()
+      winid = vim.api.nvim_get_current_win()
+    end,
     'ListTask',
     'Task ls',
     'Task python --version',
     'Task tree',
     'Task make',
+    function()
+      -- newly created task should be automatically focused and put in the front
+      assert(sidebar.focused_task_range.start_line == 1)
+      assert(all_tasks[sidebar.focused_task_range.task_id].cmd == 'make')
+    end,
     'Task cat longline',
     'Task brew update',
     'wincmd c',
@@ -441,6 +455,19 @@ M.test = function()
     'ListTask',
     'normal! G',
     'wincmd p',
+    function()
+      assert(sidebar.tasklist_winid ~= nil)
+      assert(sidebar.taskout_winid ~= nil)
+      vim.api.nvim_set_current_win(sidebar.taskout_winid)
+    end,
+    'wincmd c',
+    function()
+      -- both window should be closed
+      assert(sidebar.tasklist_winid == nil)
+      assert(sidebar.taskout_winid == nil)
+      assert(vim.api.nvim_get_current_win() == winid)
+    end,
+    'tabclose'
   }
 
   timer:start(delay, delay,
@@ -452,7 +479,17 @@ M.test = function()
         return
       end
 
-      vim.cmd(commands[idx])
+      if type(commands[idx]) == 'string' then
+        vim.cmd(commands[idx])
+      else
+        commands[idx]()
+      end
+
+      if vim.fn.empty(vim.v.errmsg) == 0 then
+        vim.uv.timer_stop(timer)
+        vim.uv.close(timer)
+        return
+      end
     end)
   )
 end
