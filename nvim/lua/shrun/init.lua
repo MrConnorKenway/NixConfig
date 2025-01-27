@@ -13,13 +13,9 @@ local M = {}
 ---@field end_line integer?
 ---@field task_id integer
 
+---all registered tasks
 ---@type Task[]
-local task_list = {}
-
----@param range TaskRange
-local function task_range_to_bufnr(range)
-  return task_list[range.task_id].buf_id
-end
+local all_tasks = {}
 
 ---@class Sidebar
 ---@field bufnr integer
@@ -104,8 +100,8 @@ local function render_sidebar()
   local separator = string.rep(separator_stem, vim.o.columns)
 
   sidebar.task_ranges = {}
-  for i = #task_list, 1, -1 do
-    local task = task_list[i]
+  for i = #all_tasks, 1, -1 do
+    local task = all_tasks[i]
     ---@type TaskRange
     local task_range = { start_line = #lines + 1, end_line = -1, task_id = task.id }
     render_task(lines, highlights, task)
@@ -133,7 +129,7 @@ local function render_sidebar()
 
   highlight_focused()
   if sidebar.taskout_winid and sidebar.focused_task_range then
-    switch_task_out_panel(task_range_to_bufnr(sidebar.focused_task_range))
+    switch_task_out_panel(all_tasks[sidebar.focused_task_range.task_id].buf_id)
   end
 end
 
@@ -177,7 +173,7 @@ local function sidebar_on_cursor_move(bufnr)
 
   sidebar.focused_task_range = range
   if sidebar.taskout_winid then
-    switch_task_out_panel(task_range_to_bufnr(range))
+    switch_task_out_panel(all_tasks[range.task_id].buf_id)
   end
   highlight_focused()
 end
@@ -287,7 +283,7 @@ local function new_sidebar()
     if not range then return end
 
     if sidebar.taskout_winid then
-      local task = task_list[range.task_id]
+      local task = all_tasks[range.task_id]
       if task.status == 'RUNNING' then
         return
       end
@@ -296,14 +292,14 @@ local function new_sidebar()
       local old_term = task.term_id
 
       start_task(task)
-      switch_task_out_panel(task_range_to_bufnr(range))
+      switch_task_out_panel(all_tasks[range.task_id].buf_id)
       scroll_terminal_to_tail()
 
       vim.cmd(string.format('call chanclose(%d)', old_term))
       vim.api.nvim_buf_delete(old_bufnr, {})
     else
       -- open task output panel if window is closed
-      sidebar.taskout_winid = new_task_output_window(task_range_to_bufnr(range))
+      sidebar.taskout_winid = new_task_output_window(all_tasks[range.task_id].buf_id)
     end
   end, { buffer = tasklist_bufnr })
 
@@ -349,7 +345,7 @@ M.setup = function()
       task.cmd = cmd.args
 
       start_task(task)
-      table.insert(task_list, task)
+      table.insert(all_tasks, task)
       if sidebar then
         if vim.api.nvim_get_current_buf() == sidebar.bufnr then
           -- move cursor to the first line, and the CursorMoved autocmd will do
@@ -409,7 +405,7 @@ M.setup = function()
       end
       sidebar.tasklist_winid = tasklist_winid
       if sidebar.focused_task_range then
-        local bufnr = task_range_to_bufnr(sidebar.focused_task_range)
+        local bufnr = all_tasks[sidebar.focused_task_range.task_id].buf_id
         sidebar.taskout_winid = new_task_output_window(bufnr)
       else
         sidebar.taskout_winid = new_task_output_window(empty_task_output_buf)
