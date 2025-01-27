@@ -416,4 +416,44 @@ M.setup = function()
     })
 end
 
+---for development test purpose only
+M.test = function()
+  local timer = vim.uv.new_timer()
+  local delay = 300
+
+  if not timer then
+    return
+  end
+
+  local idx = 0
+  local commands = {
+    'ListTask',
+    'Task ls',
+    'Task python --version',
+    'Task tree',
+    'Task make',
+    'Task cat longline',
+    'Task brew update',
+    'wincmd c',
+    'Task ls',
+    'Task tree',
+    'ListTask',
+    'normal! G',
+    'wincmd p',
+  }
+
+  timer:start(delay, delay,
+    vim.schedule_wrap(function()
+      idx = idx + 1
+      if idx > #commands then
+        vim.uv.timer_stop(timer)
+        vim.uv.close(timer)
+        return
+      end
+
+      vim.cmd(commands[idx])
+    end)
+  )
+end
+
 return M
