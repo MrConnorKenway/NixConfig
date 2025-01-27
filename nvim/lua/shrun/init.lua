@@ -307,6 +307,7 @@ local function new_sidebar()
 
     start_task(task)
     switch_task_out_panel(task.buf_id)
+    render_sidebar()
     scroll_terminal_to_tail()
 
     vim.fn.chanclose(old_term)
