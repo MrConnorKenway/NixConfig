@@ -251,10 +251,10 @@ local function start_task(task)
 
   task.job_id = vim.fn.jobstart(task.cmd, {
     pty = true,
-    on_stdout = function(job_id, out)
+    on_stdout = function(_, out)
       vim.api.nvim_chan_send(task.term_id, table.concat(out, '\r\n'))
     end,
-    on_exit = function(job_id, exit_code, event)
+    on_exit = function(job_id, exit_code, _)
       if exit_code == 0 then
         task.status = 'SUCCESS'
         if sidebar then
