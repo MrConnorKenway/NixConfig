@@ -352,11 +352,7 @@ M.setup = function()
           -- the work for us
           vim.api.nvim_win_set_cursor(sidebar.tasklist_winid, { 1, 0 })
         else
-          sidebar.focused_task_range = {
-            start_line = nil,
-            end_line = nil,
-            task_id = task.id
-          }
+          sidebar.focused_task_range = { task_id = task.id }
         end
         if sidebar.tasklist_winid then
           render_sidebar()
