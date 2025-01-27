@@ -257,19 +257,19 @@ local function start_task(task)
     on_stdout = function(_, out)
       vim.api.nvim_chan_send(task.term_id, table.concat(out, '\r\n'))
     end,
-    on_exit = function(job_id, exit_code, _)
+    on_exit = function(_, exit_code, _)
       if exit_code == 0 then
         task.status = 'SUCCESS'
         if sidebar then
           render_sidebar()
         end
-        vim.notify(job_id .. ' success', vim.log.levels.TRACE)
+        vim.notify(task.cmd .. ' success', vim.log.levels.INFO, { timeout = 2000 })
       else
         task.status = 'FAILED'
         if sidebar then
           render_sidebar()
         end
-        vim.notify(job_id .. ' failed', vim.log.levels.ERROR)
+        vim.notify(task.cmd .. ' failed', vim.log.levels.ERROR, { timeout = 2000 })
       end
       vim.api.nvim_chan_send(task.term_id, string.format('\n[ Process exited with %d ]', exit_code))
     end
