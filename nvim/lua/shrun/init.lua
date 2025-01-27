@@ -44,8 +44,6 @@ local default_highlights = {
   TaskOutPrefix = 'Comment'
 }
 
-local task_nr = 0
-
 local function highlight_focused()
   local ns = vim.api.nvim_create_namespace('tasklist_focus')
   vim.api.nvim_buf_clear_namespace(sidebar.bufnr, ns, 0, -1)
@@ -342,11 +340,10 @@ end
 M.setup = function()
   vim.api.nvim_create_user_command('Task',
     function(cmd)
-      ---@class Task
-      local task = {}
-      task_nr = task_nr + 1
-      task.id = task_nr
-      task.cmd = cmd.args
+      local task = {
+        id = #all_tasks + 1,
+        cmd = cmd.args
+      }
 
       start_task(task)
       table.insert(all_tasks, task)
