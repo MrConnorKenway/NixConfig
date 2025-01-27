@@ -324,13 +324,6 @@ local function new_sidebar()
     end
   })
 
-  vim.api.nvim_create_autocmd('User', {
-    pattern = 'TaskListUpdate',
-    callback = function()
-      render_sidebar()
-    end
-  })
-
   return {
     bufnr = tasklist_bufnr,
     task_lines = task_lines
