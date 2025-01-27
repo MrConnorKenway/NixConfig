@@ -442,8 +442,10 @@ M.test = function()
     end,
     'ListTask',
     'Task ls',
+    '+2',
     'Task python --version',
     'Task tree',
+    '+5',
     'Task make',
     function()
       -- newly created task should be automatically focused and put in the front
@@ -456,6 +458,9 @@ M.test = function()
     'Task ls',
     'Task tree',
     'ListTask',
+    '+2',
+    '+5',
+    'normal! gg',
     'normal! G',
     'wincmd p',
     function()
