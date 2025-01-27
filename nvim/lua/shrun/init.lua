@@ -306,7 +306,7 @@ local function new_sidebar()
     local old_term = task.term_id
 
     start_task(task)
-    switch_task_out_panel(all_tasks[range.task_id].buf_id)
+    switch_task_out_panel(task.buf_id)
     scroll_terminal_to_tail()
 
     vim.fn.chanclose(old_term)
