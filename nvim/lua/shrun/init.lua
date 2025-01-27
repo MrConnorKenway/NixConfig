@@ -93,6 +93,7 @@ local function switch_task_out_panel(bufnr)
   vim.wo[sidebar.taskout_winid].winfixbuf = true
 end
 
+---caller should ensure that sidebar ~= nil
 local function render_sidebar()
   local ns = vim.api.nvim_create_namespace('shrun_sidebar')
   local lines = {}
@@ -144,6 +145,7 @@ local function sidebar_get_task_range_from_line(lnum)
   return nil
 end
 
+---caller should ensure that task output panel is opened
 local function scroll_terminal_to_tail()
   local winid = vim.api.nvim_get_current_win()
   vim.api.nvim_set_current_win(sidebar.taskout_winid)
@@ -358,8 +360,12 @@ M.setup = function()
             task_id = task.id
           }
         end
-        render_sidebar()
-        scroll_terminal_to_tail()
+        if sidebar.tasklist_winid then
+          render_sidebar()
+        end
+        if sidebar.taskout_winid then
+          scroll_terminal_to_tail()
+        end
       end
     end,
     {
