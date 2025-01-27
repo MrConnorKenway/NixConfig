@@ -21,8 +21,8 @@ local all_tasks = {}
 ---@field bufnr integer
 ---@field task_ranges TaskRange[] -- map from line range to task
 ---@field focused_task_range TaskRange?
----@field tasklist_winid integer?
----@field taskout_winid integer?
+---@field tasklist_winid integer? -- when winid == nil, the window is closed
+---@field taskout_winid integer? -- when winid == nil, the window is closed
 
 ---@class Sidebar
 local sidebar
@@ -198,6 +198,16 @@ local function new_task_output_window(buf_id)
   for k, v in pairs(default_opts) do
     vim.api.nvim_set_option_value(k, v, { scope = 'local', win = winid })
   end
+  vim.api.nvim_create_autocmd('WinClosed', {
+    pattern = tostring(winid),
+    callback = function()
+      if sidebar.tasklist_winid then
+        vim.api.nvim_win_close(sidebar.tasklist_winid, false)
+      end
+      sidebar.tasklist_winid = nil
+      sidebar.taskout_winid = nil
+    end
+  })
   return winid
 end
 
@@ -284,31 +294,26 @@ local function new_sidebar()
 
     if not range then return end
 
-    if sidebar.taskout_winid then
-      local task = all_tasks[range.task_id]
-      if task.status == 'RUNNING' then
-        return
-      end
-
-      local old_bufnr = task.buf_id
-      local old_term = task.term_id
-
-      start_task(task)
-      switch_task_out_panel(all_tasks[range.task_id].buf_id)
-      scroll_terminal_to_tail()
-
-      vim.fn.chanclose(old_term)
-      vim.api.nvim_buf_delete(old_bufnr, {})
-    else
-      -- open task output panel if window is closed
-      sidebar.taskout_winid = new_task_output_window(all_tasks[range.task_id].buf_id)
+    local task = all_tasks[range.task_id]
+    if task.status == 'RUNNING' then
+      return
     end
+
+    local old_bufnr = task.buf_id
+    local old_term = task.term_id
+
+    start_task(task)
+    switch_task_out_panel(all_tasks[range.task_id].buf_id)
+    scroll_terminal_to_tail()
+
+    vim.fn.chanclose(old_term)
+    vim.api.nvim_buf_delete(old_bufnr, {})
   end, { buffer = tasklist_bufnr })
 
   vim.api.nvim_create_autocmd('BufHidden', {
     buffer = tasklist_bufnr,
     callback = function()
-      if vim.api.nvim_win_is_valid(sidebar.taskout_winid) then
+      if sidebar.taskout_winid then
         vim.api.nvim_win_close(sidebar.taskout_winid, false)
       end
       sidebar.tasklist_winid = nil
