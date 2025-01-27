@@ -38,7 +38,10 @@ local out_prefix = 'out: '
 local default_highlights = {
   TaskRUNNING = 'Constant',
   TaskSUCCESS = 'DiagnosticOk',
-  TaskFAILED = 'DiagnosticError'
+  TaskFAILED = 'DiagnosticError',
+  TaskFocus = 'CursorLine',
+  TaskName = 'Title',
+  TaskOutPrefix = 'Comment'
 }
 
 local task_nr = 0
@@ -61,7 +64,7 @@ local function highlight_focused()
   end
 
   vim.api.nvim_buf_set_extmark(sidebar.bufnr, ns, task_range.start_line - 1, 0, {
-    line_hl_group = "CursorLine",
+    line_hl_group = default_highlights.TaskFocus,
     end_row = task_range.end_line - 1,
   })
 end
@@ -80,10 +83,10 @@ local function render_task(lines, highlights, task)
     #lines, 0, status_len
   })
   table.insert(highlights, {
-    'Title', #lines, cmd_offset, cmd_offset + string.len(task.cmd)
+    default_highlights.TaskName, #lines, cmd_offset, cmd_offset + string.len(task.cmd)
   })
   table.insert(lines, out_prefix)
-  table.insert(highlights, { 'Comment', #lines, 0, string.len(out_prefix) })
+  table.insert(highlights, { default_highlights.TaskOutPrefix, #lines, 0, string.len(out_prefix) })
 end
 
 ---@param bufnr integer
