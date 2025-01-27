@@ -428,6 +428,14 @@ M.test = function()
     return
   end
 
+  local abort_tests_if_not = function(assertion)
+    if not assertion then
+      vim.uv.timer_stop(timer)
+      vim.uv.close(timer)
+      assert(assertion)
+    end
+  end
+
   local idx = 0
 
   --- The following commands will be executed sequentially with a delay of `delay`
@@ -448,20 +456,20 @@ M.test = function()
     [[ call feedkeys("\<cr>") ]],
     function()
       -- if <cr> does restart the first task, then it should be running now
-      assert(sidebar.focused_task_range.task_id == 1)
+      abort_tests_if_not(sidebar.focused_task_range.task_id == 1)
       local task = all_tasks[sidebar.focused_task_range.task_id]
       local header = vim.api.nvim_buf_get_lines(sidebar.bufnr, sidebar.focused_task_range.start_line - 1,
         sidebar.focused_task_range.end_line, true)
-      assert(task.cmd:match('^sleep'))
-      assert(task.status == 'RUNNING')
-      assert(header[1]:match('^RUNNING: sleep'))
+      abort_tests_if_not(task.cmd:match('^sleep'))
+      abort_tests_if_not(task.status == 'RUNNING')
+      abort_tests_if_not(header[1]:match('^RUNNING: sleep'))
     end,
     '+5',
     'Task make',
     function()
       -- newly created task should be automatically focused and put in the front
-      assert(sidebar.focused_task_range.start_line == 1)
-      assert(all_tasks[sidebar.focused_task_range.task_id].cmd == 'make')
+      abort_tests_if_not(sidebar.focused_task_range.start_line == 1)
+      abort_tests_if_not(all_tasks[sidebar.focused_task_range.task_id].cmd == 'make')
     end,
     'Task cat longline',
     'Task brew update',
@@ -475,16 +483,16 @@ M.test = function()
     'normal! G',
     'wincmd p',
     function()
-      assert(sidebar.tasklist_winid ~= nil)
-      assert(sidebar.taskout_winid ~= nil)
+      abort_tests_if_not(sidebar.tasklist_winid ~= nil)
+      abort_tests_if_not(sidebar.taskout_winid ~= nil)
       vim.api.nvim_set_current_win(sidebar.taskout_winid)
     end,
     'wincmd c',
     function()
       -- both window should be closed
-      assert(sidebar.tasklist_winid == nil)
-      assert(sidebar.taskout_winid == nil)
-      assert(vim.api.nvim_get_current_win() == winid)
+      abort_tests_if_not(sidebar.tasklist_winid == nil)
+      abort_tests_if_not(sidebar.taskout_winid == nil)
+      abort_tests_if_not(vim.api.nvim_get_current_win() == winid)
     end,
     'tabclose'
   }
