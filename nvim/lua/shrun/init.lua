@@ -295,7 +295,7 @@ local function new_sidebar()
       switch_task_out_panel(all_tasks[range.task_id].buf_id)
       scroll_terminal_to_tail()
 
-      vim.cmd(string.format('call chanclose(%d)', old_term))
+      vim.fn.chanclose(old_term)
       vim.api.nvim_buf_delete(old_bufnr, {})
     else
       -- open task output panel if window is closed
