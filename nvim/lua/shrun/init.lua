@@ -519,7 +519,7 @@ M.test = function()
     '+2',
     '+5',
     'normal! gg',
-    'normal! G',
+    'normal! 16G7|',
     'wincmd p',
     function()
       abort_tests_if_not(sidebar.tasklist_winid ~= nil)
@@ -532,6 +532,12 @@ M.test = function()
       abort_tests_if_not(sidebar.tasklist_winid == nil)
       abort_tests_if_not(sidebar.taskout_winid == nil)
       abort_tests_if_not(vim.api.nvim_get_current_win() == winid)
+    end,
+    'ListTask',
+    function()
+      abort_tests_if_not(vim.api.nvim_get_current_win() == sidebar.tasklist_winid)
+      local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+      abort_tests_if_not(row == 16 and col == 6)
     end,
     'tabclose'
   }
