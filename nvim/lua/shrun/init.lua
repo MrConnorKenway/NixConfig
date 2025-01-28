@@ -310,7 +310,6 @@ local function new_sidebar()
     local old_term = task.term_id
 
     start_task(task)
-    switch_task_out_panel(task.buf_id)
     render_sidebar()
     scroll_terminal_to_tail(task.buf_id)
 
