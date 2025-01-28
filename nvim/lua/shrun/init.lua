@@ -7,6 +7,8 @@ local M = {}
 ---@field buf_id integer
 ---@field term_id integer
 ---@field job_id integer
+---@field output_tail string
+---@field output_line_num integer?
 
 ---@class shrun.TaskRange
 ---@field start_line integer?
@@ -84,7 +86,8 @@ local function render_task(lines, highlights, task)
   table.insert(highlights, {
     default_highlights.TaskName, #lines, cmd_offset, cmd_offset + string.len(task.cmd)
   })
-  table.insert(lines, out_prefix)
+  table.insert(lines, out_prefix .. task.output_tail)
+  task.output_line_num = #lines
   table.insert(highlights, { default_highlights.TaskOutPrefix, #lines, 0, string.len(out_prefix) })
 end
 
@@ -250,6 +253,7 @@ end
 local function start_task(task)
   task.buf_id = vim.api.nvim_create_buf(false, true)
   task.status = 'RUNNING'
+  task.output_tail = ''
 
   run_in_tmp_win(task.buf_id, function()
     task.term_id = vim.api.nvim_open_term(task.buf_id, {
@@ -262,6 +266,25 @@ local function start_task(task)
   task.job_id = vim.fn.jobstart(task.cmd, {
     pty = true,
     on_stdout = function(_, out)
+      for i = #out, 1, -1 do
+        if out[i]:len() > 0 then
+          task.output_tail = out[i]
+              :gsub('\r$', '')
+              :gsub('\x1b%[[%d;]*m', '')
+              :gsub('\x1b%[%d*K', '')
+          break
+        end
+      end
+      if sidebar.tasklist_winid and task.output_line_num then
+        vim.bo[sidebar.bufnr].modifiable = true
+        vim.api.nvim_buf_set_lines(sidebar.bufnr, task.output_line_num - 1, task.output_line_num, true,
+          { out_prefix .. task.output_tail })
+        vim.bo[sidebar.bufnr].modifiable = false
+        vim.bo[sidebar.bufnr].modified = false
+        local ns = vim.api.nvim_create_namespace('shrun_sidebar')
+        vim.api.nvim_buf_add_highlight(sidebar.bufnr, ns, default_highlights.TaskOutPrefix, task.output_line_num - 1, 0,
+          out_prefix:len())
+      end
       vim.api.nvim_chan_send(task.term_id, table.concat(out, '\r\n'))
     end,
     on_exit = function(_, exit_code, _)
