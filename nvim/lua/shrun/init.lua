@@ -1,6 +1,6 @@
 local M = {}
 
----@class Task
+---@class shrun.Task
 ---@field id integer
 ---@field cmd string
 ---@field status string
@@ -8,24 +8,24 @@ local M = {}
 ---@field term_id integer
 ---@field job_id integer
 
----@class TaskRange
+---@class shrun.TaskRange
 ---@field start_line integer?
 ---@field end_line integer?
 ---@field task_id integer
 
 ---all registered tasks
----@type Task[]
+---@type shrun.Task[]
 local all_tasks = {}
 
----@class Sidebar
+---@class shrun.Sidebar
 ---@field bufnr integer
----@field task_ranges TaskRange[] -- map from line range to task
----@field focused_task_range TaskRange?
+---@field task_ranges shrun.TaskRange[] -- map from line range to task
+---@field focused_task_range shrun.TaskRange?
 ---@field tasklist_winid integer? -- when winid == nil, the window is closed
 ---@field tasklist_cursor integer[]?
 ---@field taskout_winid integer? -- when winid == nil, the window is closed
 
----@class Sidebar
+---@type shrun.Sidebar
 local sidebar
 
 ---@type integer?
@@ -71,7 +71,7 @@ end
 ---@param lines string[]
 ---@param highlights {[1]: string, [2]: integer, [3]: integer, [4]: integer}
 ---                   group name,  start row,    start col,    end col
----@param task Task
+---@param task shrun.Task
 local function render_task(lines, highlights, task)
   local status_len = string.len(task.status)
   local cmd_offset = status_len + 2 -- 2 == len(': ')
@@ -105,7 +105,7 @@ local function render_sidebar()
   sidebar.task_ranges = {}
   for i = #all_tasks, 1, -1 do
     local task = all_tasks[i]
-    ---@type TaskRange
+    ---@type shrun.TaskRange
     local task_range = { start_line = #lines + 1, end_line = -1, task_id = task.id }
     render_task(lines, highlights, task)
     task_range.end_line = #lines
@@ -137,7 +137,7 @@ local function render_sidebar()
 end
 
 ---@param lnum integer
----@return TaskRange?
+---@return shrun.TaskRange?
 local function sidebar_get_task_range_from_line(lnum)
   for _, task_range in ipairs(sidebar.task_ranges) do
     if task_range.end_line >= lnum then
@@ -159,7 +159,7 @@ end
 ---that we don't need to check if current window is task list window
 local function sidebar_on_cursor_move()
   local lnum = vim.api.nvim_win_get_cursor(sidebar.tasklist_winid)[1]
-  ---@type TaskRange?
+  ---@type shrun.TaskRange?
   local range = sidebar_get_task_range_from_line(lnum)
 
   if not range then
@@ -246,7 +246,7 @@ local function run_in_tmp_win(bufnr, fn)
   vim.api.nvim_set_current_win(start_winid)
 end
 
----@param task Task
+---@param task shrun.Task
 local function start_task(task)
   task.buf_id = vim.api.nvim_create_buf(false, true)
   task.status = 'RUNNING'
@@ -285,9 +285,8 @@ local function start_task(task)
   vim.api.nvim_buf_set_name(task.buf_id, string.format('task %d:%s', task.job_id, task.cmd))
 end
 
-local function new_sidebar()
+local function new_tasklist_buffer()
   local tasklist_bufnr = vim.api.nvim_create_buf(false, true)
-  local task_lines = {}
 
   vim.api.nvim_buf_set_name(tasklist_bufnr, 'TaskList')
 
@@ -338,10 +337,7 @@ local function new_sidebar()
     callback = sidebar_on_cursor_move
   })
 
-  return {
-    bufnr = tasklist_bufnr,
-    task_lines = task_lines
-  }
+  return tasklist_bufnr
 end
 
 M.setup = function()
@@ -381,7 +377,10 @@ M.setup = function()
 
   vim.api.nvim_create_user_command('ListTask', function()
       if not sidebar then
-        sidebar = new_sidebar()
+        sidebar = {
+          bufnr = new_tasklist_buffer(),
+          task_ranges = {}
+        }
         render_sidebar()
       end
       if sidebar.tasklist_winid then
