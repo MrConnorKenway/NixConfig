@@ -215,10 +215,21 @@ end
 ---@param fn fun()
 local function run_in_tmp_win(bufnr, fn)
   local start_winid = vim.api.nvim_get_current_win()
+  local width
+  local height
+
+  if sidebar and sidebar.tasklist_winid then
+    width = vim.api.nvim_win_get_width(sidebar.tasklist_winid)
+    height = vim.api.nvim_win_get_height(sidebar.tasklist_winid)
+  else
+    width = tasklist_width
+    height = tasklist_height
+  end
+
   local winid = vim.api.nvim_open_win(bufnr, false, {
     relative = 'editor',
-    width = vim.o.columns - tasklist_width,
-    height = tasklist_height,
+    width = vim.o.columns - width,
+    height = height,
     row = 0,
     col = 0,
     noautocmd = true,
