@@ -452,6 +452,32 @@ M.test = function()
     'ListTask',
     'Task sleep 1 && echo done',
     'Task ls',
+    'Task seq 1 ' .. tasklist_height,
+    function()
+      -- since last command is newly executed, its output should scroll to bottom
+      vim.api.nvim_set_current_win(sidebar.taskout_winid)
+      abort_tests_if_not(vim.fn.line('w0') ~= '3')
+      -- go back to beginning window to prepare for the next test
+      vim.api.nvim_set_current_win(winid)
+    end,
+    'Task seq 1 ' .. tasklist_height,
+    function()
+      -- when running command outside of task panel, the output should also scroll
+      -- to bottom
+      vim.api.nvim_set_current_win(sidebar.taskout_winid)
+      abort_tests_if_not(vim.fn.line('w0') ~= '3')
+      vim.api.nvim_set_current_win(sidebar.tasklist_winid)
+      vim.api.nvim_win_close(sidebar.tasklist_winid, false)
+    end,
+    'Task seq 1 ' .. tasklist_height,
+    'ListTask',
+    function()
+      -- when running command with task panel closed and then open it, the output
+      -- should also scroll to bottom
+      vim.api.nvim_set_current_win(sidebar.taskout_winid)
+      abort_tests_if_not(vim.fn.line('w0') ~= '3')
+      vim.api.nvim_set_current_win(sidebar.tasklist_winid)
+    end,
     '+2',
     'Task python --version',
     'Task tree',
