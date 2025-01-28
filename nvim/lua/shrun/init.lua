@@ -146,12 +146,12 @@ local function sidebar_get_task_range_from_line(lnum)
   return nil
 end
 
----caller should ensure that task output panel is opened
-local function scroll_terminal_to_tail()
-  local winid = vim.api.nvim_get_current_win()
-  vim.api.nvim_set_current_win(sidebar.taskout_winid)
-  vim.cmd [[normal! G]]
-  vim.api.nvim_set_current_win(winid)
+---caller should ensure that task output panel is opened and the buffer shown in
+---panel has buffer id of `bufnr`
+---@param bufnr integer
+local function scroll_terminal_to_tail(bufnr)
+  local line_cnt = vim.api.nvim_buf_line_count(bufnr)
+  vim.api.nvim_win_set_cursor(sidebar.taskout_winid, { line_cnt, 0 })
 end
 
 local function sidebar_on_cursor_move(bufnr)
@@ -306,7 +306,7 @@ local function new_sidebar()
     start_task(task)
     switch_task_out_panel(task.buf_id)
     render_sidebar()
-    scroll_terminal_to_tail()
+    scroll_terminal_to_tail(task.buf_id)
 
     vim.fn.chanclose(old_term)
     vim.api.nvim_buf_delete(old_bufnr, {})
@@ -352,14 +352,17 @@ M.setup = function()
           -- move cursor to the first line, and the CursorMoved autocmd will do
           -- the work for us
           vim.api.nvim_win_set_cursor(sidebar.tasklist_winid, { 1, 0 })
+          -- we cannot wait CursorMoved event to trigger because the
+          -- `scroll_terminal_to_tail` a few lines below needs the task panel to
+          -- be switched
+          switch_task_out_panel(task.buf_id)
         else
           sidebar.focused_task_range = { task_id = task.id }
         end
         if sidebar.tasklist_winid then
           render_sidebar()
-        end
-        if sidebar.taskout_winid then
-          scroll_terminal_to_tail()
+          -- sidebar.tasklist_winid ~= nil iff. sidebar.taskout_winid ~= nil
+          scroll_terminal_to_tail(task.buf_id)
         end
       end
     end,
