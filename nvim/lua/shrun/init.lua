@@ -197,6 +197,7 @@ local function new_task_output_window(buf_id)
   end
   vim.api.nvim_create_autocmd('WinClosed', {
     pattern = tostring(winid),
+    once = true,
     callback = function()
       if sidebar.tasklist_winid then
         sidebar.tasklist_cursor = vim.api.nvim_win_get_cursor(sidebar.tasklist_winid)
