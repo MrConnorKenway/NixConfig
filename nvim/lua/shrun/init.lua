@@ -154,15 +154,10 @@ local function scroll_terminal_to_tail(bufnr)
   vim.api.nvim_win_set_cursor(sidebar.taskout_winid, { line_cnt, 0 })
 end
 
-local function sidebar_on_cursor_move(bufnr)
-  local winid
-  if vim.api.nvim_get_current_buf() == bufnr then
-    winid = vim.api.nvim_get_current_win()
-  else
-    return
-  end
-
-  local lnum = vim.api.nvim_win_get_cursor(winid)[1]
+---since `sidebar_on_cursor_move` is called by a buffer local autocmd, it seems
+---that we don't need to check if current window is task list window
+local function sidebar_on_cursor_move()
+  local lnum = vim.api.nvim_win_get_cursor(sidebar.tasklist_winid)[1]
   ---@type TaskRange?
   local range = sidebar_get_task_range_from_line(lnum)
 
@@ -326,9 +321,7 @@ local function new_sidebar()
   vim.api.nvim_create_autocmd('CursorMoved', {
     buffer = tasklist_bufnr,
     nested = false, -- TODO: do we need nested?
-    callback = function()
-      sidebar_on_cursor_move(tasklist_bufnr)
-    end
+    callback = sidebar_on_cursor_move
   })
 
   return {
