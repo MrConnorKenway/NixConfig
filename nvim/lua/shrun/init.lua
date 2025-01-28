@@ -30,6 +30,9 @@ local all_tasks = {}
 ---@type shrun.Sidebar
 local sidebar
 
+local shrun_sidebar_hl_ns = vim.api.nvim_create_namespace('shrun_sidebar')
+local tasklist_focus_hl_ns = vim.api.nvim_create_namespace('tasklist_focus')
+
 ---@type integer?
 local empty_task_output_buf
 
@@ -48,8 +51,7 @@ local default_highlights = {
 }
 
 local function highlight_focused()
-  local ns = vim.api.nvim_create_namespace('tasklist_focus')
-  vim.api.nvim_buf_clear_namespace(sidebar.bufnr, ns, 0, -1)
+  vim.api.nvim_buf_clear_namespace(sidebar.bufnr, tasklist_focus_hl_ns, 0, -1)
 
   local task_range = sidebar.focused_task_range
   if not task_range then return end
@@ -64,7 +66,7 @@ local function highlight_focused()
     end
   end
 
-  vim.api.nvim_buf_set_extmark(sidebar.bufnr, ns, task_range.start_line - 1, 0, {
+  vim.api.nvim_buf_set_extmark(sidebar.bufnr, tasklist_focus_hl_ns, task_range.start_line - 1, 0, {
     line_hl_group = default_highlights.TaskFocus,
     end_row = task_range.end_line - 1,
   })
@@ -100,7 +102,6 @@ end
 
 ---caller should ensure that sidebar ~= nil
 local function render_sidebar()
-  local ns = vim.api.nvim_create_namespace('shrun_sidebar')
   local lines = {}
   local highlights = {}
   local separator = string.rep(separator_stem, vim.o.columns)
@@ -126,7 +127,7 @@ local function render_sidebar()
 
   for _, hl in ipairs(highlights) do
     local group, lnum, col_start, col_end = unpack(hl)
-    vim.api.nvim_buf_add_highlight(sidebar.bufnr, ns, group, lnum - 1, col_start, col_end)
+    vim.api.nvim_buf_add_highlight(sidebar.bufnr, shrun_sidebar_hl_ns, group, lnum - 1, col_start, col_end)
   end
 
   if not sidebar.tasklist_winid then
@@ -281,8 +282,8 @@ local function start_task(task)
           { out_prefix .. task.output_tail })
         vim.bo[sidebar.bufnr].modifiable = false
         vim.bo[sidebar.bufnr].modified = false
-        local ns = vim.api.nvim_create_namespace('shrun_sidebar')
-        vim.api.nvim_buf_add_highlight(sidebar.bufnr, ns, default_highlights.TaskOutPrefix, task.output_line_num - 1, 0,
+        vim.api.nvim_buf_add_highlight(sidebar.bufnr, shrun_sidebar_hl_ns, default_highlights.TaskOutPrefix,
+          task.output_line_num - 1, 0,
           out_prefix:len())
       end
       vim.api.nvim_chan_send(task.term_id, table.concat(out, '\r\n'))
