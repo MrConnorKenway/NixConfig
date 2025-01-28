@@ -22,6 +22,7 @@ local all_tasks = {}
 ---@field task_ranges TaskRange[] -- map from line range to task
 ---@field focused_task_range TaskRange?
 ---@field tasklist_winid integer? -- when winid == nil, the window is closed
+---@field tasklist_cursor integer[]?
 ---@field taskout_winid integer? -- when winid == nil, the window is closed
 
 ---@class Sidebar
@@ -198,6 +199,7 @@ local function new_task_output_window(buf_id)
     pattern = tostring(winid),
     callback = function()
       if sidebar.tasklist_winid then
+        sidebar.tasklist_cursor = vim.api.nvim_win_get_cursor(sidebar.tasklist_winid)
         vim.api.nvim_win_close(sidebar.tasklist_winid, false)
       end
       sidebar.tasklist_winid = nil
@@ -320,6 +322,7 @@ local function new_sidebar()
   vim.api.nvim_create_autocmd('BufHidden', {
     buffer = tasklist_bufnr,
     callback = function()
+      sidebar.tasklist_cursor = vim.api.nvim_win_get_cursor(sidebar.tasklist_winid)
       if sidebar.taskout_winid then
         vim.api.nvim_win_close(sidebar.taskout_winid, false)
       end
@@ -397,6 +400,9 @@ M.setup = function()
       vim.api.nvim_win_set_height(tasklist_winid, tasklist_height)
       vim.api.nvim_win_set_width(tasklist_winid, tasklist_width)
       vim.api.nvim_win_set_buf(tasklist_winid, sidebar.bufnr)
+      if sidebar.tasklist_cursor then
+        vim.api.nvim_win_set_cursor(tasklist_winid, sidebar.tasklist_cursor)
+      end
       local default_opts = {
         winfixwidth = true,
         winfixheight = true,
