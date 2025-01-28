@@ -474,6 +474,7 @@ M.test = function()
     '+2',
     'Task python --version',
     'Task tree',
+    'ListTask',
     'normal! G',
     [[ call feedkeys("\<cr>") ]],
     function()
