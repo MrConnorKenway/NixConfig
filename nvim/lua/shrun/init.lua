@@ -525,6 +525,7 @@ M.test = function()
       if idx > #commands then
         vim.uv.timer_stop(timer)
         vim.uv.close(timer)
+        vim.notify('All tests passed', vim.log.levels.INFO, { timeout = 5000 })
         return
       end
 
