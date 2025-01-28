@@ -453,8 +453,8 @@ M.test = function()
     function()
       winid = vim.api.nvim_get_current_win()
     end,
-    'ListTask',
     'Task sleep 1 && echo done',
+    'ListTask',
     'Task ls',
     'Task seq 1 ' .. tasklist_height,
     function()
