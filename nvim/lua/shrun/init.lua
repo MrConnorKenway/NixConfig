@@ -331,6 +331,15 @@ local function new_tasklist_buffer()
     end
   })
 
+  vim.api.nvim_create_autocmd('BufUnload', {
+    buffer = tasklist_bufnr,
+    callback = function()
+      -- set to -1 so that the nvim_buf_is_valid check inside `ListTask` command
+      -- returns false and new task list buffer is created
+      sidebar.bufnr = -1
+    end
+  })
+
   vim.api.nvim_create_autocmd('CursorMoved', {
     buffer = tasklist_bufnr,
     nested = false, -- TODO: do we need nested?
@@ -382,7 +391,11 @@ M.setup = function()
           task_ranges = {}
         }
         render_sidebar()
+      elseif not vim.api.nvim_buf_is_valid(sidebar.bufnr) then
+        sidebar.bufnr = new_tasklist_buffer()
+        render_sidebar()
       end
+
       if sidebar.tasklist_winid then
         return
       end
