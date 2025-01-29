@@ -316,6 +316,29 @@ local function start_task(task, restart)
   vim.api.nvim_buf_set_name(task.buf_id, string.format('task %d:%s', task.job_id, task.cmd))
 end
 
+local function restart_task()
+  local lnum = vim.api.nvim_win_get_cursor(0)[1]
+  local range = sidebar_get_task_range_from_line(lnum)
+
+  if not range then return end
+
+  local task = all_tasks[range.task_id]
+  if task.status == 'RUNNING' then
+    return
+  end
+
+  vim.fn.chanclose(task.term_id)
+
+  vim.bo[task.buf_id].modifiable = true
+  vim.api.nvim_buf_set_lines(task.buf_id, 0, -1, false, {})
+  vim.bo[task.buf_id].modifiable = false
+  vim.bo[task.buf_id].modified = false
+
+  start_task(task, true)
+  render_sidebar()
+  scroll_terminal_to_tail(task.buf_id)
+end
+
 local function new_tasklist_buffer()
   local tasklist_bufnr = vim.api.nvim_create_buf(false, true)
 
@@ -328,28 +351,7 @@ local function new_tasklist_buffer()
   vim.bo[tasklist_bufnr].swapfile = false
   vim.bo[tasklist_bufnr].modifiable = false
 
-  vim.keymap.set('n', '<cr>', function()
-    local lnum = vim.api.nvim_win_get_cursor(0)[1]
-    local range = sidebar_get_task_range_from_line(lnum)
-
-    if not range then return end
-
-    local task = all_tasks[range.task_id]
-    if task.status == 'RUNNING' then
-      return
-    end
-
-    vim.fn.chanclose(task.term_id)
-
-    vim.bo[task.buf_id].modifiable = true
-    vim.api.nvim_buf_set_lines(task.buf_id, 0, -1, false, {})
-    vim.bo[task.buf_id].modifiable = false
-    vim.bo[task.buf_id].modified = false
-
-    start_task(task, true)
-    render_sidebar()
-    scroll_terminal_to_tail(task.buf_id)
-  end, { buffer = tasklist_bufnr })
+  vim.keymap.set('n', '<cr>', restart_task, { buffer = tasklist_bufnr })
 
   vim.api.nvim_create_autocmd('BufHidden', {
     buffer = tasklist_bufnr,
