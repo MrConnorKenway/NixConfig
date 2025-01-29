@@ -251,8 +251,12 @@ local function run_in_tmp_win(bufnr, fn)
 end
 
 ---@param task shrun.Task
-local function start_task(task)
-  task.buf_id = vim.api.nvim_create_buf(false, true)
+---@param restart boolean?
+local function start_task(task, restart)
+  if not restart then
+    -- reuse task output buffer
+    task.buf_id = vim.api.nvim_create_buf(false, true)
+  end
   task.status = 'RUNNING'
   task.output_tail = ''
 
@@ -332,15 +336,16 @@ local function new_tasklist_buffer()
       return
     end
 
-    local old_bufnr = task.buf_id
-    local old_term = task.term_id
+    vim.fn.chanclose(task.term_id)
 
-    start_task(task)
+    vim.bo[task.buf_id].modifiable = true
+    vim.api.nvim_buf_set_lines(task.buf_id, 0, -1, false, {})
+    vim.bo[task.buf_id].modifiable = false
+    vim.bo[task.buf_id].modified = false
+
+    start_task(task, true)
     render_sidebar()
     scroll_terminal_to_tail(task.buf_id)
-
-    vim.fn.chanclose(old_term)
-    vim.api.nvim_buf_delete(old_bufnr, {})
   end, { buffer = tasklist_bufnr })
 
   vim.api.nvim_create_autocmd('BufHidden', {
