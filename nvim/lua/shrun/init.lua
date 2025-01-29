@@ -280,7 +280,7 @@ local function start_task(task, restart)
           break
         end
       end
-      if sidebar.tasklist_winid and task.output_line_num then
+      if sidebar and sidebar.tasklist_winid and task.output_line_num then
         vim.bo[sidebar.bufnr].modifiable = true
         vim.api.nvim_buf_set_lines(sidebar.bufnr, task.output_line_num - 1, task.output_line_num, true,
           { out_prefix .. task.output_tail })
