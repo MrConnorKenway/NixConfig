@@ -298,15 +298,18 @@ local function start_task(task, restart)
         if sidebar then
           render_sidebar()
         end
-        vim.notify(task.cmd .. ' success', vim.log.levels.INFO, { timeout = 2000 })
+        --TODO: currently relies on Snacks.nvim's markdown support to change the style, not a perfect solution
+        vim.notify(task.cmd .. ' `SUCCESS`', vim.log.levels.INFO, { timeout = 2000 })
+        vim.api.nvim_chan_send(task.term_id, ('\n[ Process exited with \x1b[32m%d\x1b[m ]'):format(exit_code))
       else
         task.status = 'FAILED'
         if sidebar then
           render_sidebar()
         end
-        vim.notify(task.cmd .. ' failed', vim.log.levels.ERROR, { timeout = 2000 })
+        --TODO: currently relies on Snacks.nvim's markdown support to change the style, not a perfect solution
+        vim.notify(task.cmd .. ' **FAILED**', vim.log.levels.ERROR, { timeout = 2000 })
+        vim.api.nvim_chan_send(task.term_id, ('\n[ Process exited with \x1b[31m%d\x1b[m ]'):format(exit_code))
       end
-      vim.api.nvim_chan_send(task.term_id, string.format('\n[ Process exited with %d ]', exit_code))
     end
   })
 
