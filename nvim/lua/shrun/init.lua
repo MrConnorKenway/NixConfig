@@ -516,7 +516,7 @@ M.test = function()
     function()
       -- since last command is newly executed, its output should scroll to bottom
       vim.api.nvim_set_current_win(sidebar.taskout_winid)
-      abort_tests_if_not(vim.fn.line('w0') ~= '3')
+      abort_tests_if_not(vim.fn.line('w0') ~= 1)
       -- go back to beginning window to prepare for the next test
       vim.api.nvim_set_current_win(winid)
     end,
@@ -525,7 +525,7 @@ M.test = function()
       -- when running command outside of task panel, the output should also scroll
       -- to bottom
       vim.api.nvim_set_current_win(sidebar.taskout_winid)
-      abort_tests_if_not(vim.fn.line('w0') ~= '3')
+      abort_tests_if_not(vim.fn.line('w0') ~= 1)
       vim.api.nvim_set_current_win(sidebar.tasklist_winid)
       vim.api.nvim_win_close(sidebar.tasklist_winid, false)
     end,
@@ -535,7 +535,7 @@ M.test = function()
       -- when running command with task panel closed and then open it, the output
       -- should also scroll to bottom
       vim.api.nvim_set_current_win(sidebar.taskout_winid)
-      abort_tests_if_not(vim.fn.line('w0') ~= '3')
+      abort_tests_if_not(vim.fn.line('w0') ~= 1)
       vim.api.nvim_set_current_win(sidebar.tasklist_winid)
     end,
     '+2',
