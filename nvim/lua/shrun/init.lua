@@ -401,17 +401,18 @@ M.setup = function()
           -- move cursor to the first line, and the CursorMoved autocmd will do
           -- the work for us
           vim.api.nvim_win_set_cursor(sidebar.tasklist_winid, { 1, 0 })
-          -- we cannot wait CursorMoved event to trigger because the
-          -- `scroll_terminal_to_tail` a few lines below needs the task panel to
-          -- be switched
-          switch_task_out_panel(task.buf_id)
         else
           sidebar.focused_task_range = { task_id = task.id }
         end
         if sidebar.tasklist_winid then
           render_sidebar()
-          -- sidebar.tasklist_winid ~= nil iff. sidebar.taskout_winid ~= nil
-          scroll_terminal_to_tail(task.buf_id)
+          -- at this time, although we have already told task output panel to
+          -- switch the buffer it displayed, nvim may have not finished rendering
+          -- yet, so we defer the scrolling using `vim.schedule`
+          vim.schedule(function()
+            -- since task list is not nil, task out window is also not nil
+            scroll_terminal_to_tail(task.buf_id)
+          end)
         end
       end
     end,
