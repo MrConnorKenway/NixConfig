@@ -203,12 +203,12 @@ local function new_task_output_window(buf_id)
     pattern = tostring(winid),
     once = true,
     callback = function()
-      if sidebar.tasklist_winid then
-        sidebar.tasklist_cursor = vim.api.nvim_win_get_cursor(sidebar.tasklist_winid)
-        vim.api.nvim_win_close(sidebar.tasklist_winid, false)
-      end
-      sidebar.tasklist_winid = nil
       sidebar.taskout_winid = nil
+      vim.schedule(function()
+        if sidebar.tasklist_winid then
+          vim.api.nvim_win_hide(sidebar.tasklist_winid)
+        end
+      end)
     end
   })
   return winid
@@ -357,11 +357,12 @@ local function new_tasklist_buffer()
     buffer = tasklist_bufnr,
     callback = function()
       sidebar.tasklist_cursor = vim.api.nvim_win_get_cursor(sidebar.tasklist_winid)
-      if sidebar.taskout_winid then
-        vim.api.nvim_win_close(sidebar.taskout_winid, false)
-      end
       sidebar.tasklist_winid = nil
-      sidebar.taskout_winid = nil
+      vim.schedule(function()
+        if sidebar.taskout_winid then
+          vim.api.nvim_win_hide(sidebar.taskout_winid)
+        end
+      end)
     end
   })
 
