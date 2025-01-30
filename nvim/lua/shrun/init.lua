@@ -9,6 +9,7 @@ local M = {}
 ---@field job_id integer
 ---@field output_tail string
 ---@field output_line_num integer?
+---@field no_follow_term_output boolean?
 
 ---@class shrun.TaskRange
 ---@field start_line integer?
@@ -93,11 +94,23 @@ local function render_task(lines, highlights, task)
   table.insert(highlights, { default_highlights.TaskOutPrefix, #lines, 0, string.len(out_prefix) })
 end
 
+---caller should ensure that task output panel is opened and the buffer shown in
+---panel has buffer id of `bufnr`
 ---@param bufnr integer
-local function switch_task_out_panel(bufnr)
+local function scroll_terminal_to_tail(bufnr)
+  local line_cnt = vim.api.nvim_buf_line_count(bufnr)
+  vim.api.nvim_win_set_cursor(sidebar.taskout_winid, { line_cnt, 0 })
+end
+
+---@param task shrun.Task
+local function switch_task_out_panel(task)
   vim.wo[sidebar.taskout_winid].winfixbuf = false
-  vim.api.nvim_win_set_buf(sidebar.taskout_winid, bufnr)
+  vim.api.nvim_win_set_buf(sidebar.taskout_winid, task.buf_id)
   vim.wo[sidebar.taskout_winid].winfixbuf = true
+
+  if not task.no_follow_term_output then
+    scroll_terminal_to_tail(task.buf_id)
+  end
 end
 
 ---caller should ensure that sidebar ~= nil
@@ -136,7 +149,7 @@ local function render_sidebar()
 
   highlight_focused()
   if sidebar.taskout_winid and sidebar.focused_task_range then
-    switch_task_out_panel(all_tasks[sidebar.focused_task_range.task_id].buf_id)
+    switch_task_out_panel(all_tasks[sidebar.focused_task_range.task_id])
   end
 end
 
@@ -149,14 +162,6 @@ local function sidebar_get_task_range_from_line(lnum)
     end
   end
   return nil
-end
-
----caller should ensure that task output panel is opened and the buffer shown in
----panel has buffer id of `bufnr`
----@param bufnr integer
-local function scroll_terminal_to_tail(bufnr)
-  local line_cnt = vim.api.nvim_buf_line_count(bufnr)
-  vim.api.nvim_win_set_cursor(sidebar.taskout_winid, { line_cnt, 0 })
 end
 
 ---since `sidebar_on_cursor_move` is called by a buffer local autocmd, it seems
@@ -176,7 +181,7 @@ local function sidebar_on_cursor_move()
 
   sidebar.focused_task_range = range
   if sidebar.taskout_winid then
-    switch_task_out_panel(all_tasks[range.task_id].buf_id)
+    switch_task_out_panel(all_tasks[range.task_id])
   end
   highlight_focused()
 end
@@ -256,6 +261,27 @@ local function start_task(task, restart)
   if not restart then
     -- reuse task output buffer
     task.buf_id = vim.api.nvim_create_buf(false, true)
+
+    vim.api.nvim_create_autocmd('CursorMoved', {
+      buffer = task.buf_id,
+      callback = function()
+        -- current buffer must be task's output buffer and current window must be
+        -- task output window
+        local row = vim.api.nvim_win_get_cursor(sidebar.taskout_winid)[1]
+        -- if user moves cursor to non bottom, it is reasonable to assume that user
+        -- wants to disable automatically scrolling and keeps the cursor fixed
+        task.no_follow_term_output = row < vim.api.nvim_buf_line_count(task.buf_id)
+      end
+    })
+
+    vim.api.nvim_create_autocmd('BufWinEnter', {
+      buffer = task.buf_id,
+      callback = vim.schedule_wrap(function()
+        if not task.no_follow_term_output then
+          scroll_terminal_to_tail(task.buf_id)
+        end
+      end)
+    })
   end
   task.status = 'RUNNING'
   task.output_tail = ''
