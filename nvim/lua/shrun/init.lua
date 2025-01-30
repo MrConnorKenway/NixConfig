@@ -556,6 +556,13 @@ M.test = function()
       abort_tests_if_not(vim.fn.line('w0') ~= 1)
       vim.api.nvim_set_current_win(sidebar.tasklist_winid)
     end,
+    [[ call feedkeys("\<cr>") ]],
+    function()
+      -- when restarting command, the output should also scroll to bottom
+      vim.api.nvim_set_current_win(sidebar.taskout_winid)
+      abort_tests_if_not(vim.fn.line('w0') ~= 1)
+      vim.api.nvim_set_current_win(sidebar.tasklist_winid)
+    end,
     '+2',
     'Task python --version',
     'Task tree',
