@@ -327,6 +327,8 @@ local function restart_task()
     return
   end
 
+  -- move cursor to the bottom to prevent "[Terminal closed]" message
+  vim.api.nvim_chan_send(task.term_id, ('\x1b[%d;f'):format(vim.o.lines))
   vim.fn.chanclose(task.term_id)
 
   vim.bo[task.buf_id].modifiable = true
