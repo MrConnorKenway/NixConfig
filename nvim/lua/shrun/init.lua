@@ -273,15 +273,6 @@ local function start_task(task, restart)
         task.no_follow_term_output = row < vim.api.nvim_buf_line_count(task.buf_id)
       end
     })
-
-    vim.api.nvim_create_autocmd('BufWinEnter', {
-      buffer = task.buf_id,
-      callback = vim.schedule_wrap(function()
-        if not task.no_follow_term_output then
-          scroll_terminal_to_tail(task.buf_id)
-        end
-      end)
-    })
   end
   task.status = 'RUNNING'
   task.output_tail = ''
