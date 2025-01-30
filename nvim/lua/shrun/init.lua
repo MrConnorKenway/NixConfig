@@ -364,7 +364,6 @@ local function restart_task()
 
   start_task(task, true)
   render_sidebar()
-  scroll_terminal_to_tail(task.buf_id)
 end
 
 local function new_tasklist_buffer()
@@ -428,13 +427,6 @@ M.setup = function()
         if sidebar.tasklist_winid then
           vim.api.nvim_win_set_cursor(sidebar.tasklist_winid, { 1, 0 })
           render_sidebar()
-          -- at this time, although we have already told task output panel to
-          -- switch the buffer it displayed, nvim may have not finished rendering
-          -- yet, so we defer the scrolling using `vim.schedule`
-          vim.schedule(function()
-            -- since task list is not nil, task out window is also not nil
-            scroll_terminal_to_tail(task.buf_id)
-          end)
         else
           -- task list panel is not opened, record the cursor here and defer the
           -- cursor update after `ListTask`
