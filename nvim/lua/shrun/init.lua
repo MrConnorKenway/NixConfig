@@ -397,14 +397,10 @@ M.setup = function()
       start_task(task)
       table.insert(all_tasks, task)
       if sidebar then
-        if vim.api.nvim_get_current_buf() == sidebar.bufnr then
-          -- move cursor to the first line, and the CursorMoved autocmd will do
-          -- the work for us
-          vim.api.nvim_win_set_cursor(sidebar.tasklist_winid, { 1, 0 })
-        else
-          sidebar.focused_task_range = { task_id = task.id }
-        end
+        sidebar.focused_task_range = { task_id = task.id }
+
         if sidebar.tasklist_winid then
+          vim.api.nvim_win_set_cursor(sidebar.tasklist_winid, { 1, 0 })
           render_sidebar()
           -- at this time, although we have already told task output panel to
           -- switch the buffer it displayed, nvim may have not finished rendering
@@ -413,6 +409,10 @@ M.setup = function()
             -- since task list is not nil, task out window is also not nil
             scroll_terminal_to_tail(task.buf_id)
           end)
+        else
+          -- task list panel is not opened, record the cursor here and defer the
+          -- cursor update after `ListTask`
+          sidebar.tasklist_cursor = { 1, 0 }
         end
       end
     end,
