@@ -3,6 +3,7 @@ local M = {}
 ---@class shrun.Task
 ---@field id integer
 ---@field cmd string
+---@field view vim.fn.winsaveview.ret
 ---@field status string
 ---@field buf_id integer
 ---@field term_id integer
@@ -110,6 +111,10 @@ local function switch_task_out_panel(task)
 
   if not task.no_follow_term_output then
     scroll_terminal_to_tail(task.buf_id)
+  else
+    vim.api.nvim_win_call(sidebar.taskout_winid, function()
+      vim.fn.winrestview(task.view)
+    end)
   end
 end
 
@@ -270,7 +275,12 @@ local function start_task(task, restart)
         local row = vim.api.nvim_win_get_cursor(sidebar.taskout_winid)[1]
         -- if user moves cursor to non bottom, it is reasonable to assume that user
         -- wants to disable automatically scrolling and keeps the cursor fixed
-        task.no_follow_term_output = row < vim.api.nvim_buf_line_count(task.buf_id)
+        if row < vim.api.nvim_buf_line_count(task.buf_id) then
+          task.no_follow_term_output = true
+          task.view = vim.fn.winsaveview()
+        else
+          task.no_follow_term_output = false
+        end
       end
     })
   end
@@ -478,8 +488,13 @@ M.setup = function()
       end
       sidebar.tasklist_winid = tasklist_winid
       if sidebar.focused_task_range then
-        local bufnr = all_tasks[sidebar.focused_task_range.task_id].buf_id
-        sidebar.taskout_winid = new_task_output_window(bufnr)
+        local task = all_tasks[sidebar.focused_task_range.task_id]
+        sidebar.taskout_winid = new_task_output_window(task.buf_id)
+        if task.no_follow_term_output then
+          vim.api.nvim_win_call(sidebar.taskout_winid, function()
+            vim.fn.winrestview(task.view)
+          end)
+        end
       else
         sidebar.taskout_winid = new_task_output_window(empty_task_output_buf)
       end
