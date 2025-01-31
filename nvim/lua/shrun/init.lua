@@ -621,6 +621,28 @@ M.test = function()
       local row, col = unpack(vim.api.nvim_win_get_cursor(0))
       abort_tests_if_not(row == 16 and col == 6)
     end,
+
+    ------------------ test window view save and restore -----------------------
+    'Task seq 1 200',
+    function()
+      vim.api.nvim_set_current_win(sidebar.taskout_winid)
+      local line_cnt = vim.api.nvim_buf_line_count(0)
+      -- cursor should stay at bottom now
+      abort_tests_if_not(line_cnt == vim.api.nvim_win_get_cursor(0)[1])
+      vim.cmd('normal! 120G3|')
+      vim.cmd('normal! H')
+    end,
+    'wincmd c',
+    'ListTask',
+    function()
+      vim.api.nvim_set_current_win(sidebar.taskout_winid)
+      -- the top line should be line 115
+      abort_tests_if_not(vim.fn.line('w0') == 115)
+      -- cursor should stay at 115
+      abort_tests_if_not(vim.api.nvim_win_get_cursor(0)[1] == 115)
+    end,
+    ------------------ end test ------------------------------------------------
+
     'tabclose'
   }
 
