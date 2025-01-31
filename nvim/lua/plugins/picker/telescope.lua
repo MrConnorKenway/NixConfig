@@ -7,35 +7,9 @@ return {
       desc = 'Telescope help tags'
     },
     {
-      '<leader>S',
-      function() require('telescope.builtin').lsp_document_symbols() end,
-      desc = 'Telescope find document symbols'
-    },
-    {
-      '<S-D-o>',
-      function() require('telescope.builtin').lsp_document_symbols() end,
-      desc =
-      'Telescope find document symbols'
-    },
-    {
-      '<leader>r',
-      function() require('telescope.builtin').lsp_references() end,
-      desc = 'Go to references'
-    },
-    {
       '<S-D-p>',
       function() require('telescope.builtin').commands() end,
       desc = 'Telescope find commands'
-    },
-    {
-      'gd',
-      function() require('telescope.builtin').lsp_definitions() end,
-      desc = 'Go to definitions'
-    },
-    {
-      'gy',
-      function() require('telescope.builtin').lsp_type_definitions() end,
-      desc = 'Go to type definitions'
     }
   },
   dependencies = {
