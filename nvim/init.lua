@@ -57,6 +57,8 @@ vim.keymap.set('v', '<leader>c', '"+y', { desc = 'OSC52 copy' })
 vim.keymap.set('t', '<C-;>', vim.api.nvim_replace_termcodes('<C-\\><C-N>', true, true, true),
   { silent = true, desc = 'Exit terminal mode' })
 vim.keymap.set({ 'n', 'i' }, '<D-z>', '<cmd>normal! u<cr>', { desc = 'Undo' })
+vim.keymap.set({ 'n', 'i', 't' }, '<C-tab>', '<cmd>tabnext<cr>', { desc = 'Go to next tab page' })
+vim.keymap.set({ 'n', 'i', 't' }, '<C-S-tab>', '<cmd>tabprevious<cr>', { desc = 'Go to previous tab page' })
 
 -- copy from https://github.com/neovim/neovim/pull/28176/files#diff-49225a49c226c2f1b36f966d0178c556e204cdc0b660c80db9e4568e03f6ef99R126
 -- WARN: may change as neovim updates
