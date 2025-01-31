@@ -103,6 +103,74 @@ return {
       '<leader>c',
       function() require('snacks.bufdelete').delete() end,
       desc = 'Close buffer'
+    },
+    {
+      'gh',
+      function()
+        ---@param opts snacks.picker.Config
+        ---@type snacks.picker.finder
+        local function git_hunks(opts, ctx)
+          ---@type snacks.picker.finder.Item[]
+          local items = {}
+
+          for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+            if vim.api.nvim_buf_is_valid(bufnr) then
+              local file = vim.fs.normalize(vim.api.nvim_buf_get_name(bufnr), { _fast = true })
+              ---@type Gitsigns.Hunk.Hunk_Public[] | nil
+              local hunks = require('gitsigns').get_hunks(bufnr)
+              if hunks then
+                for _, hunk in ipairs(hunks) do
+                  local line_number = hunk.added.start
+                  if line_number == 0 then
+                    line_number = 1
+                  end
+
+                  for _, line in ipairs(hunk.lines) do
+                    items[#items + 1] = {
+                      text = line,
+                      item = { hunk_line = line },
+                      buf = bufnr,
+                      file = file,
+                      pos = { line_number, 0 },
+                      lang = vim.bo[bufnr].filetype
+                    }
+                    if line:sub(1, 1) == '+' then
+                      line_number = line_number + 1
+                    end
+                  end
+                end
+              end
+            end
+          end
+          return ctx.filter:filter(items)
+        end
+
+        require('snacks').picker {
+          layout = {
+            preset = 'ivy',
+          },
+          finder = git_hunks,
+          formatters = {
+            file = {
+              truncate = 20
+            }
+          },
+          format = function(item, picker)
+            local ret = {}
+            local line = item.item.hunk_line ---@type string
+            local mod = line:sub(1, 1)
+            vim.list_extend(ret, require('snacks.picker.format').filename(item, picker))
+            if mod == '+' then
+              ret[#ret + 1] = { mod, 'SnacksPickerRow' }
+            else
+              ret[#ret + 1] = { mod, 'DiagnosticSignError' }
+            end
+            require('snacks.picker').highlight.format(item, line:sub(2), ret)
+            return ret
+          end
+        }
+      end,
+      desc = 'Picker search git hunks in opened buffers'
     }
   },
   opts = {
