@@ -533,9 +533,15 @@ M.test = function()
     function()
       winid = vim.api.nvim_get_current_win()
     end,
+
+    ------------------ test running task before sidebar is created -------------
     'Task sleep 1 && echo done',
     'ListTask',
     'Task ls',
+    ------------------ end test ------------------------------------------------
+
+
+    ------------------ test scroll to bottom -----------------------------------
     'Task seq 1 ' .. tasklist_height,
     function()
       -- since last command is newly executed, its output should scroll to bottom
@@ -569,6 +575,10 @@ M.test = function()
       abort_tests_if_not(vim.fn.line('w0') ~= 1)
       vim.api.nvim_set_current_win(sidebar.tasklist_winid)
     end,
+    ------------------ end test ------------------------------------------------
+
+
+    ------------------ test restarting task ------------------------------------
     '+2',
     'Task python --version',
     'Task tree',
@@ -585,6 +595,10 @@ M.test = function()
       abort_tests_if_not(task.status == 'RUNNING')
       abort_tests_if_not(header[1]:match('^RUNNING: sleep'))
     end,
+    ------------------ end test ------------------------------------------------
+
+
+    ------------------ test starting new task ----------------------------------
     '+5',
     'Task make',
     function()
@@ -592,6 +606,10 @@ M.test = function()
       abort_tests_if_not(sidebar.focused_task_range.start_line == 1)
       abort_tests_if_not(all_tasks[sidebar.focused_task_range.task_id].cmd == 'make')
     end,
+    ------------------ end test ------------------------------------------------
+
+
+    ------------------ test running tasks when panel is closed -----------------
     'Task cat longline',
     'Task brew update',
     'wincmd c',
@@ -600,6 +618,10 @@ M.test = function()
     'ListTask',
     '+2',
     '+5',
+    ------------------ end test ------------------------------------------------
+
+
+    ------------------ test closing and reopen panel ---------------------------
     'normal! gg',
     'normal! 16G7|',
     'wincmd p',
@@ -619,8 +641,11 @@ M.test = function()
     function()
       abort_tests_if_not(vim.api.nvim_get_current_win() == sidebar.tasklist_winid)
       local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+      -- cursor should not move after reopen
       abort_tests_if_not(row == 16 and col == 6)
     end,
+    ------------------ end test ------------------------------------------------
+
 
     ------------------ test window view save and restore -----------------------
     'Task seq 1 200',
