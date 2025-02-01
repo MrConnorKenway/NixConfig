@@ -5,31 +5,51 @@ return {
   config = function()
     local conditions = require('heirline.conditions')
     local utils = require('heirline.utils')
-    local theme_colors = require('catppuccin.palettes').get_palette()
-    local colors = {
-      bright_bg = utils.get_highlight('Folded').bg,
-      bright_fg = utils.get_highlight('Folded').fg,
-      red = utils.get_highlight('DiagnosticError').fg,
-      blue = utils.get_highlight('Function').fg,
-      orange = utils.get_highlight('Constant').fg,
-      purple = utils.get_highlight('Statement').fg,
-      cyan = utils.get_highlight('Special').fg,
-      diag_warn = utils.get_highlight('DiagnosticWarn').fg,
-      diag_error = utils.get_highlight('DiagnosticError').fg,
-      diag_hint = utils.get_highlight('DiagnosticHint').fg,
-      diag_info = utils.get_highlight('DiagnosticInfo').fg,
-      git_del = utils.get_highlight('GitSignsDelete').fg,
-      git_add = utils.get_highlight('GitSignsAdd').fg,
-      git_change = utils.get_highlight('GitSignsChange').fg,
-    }
+    local function setup_colors()
+      local theme_colors = require('catppuccin.palettes').get_palette()
+      local colors = {
+        heirline_color_purple = utils.get_highlight('Statement').fg,
+        heirline_color_cyan = utils.get_highlight('Special').fg,
+        heirline_color_bright_bg = utils.get_highlight('Folded').bg,
+        heirline_color_bright_fg = utils.get_highlight('Folded').fg,
+        heirline_color_diag_warn = utils.get_highlight('DiagnosticWarn').fg,
+        heirline_color_diag_error = utils.get_highlight('DiagnosticError').fg,
+        heirline_color_diag_hint = utils.get_highlight('DiagnosticHint').fg,
+        heirline_color_diag_info = utils.get_highlight('DiagnosticInfo').fg,
+        heirline_color_git_del = utils.get_highlight('GitSignsDelete').fg,
+        heirline_color_git_add = utils.get_highlight('GitSignsAdd').fg,
+        heirline_color_git_change = utils.get_highlight('GitSignsChange').fg,
+        heirline_color_git_branch = utils.get_highlight('Constant').fg,
+        heirline_color_file_name = utils.get_highlight('Directory').fg,
+        heirline_color_file_type = utils.get_highlight('Type').fg,
+        heirline_color_normal = theme_colors.blue,
+        heirline_color_insert = theme_colors.green,
+        heirline_color_visual = theme_colors.mauve,
+        heirline_color_command = theme_colors.peach,
+        heirline_color_select = utils.get_highlight('Statement').fg,
+        heirline_color_replace = theme_colors.red,
+        heirline_color_terminal = theme_colors.green,
+        heirline_color_lsp = theme_colors.green,
+      }
+      for k, v in pairs(theme_colors) do
+        colors['heirline_color_' .. k] = v
+      end
+      return colors
+    end
 
-    require('heirline').load_colors(colors)
+    require('heirline').load_colors(setup_colors())
 
     local leaving = false
     vim.api.nvim_create_autocmd('VimLeavePre', {
       callback = function()
         leaving = true
       end
+    })
+
+    vim.api.nvim_create_autocmd('ColorScheme', {
+      callback = function()
+        require('heirline.utils').on_colorscheme(setup_colors)
+      end,
     })
 
     local ViMode = {
@@ -75,19 +95,19 @@ return {
           t = 'TERMINAL',
         },
         mode_bgs = {
-          n = theme_colors.blue,
-          i = theme_colors.green,
-          v = theme_colors.mauve,
-          V = theme_colors.mauve,
-          ['\22'] = theme_colors.mauve,
-          c = theme_colors.peach,
-          s = 'purple',
-          S = 'purple',
-          ['\19'] = 'purple',
-          R = theme_colors.red,
-          r = theme_colors.red,
-          ['!'] = 'red',
-          t = theme_colors.green,
+          n = 'heirline_color_normal',
+          i = 'heirline_color_insert',
+          v = 'heirline_color_visual',
+          V = 'heirline_color_visual',
+          ['\22'] = 'heirline_color_visual',
+          c = 'heirline_color_command',
+          s = 'heirline_color_select',
+          S = 'heirline_color_select',
+          ['\19'] = 'heirline_color_select',
+          R = 'heirline_color_replace',
+          r = 'heirline_color_replace',
+          ['!'] = 'heirline_color_replace',
+          t = 'heirline_color_terminal',
         }
       },
       -- We can now access the value of mode() that, by now, would have been
@@ -103,7 +123,7 @@ return {
       -- Same goes for the highlight. Now the foreground will change according to the current mode.
       hl = function(self)
         local mode = vim.fn.mode(1):sub(1, 1) -- get only the first mode character
-        return { fg = theme_colors.base, bg = self.mode_bgs[mode], bold = true }
+        return { fg = 'heirline_color_base', bg = self.mode_bgs[mode], bold = true }
       end,
       update = {
         'ModeChanged',
@@ -141,7 +161,7 @@ return {
       end,
       hl = function()
         local mode = vim.fn.mode(1):sub(1, 1) -- get only the first mode character
-        return { fg = ViMode.static.mode_bgs[mode], bg = 'bright_bg' }
+        return { fg = ViMode.static.mode_bgs[mode], bg = 'heirline_color_bright_bg' }
       end
     }
 
@@ -169,25 +189,25 @@ return {
           -- 0 is just another output, we can decide to print it or not!
           return self.errors > 0 and (self.error_icon .. self.errors)
         end,
-        hl = { fg = 'diag_error' },
+        hl = { fg = 'heirline_color_diag_error' },
       },
       {
         provider = function(self)
           return self.warnings > 0 and (self.warn_icon .. self.warnings)
         end,
-        hl = { fg = 'diag_warn' },
+        hl = { fg = 'heirline_color_diag_warn' },
       },
       {
         provider = function(self)
           return self.info > 0 and (self.info_icon .. self.info)
         end,
-        hl = { fg = 'diag_info' },
+        hl = { fg = 'heirline_color_diag_info' },
       },
       {
         provider = function(self)
           return self.hints > 0 and (self.hint_icon .. self.hints)
         end,
-        hl = { fg = 'diag_hint' },
+        hl = { fg = 'heirline_color_diag_hint' },
       },
     }
 
@@ -220,7 +240,7 @@ return {
         end
         return filename
       end,
-      hl = { fg = utils.get_highlight('Directory').fg },
+      hl = { fg = 'heirline_color_file_name' },
     }
 
     local FileFlags = {
@@ -229,14 +249,14 @@ return {
           return vim.bo.modified
         end,
         provider = '[+]',
-        hl = { fg = theme_colors.green },
+        hl = { fg = 'heirline_color_green' },
       },
       {
         condition = function()
           return not vim.bo.modifiable or vim.bo.readonly
         end,
         provider = ' ',
-        hl = { fg = 'red' },
+        hl = { fg = 'heirline_color_red' },
       },
     }
 
@@ -248,7 +268,7 @@ return {
       hl = function()
         if vim.bo.modified then
           -- use `force` because we need to override the child's hl foreground
-          return { fg = 'cyan', bold = true, force = true }
+          return { fg = 'heirline_color_cyan', bold = true, force = true }
         end
       end,
     }
@@ -269,7 +289,7 @@ return {
       provider = function()
         return string.upper(vim.bo.filetype)
       end,
-      hl = { fg = utils.get_highlight('Type').fg, bold = true },
+      hl = { fg = 'heirline_color_file_type', bold = true },
     }
 
     local Git = {
@@ -279,7 +299,7 @@ return {
         self.status_dict = vim.b.gitsigns_status_dict
       end,
 
-      hl = { fg = 'orange' },
+      hl = { fg = 'heirline_color_git_branch' },
 
       {
         provider = function(self)
@@ -292,21 +312,21 @@ return {
           local count = self.status_dict.added or 0
           return count > 0 and ('  ' .. count)
         end,
-        hl = { fg = 'git_add' },
+        hl = { fg = 'heirline_color_git_add' },
       },
       {
         provider = function(self)
           local count = self.status_dict.removed or 0
           return count > 0 and ('  ' .. count)
         end,
-        hl = { fg = 'git_del' },
+        hl = { fg = 'heirline_color_git_del' },
       },
       {
         provider = function(self)
           local count = self.status_dict.changed or 0
           return count > 0 and ('  ' .. count)
         end,
-        hl = { fg = 'git_change' },
+        hl = { fg = 'heirline_color_git_change' },
       },
       {
         provider = ' %<'
@@ -321,7 +341,7 @@ return {
         local filename = vim.api.nvim_buf_get_name(0)
         return vim.fn.fnamemodify(filename, ':t')
       end,
-      hl = { fg = colors.blue },
+      hl = { fg = 'heirline_color_file_name' },
     }
 
     local TerminalName = {
@@ -337,7 +357,7 @@ return {
           return ' ' .. tname
         end
       end,
-      hl = { fg = colors.blue, bold = true },
+      hl = { fg = 'heirline_color_file_name', bold = true },
     }
 
     local Align = { provider = '%=' }
@@ -380,7 +400,7 @@ return {
         end
         return ' ' .. table.concat(names, ' ')
       end,
-      hl = { fg = theme_colors.green, bold = true },
+      hl = { fg = 'heirline_color_lsp', bold = true },
     }
 
     local DefaultStatusline = {
@@ -403,7 +423,7 @@ return {
       provider = function()
         return '  '
       end,
-      hl = { bg = 'bright_bg' }
+      hl = { bg = 'heirline_color_bright_bg' }
     }
 
     local InactiveStatusline = {
@@ -411,7 +431,7 @@ return {
       StatusBorder,
       Space,
       {
-        hl = { fg = 'bright_bg', force = true },
+        hl = { fg = 'heirline_color_bright_bg', force = true },
         FileNameBlock,
         Space,
         Git,
@@ -429,7 +449,7 @@ return {
     local StatusLines = {
       hl = function()
         if conditions.is_active() then
-          return { bg = theme_colors.surface0 }
+          return { bg = 'heirline_color_surface0' }
         else
           return 'StatusLineNC'
         end
