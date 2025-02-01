@@ -76,5 +76,12 @@ return {
         return {}
       end,
     }
+
+    vim.api.nvim_create_autocmd('ColorScheme', {
+      callback = function()
+        -- clear incline's highlight cache
+        require('incline.highlight').clear()
+      end
+    })
   end
 }
