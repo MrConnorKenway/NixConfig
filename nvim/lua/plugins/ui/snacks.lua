@@ -158,14 +158,36 @@ return {
           format = function(item, picker)
             local ret = {}
             local line = item.item.hunk_line ---@type string
-            local mod = line:sub(1, 1)
+            local byte_cnt = 0
+            local function count_digit(number)
+              local cnt = 0
+              while number > 0 do
+                number = math.floor(number / 10)
+                cnt = cnt + 1
+              end
+              return cnt
+            end
+            local line_count_digits = count_digit(vim.api.nvim_buf_line_count(item.buf))
+            local row_number_digits = count_digit(item.pos[1])
+            local align_char_count = line_count_digits - row_number_digits
+
             vim.list_extend(ret, require('snacks.picker.format').filename(item, picker))
-            if mod == '+' then
-              ret[#ret + 1] = { mod, 'SnacksPickerRow' }
-            else
-              ret[#ret + 1] = { mod, 'DiagnosticSignError' }
+            for _, v in ipairs(ret) do
+              byte_cnt = byte_cnt + string.len(v[1])
+            end
+            -- align file name
+            if align_char_count > 0 then
+              ret[#ret + 1] = { string.rep(' ', align_char_count) }
+              byte_cnt = byte_cnt + align_char_count
             end
             require('snacks.picker').highlight.format(item, line:sub(2), ret)
+            local hl = line:sub(1, 1) == '+' and 'DiffAdd' or 'DiffDelete'
+            ret[#ret + 1] = {
+              -- nvim_buf_set_extmark col wants byte count, not actual char numbers
+              col = byte_cnt - 2,
+              hl_group = hl,
+              hl_eol = true
+            }
             return ret
           end
         }
