@@ -107,42 +107,78 @@ return {
     {
       'gh',
       function()
+        local Async = require('snacks.picker.util.async')
+        local current_buf = vim.api.nvim_get_current_buf()
+        local buf_to_attach = { current_buf }
+
+        for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+          if bufnr ~= current_buf and vim.bo[bufnr].buftype:len() == 0 then
+            table.insert(buf_to_attach, bufnr)
+            vim.fn.bufload(bufnr)
+          end
+        end
+
         ---@param opts snacks.picker.Config
         ---@type snacks.picker.finder
         local function git_hunks(opts, ctx)
-          ---@type snacks.picker.finder.Item[]
-          local items = {}
+          ---@async
+          ---@param cb async fun(item: snacks.picker.finder.Item)
+          return function(cb)
+            ---@type snacks.picker.Async
+            local async = Async.running()
 
-          for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-            if vim.api.nvim_buf_is_valid(bufnr) then
-              local file = vim.fs.normalize(vim.api.nvim_buf_get_name(bufnr), { _fast = true })
-              ---@type Gitsigns.Hunk.Hunk_Public[] | nil
-              local hunks = require('gitsigns').get_hunks(bufnr)
-              if hunks then
-                for _, hunk in ipairs(hunks) do
-                  local line_number = hunk.added.start
-                  if line_number == 0 then
-                    line_number = 1
-                  end
+            for _, bufnr in ipairs(buf_to_attach) do
+              if not require('gitsigns.cache').cache[bufnr] then
+                vim.schedule(function()
+                  require('gitsigns').attach(bufnr, nil, nil, function()
+                    vim.defer_fn(function()
+                      async:resume()
+                    end, 100)
+                  end)
+                end)
 
-                  for _, line in ipairs(hunk.lines) do
-                    items[#items + 1] = {
-                      text = file .. ' ' .. line,
-                      item = { hunk_line = line },
-                      buf = bufnr,
-                      file = file,
-                      pos = { line_number, 0 },
-                      lang = vim.bo[bufnr].filetype
-                    }
-                    if line:sub(1, 1) == '+' then
-                      line_number = line_number + 1
+                async:suspend()
+
+                if not require('gitsigns.cache').cache[bufnr] then
+                  goto continue
+                end
+              end
+
+              vim.schedule(function()
+                local file = vim.fs.normalize(vim.api.nvim_buf_get_name(bufnr), { _fast = true })
+                ---@type Gitsigns.Hunk.Hunk_Public[] | nil
+                local hunks = require('gitsigns').get_hunks(bufnr)
+                if type(hunks) == 'table' then
+                  for _, hunk in ipairs(hunks) do
+                    local line_number = hunk.added.start
+                    if line_number == 0 then
+                      line_number = 1
+                    end
+
+                    for _, line in ipairs(hunk.lines) do
+                      cb({
+                        text = file .. ' ' .. line,
+                        item = { hunk_line = line },
+                        buf = bufnr,
+                        file = file,
+                        pos = { line_number, 0 },
+                        lang = vim.bo[bufnr].filetype
+                      })
+                      if line:sub(1, 1) == '+' then
+                        line_number = line_number + 1
+                      end
                     end
                   end
                 end
-              end
+                async:resume()
+              end)
+
+              async:suspend()
+              ::continue::
             end
+
+            async = Async.nop()
           end
-          return ctx.filter:filter(items)
         end
 
         require('snacks').picker {
