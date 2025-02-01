@@ -127,7 +127,7 @@ return {
 
                   for _, line in ipairs(hunk.lines) do
                     items[#items + 1] = {
-                      text = line,
+                      text = file .. ' ' .. line,
                       item = { hunk_line = line },
                       buf = bufnr,
                       file = file,
