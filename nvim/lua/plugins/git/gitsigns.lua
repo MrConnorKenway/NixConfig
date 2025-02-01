@@ -12,14 +12,14 @@ return {
       if vim.api.nvim_buf_get_name(0):match('fugitive://') then
         vim.cmd('normal! ]c | zz')
       else
-        gitsigns.nav_hunk('next')
+        gitsigns.nav_hunk('next', { target = 'all' })
       end
     end, { desc = 'Go to next git change' })
     vim.keymap.set('n', '[c', function()
       if vim.api.nvim_buf_get_name(0):match('fugitive://') then
         vim.cmd('normal! [c | zz')
       else
-        gitsigns.nav_hunk('prev')
+        gitsigns.nav_hunk('prev', { target = 'all' })
       end
     end, { desc = 'Go to previous git change' })
     vim.keymap.set('n', '<leader>u', gitsigns.reset_hunk, { desc = 'Git reset hunk' })
