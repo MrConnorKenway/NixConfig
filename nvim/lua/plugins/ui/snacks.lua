@@ -107,77 +107,135 @@ return {
     {
       'gh',
       function()
-        local Async = require('snacks.picker.util.async')
-        local current_buf = vim.api.nvim_get_current_buf()
-        local buf_to_attach = { current_buf }
+        local filename_bufnr = {}
+        local cwd = vim.uv.cwd()
+
+        if not cwd then
+          return
+        end
 
         for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-          if bufnr ~= current_buf and vim.bo[bufnr].buftype:len() == 0 then
-            table.insert(buf_to_attach, bufnr)
-            vim.fn.bufload(bufnr)
+          if vim.api.nvim_buf_is_loaded(bufnr) and vim.bo[bufnr].buftype:len() == 0 then
+            local filename = vim.api.nvim_buf_get_name(bufnr):gsub(cwd .. '/', '')
+            filename_bufnr[filename] = bufnr
           end
         end
 
         ---@param opts snacks.picker.Config
         ---@type snacks.picker.finder
         local function git_hunks(opts, ctx)
+          local args = { '--no-pager', 'diff', '--no-color', '--no-ext-diff' }
+          local finder = require('snacks.picker.source.proc').proc({
+            opts,
+            { cmd = 'git', args = args }
+          }, ctx)
+
           ---@async
           ---@param cb async fun(item: snacks.picker.finder.Item)
           return function(cb)
-            ---@type snacks.picker.Async
-            local async = Async.running()
+            local async = require('snacks.picker.util.async').running()
+            local file_name ---@type string
+            local bufnr ---@type integer
+            local in_hunk ---@type boolean
+            local use_gitsigns ---@type boolean
+            local line_number
 
-            for _, bufnr in ipairs(buf_to_attach) do
-              if not require('gitsigns.cache').cache[bufnr] then
-                vim.schedule(function()
-                  require('gitsigns').attach(bufnr, nil, nil, function()
-                    vim.defer_fn(function()
-                      async:resume()
-                    end, 100)
+            finder(function(proc_item)
+              local diff_text = proc_item.text
+
+              if diff_text:sub(1, 4) == 'diff' then
+                file_name = diff_text:match('^diff .* a/.* b/(.*)$')
+                bufnr = filename_bufnr[file_name]
+                if bufnr and require('gitsigns.cache').cache[bufnr] then
+                  ---@type Gitsigns.Hunk.Hunk_Public[] | nil
+                  local hunks
+
+                  vim.schedule(function()
+                    hunks = require('gitsigns').get_hunks(bufnr)
+                    async:resume()
                   end)
-                end)
 
-                async:suspend()
+                  -- waiting for hunks
+                  async:suspend()
 
-                if not require('gitsigns.cache').cache[bufnr] then
-                  goto continue
-                end
-              end
+                  if hunks then
+                    for _, hunk in ipairs(hunks) do
+                      line_number = hunk.added.start
+                      if line_number == 0 then
+                        line_number = 1
+                      end
 
-              vim.schedule(function()
-                local file = vim.fs.normalize(vim.api.nvim_buf_get_name(bufnr), { _fast = true })
-                ---@type Gitsigns.Hunk.Hunk_Public[] | nil
-                local hunks = require('gitsigns').get_hunks(bufnr)
-                if type(hunks) == 'table' then
-                  for _, hunk in ipairs(hunks) do
-                    local line_number = hunk.added.start
-                    if line_number == 0 then
-                      line_number = 1
-                    end
-
-                    for _, line in ipairs(hunk.lines) do
-                      cb({
-                        text = file .. ' ' .. line,
-                        item = { hunk_line = line },
-                        buf = bufnr,
-                        file = file,
-                        pos = { line_number, 0 },
-                        lang = vim.bo[bufnr].filetype
-                      })
-                      if line:sub(1, 1) == '+' then
-                        line_number = line_number + 1
+                      for _, line in ipairs(hunk.lines) do
+                        cb({
+                          text = file_name .. ' ' .. line,
+                          item = { hunk_line = line },
+                          buf = bufnr,
+                          file = file_name,
+                          pos = { line_number, 0 }
+                        })
+                        if line:sub(1, 1) == '+' then
+                          line_number = line_number + 1
+                        end
                       end
                     end
                   end
+
+                  use_gitsigns = true
+                else
+                  use_gitsigns = false
+                  in_hunk = false
                 end
-                async:resume()
-              end)
 
-              async:suspend()
-              ::continue::
-            end
+                return
+              end
 
-            async = Async.nop()
+              if use_gitsigns then
+                return
+              end
+
+              if diff_text:sub(1, 1) == '@' then
+                in_hunk = true
+                local new_line_number = diff_text:match('^@@ %-%d+,%d+ %+(%d+),%d+ @@')
+                if new_line_number then
+                  line_number = tonumber(new_line_number)
+                  return
+                else
+                  error('Unexpected ' .. diff_text, vim.log.levels.ERROR)
+                end
+              end
+
+              if not in_hunk then
+                return
+              end
+
+              local char = diff_text:sub(1, 1)
+
+              if char == '-' then
+                cb({
+                  text = file_name .. diff_text,
+                  item = { hunk_line = diff_text },
+                  file = file_name,
+                  pos = { line_number, 0 }
+                })
+                return
+              end
+
+              if char == '+' then
+                cb({
+                  text = file_name .. diff_text,
+                  item = { hunk_line = diff_text },
+                  file = file_name,
+                  pos = { line_number, 0 }
+                })
+                line_number = line_number + 1
+                return
+              end
+
+              if char == ' ' then
+                line_number = line_number + 1
+                return
+              end
+            end)
           end
         end
 
@@ -203,7 +261,7 @@ return {
               end
               return cnt
             end
-            local line_count_digits = count_digit(vim.api.nvim_buf_line_count(item.buf))
+            local line_count_digits = item.buf and count_digit(vim.api.nvim_buf_line_count(item.buf)) or 0
             local row_number_digits = count_digit(item.pos[1])
             local align_char_count = line_count_digits - row_number_digits
 
