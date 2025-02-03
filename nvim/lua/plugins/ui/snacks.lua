@@ -252,35 +252,18 @@ return {
           format = function(item, picker)
             local ret = {}
             local line = item.item.hunk_line ---@type string
-            local byte_cnt = 0
-            local function count_digit(number)
-              local cnt = 0
-              while number > 0 do
-                number = math.floor(number / 10)
-                cnt = cnt + 1
-              end
-              return cnt
-            end
-            local line_count_digits = item.buf and count_digit(vim.api.nvim_buf_line_count(item.buf)) or 0
-            local row_number_digits = count_digit(item.pos[1])
-            local align_char_count = line_count_digits - row_number_digits
 
             vim.list_extend(ret, require('snacks.picker.format').filename(item, picker))
-            for _, v in ipairs(ret) do
-              byte_cnt = byte_cnt + string.len(v[1])
-            end
-            -- align file name
-            if align_char_count > 0 then
-              ret[#ret + 1] = { string.rep(' ', align_char_count) }
-              byte_cnt = byte_cnt + align_char_count
-            end
+            local offset = require('snacks.picker').highlight.offset(ret, { char_idx = true })
+
             require('snacks.picker').highlight.format(item, line:sub(2), ret)
             local hl = line:sub(1, 1) == '+' and 'DiffAdd' or 'DiffDelete'
+            ret[#ret + 1] = { string.rep(' ', vim.o.columns - offset - line:len()) }
             ret[#ret + 1] = {
-              -- nvim_buf_set_extmark col wants byte count, not actual char numbers
-              col = byte_cnt - 2,
+              col = 2,
+              end_col = vim.o.columns,
               hl_group = hl,
-              hl_eol = true
+              strict = false
             }
             return ret
           end
