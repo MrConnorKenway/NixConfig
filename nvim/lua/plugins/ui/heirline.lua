@@ -377,6 +377,12 @@ return {
       Align
     }
 
+    local SnacksExplorerStatusLine = {
+      condition = function()
+        return conditions.buffer_matches({ filetype = { 'snacks_layout_box' } })
+      end
+    }
+
     local TerminalStatusline = {
       condition = function()
         return conditions.buffer_matches({ buftype = { 'terminal' } })
@@ -459,6 +465,7 @@ return {
       -- think of it as a switch case with breaks to stop fallthrough.
       fallthrough = false,
 
+      SnacksExplorerStatusLine,
       SpecialStatusline,
       TerminalStatusline,
       InactiveStatusline,
