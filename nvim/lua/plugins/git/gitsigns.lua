@@ -3,6 +3,12 @@ return {
   config = function()
     local gitsigns = require('gitsigns')
     gitsigns.setup {
+      signs = {
+        changedelete = { text = '┃' }
+      },
+      signs_staged = {
+        changedelete = { text = '┃' }
+      },
       sign_priority = 100,
       preview_config = {
         border = 'rounded'
