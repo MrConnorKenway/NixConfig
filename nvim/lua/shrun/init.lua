@@ -122,6 +122,7 @@ local function switch_task_out_panel(task)
   end
 end
 
+---caller should ensure that task list panel is opened
 ---@param task shrun.Task
 local function partial_render_sidebar(task)
   local task_range = sidebar.task_ranges[task.id]
@@ -136,6 +137,10 @@ local function partial_render_sidebar(task)
   for _, hl in ipairs(highlights) do
     local group, lnum, col_start, col_end = unpack(hl)
     vim.api.nvim_buf_add_highlight(sidebar.bufnr, shrun_sidebar_hl_ns, group, lnum - 1, col_start, col_end)
+  end
+
+  if not sidebar.tasklist_winid then
+    return
   end
 
   highlight_focused()
