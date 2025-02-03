@@ -217,8 +217,7 @@ require('lazy').setup {
     { import = 'plugins.git' },
     { import = 'plugins.lsp' },
     { import = 'plugins.edit' },
-    { import = 'plugins.utils' },
-    { import = 'plugins.picker' }
+    { import = 'plugins.utils' }
   },
   ui = {
     border = 'rounded'
