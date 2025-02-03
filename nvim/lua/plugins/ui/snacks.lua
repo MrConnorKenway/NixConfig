@@ -300,6 +300,11 @@ return {
     },
     picker = {
       enabled = true,
+      layout = {
+        layout = {
+          backdrop = false
+        }
+      },
       win = {
         -- input window
         input = {
