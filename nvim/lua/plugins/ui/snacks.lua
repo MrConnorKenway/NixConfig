@@ -293,16 +293,8 @@ return {
         input = {
           keys = {
             ['<Esc>'] = { 'close', mode = { 'n', 'i' } },
-            ['<C-w>'] = { '<c-s-w>', mode = { 'i' }, expr = true, desc = 'delete word' },
-            ['<S-CR>'] = { { 'pick_win', 'jump' }, mode = { 'n', 'i' } },
-            ['<C-Up>'] = { 'history_back', mode = { 'i', 'n' } },
-            ['<C-Down>'] = { 'history_forward', mode = { 'i', 'n' } },
-            ['<Tab>'] = { 'select_and_next', mode = { 'i', 'n' } },
-            ['<S-Tab>'] = { 'select_and_prev', mode = { 'i', 'n' } },
-            ['<Down>'] = { 'list_down', mode = { 'i', 'n' } },
-            ['<Up>'] = { 'list_up', mode = { 'i', 'n' } },
-            ['<c-n>'] = { 'list_down', mode = { 'i', 'n' } },
-            ['<c-p>'] = { 'list_up', mode = { 'i', 'n' } },
+            ['<c-k>'] = { 'history_back', mode = { 'i', 'n' } },
+            ['<c-j>'] = { 'history_forward', mode = { 'i', 'n' } },
             ['<c-u>'] = { 'preview_scroll_up', mode = { 'i', 'n' } },
             ['<c-f>'] = { 'list_scroll_down', mode = { 'i', 'n' } },
             ['<c-d>'] = { 'preview_scroll_down', mode = { 'i', 'n' } },
