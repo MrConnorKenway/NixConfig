@@ -52,28 +52,6 @@ local default_highlights = {
   TaskOutPrefix = 'Comment'
 }
 
-local function highlight_focused()
-  vim.api.nvim_buf_clear_namespace(sidebar.bufnr, tasklist_focus_hl_ns, 0, -1)
-
-  local task_range = sidebar.focused_task_range
-  if not task_range then return end
-
-  if not task_range.end_line then
-    -- slow path
-    for _, r in ipairs(sidebar.task_ranges) do
-      if r.task_id == task_range.task_id then
-        task_range = r
-        break
-      end
-    end
-  end
-
-  vim.api.nvim_buf_set_extmark(sidebar.bufnr, tasklist_focus_hl_ns, task_range.start_line - 1, 0, {
-    line_hl_group = default_highlights.TaskFocus,
-    end_row = task_range.end_line - 1,
-  })
-end
-
 ---@param task shrun.Task
 ---@param row_offset integer zero-based indexing start row
 local function render_task(task, row_offset)
@@ -122,7 +100,32 @@ local function switch_task_out_panel(task)
   end
 end
 
----caller should ensure that task list panel is opened
+local function highlight_focused()
+  vim.api.nvim_buf_clear_namespace(sidebar.bufnr, tasklist_focus_hl_ns, 0, -1)
+
+  local task_range = sidebar.focused_task_range
+  if not task_range then return end
+
+  if not task_range.end_line then
+    -- slow path
+    for _, r in ipairs(sidebar.task_ranges) do
+      if r.task_id == task_range.task_id then
+        task_range = r
+        break
+      end
+    end
+  end
+
+  vim.api.nvim_buf_set_extmark(sidebar.bufnr, tasklist_focus_hl_ns, task_range.start_line - 1, 0, {
+    line_hl_group = default_highlights.TaskFocus,
+    end_row = task_range.end_line - 1,
+  })
+
+  if sidebar.taskout_winid and sidebar.focused_task_range then
+    switch_task_out_panel(all_tasks[sidebar.focused_task_range.task_id])
+  end
+end
+
 ---@param task shrun.Task
 local function partial_render_sidebar(task)
   local task_range = sidebar.task_ranges[task.id]
@@ -144,9 +147,6 @@ local function partial_render_sidebar(task)
   end
 
   highlight_focused()
-  if sidebar.taskout_winid and sidebar.focused_task_range then
-    switch_task_out_panel(all_tasks[sidebar.focused_task_range.task_id])
-  end
 end
 
 ---caller should ensure that sidebar ~= nil
@@ -183,9 +183,6 @@ local function render_sidebar()
   end
 
   highlight_focused()
-  if sidebar.taskout_winid and sidebar.focused_task_range then
-    switch_task_out_panel(all_tasks[sidebar.focused_task_range.task_id])
-  end
 end
 
 ---@param lnum integer
@@ -215,9 +212,6 @@ local function sidebar_on_cursor_move()
   end
 
   sidebar.focused_task_range = range
-  if sidebar.taskout_winid then
-    switch_task_out_panel(all_tasks[range.task_id])
-  end
   highlight_focused()
 end
 
