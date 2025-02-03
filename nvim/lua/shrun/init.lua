@@ -74,25 +74,29 @@ local function highlight_focused()
   })
 end
 
----@param lines string[]
----@param highlights {[1]: string, [2]: integer, [3]: integer, [4]: integer}
----                   group name,  start row,    start col,    end col
 ---@param task shrun.Task
-local function render_task(lines, highlights, task)
+---@param row_offset integer zero-based indexing start row
+local function render_task(task, row_offset)
+  local lines = {} ---@type string[]
+  ---@type {[1]: string, [2]: integer, [3]: integer, [4]: integer}[]
+  ---       group name,  start row,    start col,    end col
+  local highlights = {}
   local status_len = string.len(task.status)
   local cmd_offset = status_len + 2 -- 2 == len(': ')
 
   table.insert(lines, task.status .. ': ' .. task.cmd)
   table.insert(highlights, {
     default_highlights['Task' .. task.status],
-    #lines, 0, status_len
+    row_offset + #lines, 0, status_len
   })
   table.insert(highlights, {
-    default_highlights.TaskName, #lines, cmd_offset, cmd_offset + string.len(task.cmd)
+    default_highlights.TaskName, row_offset + #lines, cmd_offset, cmd_offset + string.len(task.cmd)
   })
   table.insert(lines, out_prefix .. task.output_tail)
-  task.output_line_num = #lines
-  table.insert(highlights, { default_highlights.TaskOutPrefix, #lines, 0, string.len(out_prefix) })
+  task.output_line_num = row_offset + #lines
+  table.insert(highlights, { default_highlights.TaskOutPrefix, row_offset + #lines, 0, string.len(out_prefix) })
+
+  return lines, highlights
 end
 
 ---caller should ensure that task output panel is opened and the buffer shown in
@@ -118,6 +122,28 @@ local function switch_task_out_panel(task)
   end
 end
 
+---@param task shrun.Task
+local function partial_render_sidebar(task)
+  local task_range = sidebar.task_ranges[task.id]
+
+  local lines, highlights = render_task(task, task_range.start_line - 1)
+
+  vim.bo[sidebar.bufnr].modifiable = true
+  vim.api.nvim_buf_set_lines(sidebar.bufnr, task_range.start_line - 1, task_range.end_line, true, lines)
+  vim.bo[sidebar.bufnr].modifiable = false
+  vim.bo[sidebar.bufnr].modified = false
+
+  for _, hl in ipairs(highlights) do
+    local group, lnum, col_start, col_end = unpack(hl)
+    vim.api.nvim_buf_add_highlight(sidebar.bufnr, shrun_sidebar_hl_ns, group, lnum - 1, col_start, col_end)
+  end
+
+  highlight_focused()
+  if sidebar.taskout_winid and sidebar.focused_task_range then
+    switch_task_out_panel(all_tasks[sidebar.focused_task_range.task_id])
+  end
+end
+
 ---caller should ensure that sidebar ~= nil
 local function render_sidebar()
   local lines = {}
@@ -127,11 +153,10 @@ local function render_sidebar()
   sidebar.task_ranges = {}
   for i = #all_tasks, 1, -1 do
     local task = all_tasks[i]
-    ---@type shrun.TaskRange
-    local task_range = { start_line = #lines + 1, end_line = -1, task_id = task.id }
-    render_task(lines, highlights, task)
-    task_range.end_line = #lines
-    table.insert(sidebar.task_ranges, task_range)
+    local task_lines, task_highlights = render_task(task, #lines)
+    sidebar.task_ranges[i] = { start_line = #lines + 1, end_line = #lines + #task_lines, task_id = task.id }
+    vim.list_extend(lines, task_lines)
+    vim.list_extend(highlights, task_highlights)
     if i > 1 then
       table.insert(lines, separator)
       table.insert(highlights, { 'FloatBorder', #lines, 0, vim.o.columns })
@@ -162,7 +187,7 @@ end
 ---@return shrun.TaskRange?
 local function sidebar_get_task_range_from_line(lnum)
   for _, task_range in ipairs(sidebar.task_ranges) do
-    if task_range.end_line >= lnum then
+    if task_range.start_line <= lnum then
       return task_range
     end
   end
@@ -308,14 +333,7 @@ local function start_task(task, restart)
         end
       end
       if sidebar and sidebar.tasklist_winid and task.output_line_num then
-        vim.bo[sidebar.bufnr].modifiable = true
-        vim.api.nvim_buf_set_lines(sidebar.bufnr, task.output_line_num - 1, task.output_line_num, true,
-          { out_prefix .. task.output_tail })
-        vim.bo[sidebar.bufnr].modifiable = false
-        vim.bo[sidebar.bufnr].modified = false
-        vim.api.nvim_buf_add_highlight(sidebar.bufnr, shrun_sidebar_hl_ns, default_highlights.TaskOutPrefix,
-          task.output_line_num - 1, 0,
-          out_prefix:len())
+        partial_render_sidebar(task)
       end
       vim.api.nvim_chan_send(task.term_id, table.concat(out, '\r\n'))
     end,
@@ -323,7 +341,7 @@ local function start_task(task, restart)
       if exit_code == 0 then
         task.status = 'SUCCESS'
         if sidebar then
-          render_sidebar()
+          partial_render_sidebar(task)
         end
         --TODO: currently relies on Snacks.nvim's markdown support to change the style, not a perfect solution
         vim.notify(task.cmd .. ' `SUCCESS`', vim.log.levels.INFO, { timeout = 2000 })
@@ -331,7 +349,7 @@ local function start_task(task, restart)
       else
         task.status = 'FAILED'
         if sidebar then
-          render_sidebar()
+          partial_render_sidebar(task)
         end
         --TODO: currently relies on Snacks.nvim's markdown support to change the style, not a perfect solution
         vim.notify(task.cmd .. ' **FAILED**', vim.log.levels.ERROR, { timeout = 2000 })
@@ -364,7 +382,8 @@ local function restart_task()
   vim.bo[task.buf_id].modified = false
 
   start_task(task, true)
-  render_sidebar()
+
+  partial_render_sidebar(task)
 end
 
 local function new_tasklist_buffer()
