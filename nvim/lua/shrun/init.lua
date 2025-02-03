@@ -337,7 +337,7 @@ local function start_task(task, restart)
           break
         end
       end
-      if sidebar and sidebar.tasklist_winid and task.output_line_num then
+      if sidebar and task.output_line_num then
         partial_render_sidebar(task)
       end
       vim.api.nvim_chan_send(task.term_id, table.concat(out, '\r\n'))
@@ -451,12 +451,12 @@ M.setup = function()
 
         if sidebar.tasklist_winid then
           vim.api.nvim_win_set_cursor(sidebar.tasklist_winid, { 1, 0 })
-          render_sidebar()
         else
           -- task list panel is not opened, record the cursor here and defer the
           -- cursor update after `ListTask`
           sidebar.tasklist_cursor = { 1, 0 }
         end
+        render_sidebar()
       end
     end,
     {
