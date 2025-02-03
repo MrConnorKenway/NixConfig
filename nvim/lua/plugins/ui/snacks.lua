@@ -241,7 +241,7 @@ return {
 
         require('snacks').picker {
           layout = {
-            preset = 'ivy',
+            preset = 'ivy_split',
           },
           finder = git_hunks,
           formatters = {
