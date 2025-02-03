@@ -308,10 +308,7 @@ return {
             ['<c-d>'] = { 'preview_scroll_down', mode = { 'i', 'n' } },
             ['<c-b>'] = { 'list_scroll_up', mode = { 'i', 'n' } },
             ['<c-a>'] = false
-          },
-          b = {
-            minipairs_disable = true,
-          },
+          }
         },
       },
       icons = {
