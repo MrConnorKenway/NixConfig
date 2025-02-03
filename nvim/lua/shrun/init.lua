@@ -513,6 +513,8 @@ M.setup = function()
           vim.api.nvim_win_call(sidebar.taskout_winid, function()
             vim.fn.winrestview(task.view)
           end)
+        else
+          scroll_terminal_to_tail(task.buf_id)
         end
       else
         sidebar.taskout_winid = new_task_output_window(empty_task_output_buf)
