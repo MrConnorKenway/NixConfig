@@ -150,7 +150,7 @@ local function partial_render_sidebar(task)
 end
 
 ---caller should ensure that sidebar ~= nil
-local function render_sidebar()
+local function render_sidebar_from_scratch()
   local lines = {}
   local highlights = {}
   local separator = string.rep(separator_stem, vim.o.columns)
@@ -443,14 +443,41 @@ M.setup = function()
       if sidebar then
         sidebar.focused_task_range = { task_id = task.id }
 
+        local lines, highlights = render_task(task, 0)
+        sidebar.task_ranges[task.id] = { start_line = 1, end_line = #lines, task_id = task.id }
+        if #sidebar.task_ranges > 1 then
+          local separator = string.rep(separator_stem, vim.o.columns)
+          table.insert(lines, separator)
+          table.insert(highlights, { 'FloatBorder', #lines, 0, vim.o.columns })
+          for i = 1, #sidebar.task_ranges - 1 do
+            local r = sidebar.task_ranges[i]
+            r.start_line = r.start_line + #lines
+            r.end_line = r.end_line + #lines
+          end
+        end
+
+        vim.bo[sidebar.bufnr].modifiable = true
+        if #sidebar.task_ranges == 1 then
+          vim.api.nvim_buf_set_lines(sidebar.bufnr, 0, -1, true, lines)
+        else
+          vim.api.nvim_buf_set_lines(sidebar.bufnr, 0, 0, true, lines)
+        end
+        vim.bo[sidebar.bufnr].modifiable = false
+        vim.bo[sidebar.bufnr].modified = false
+
+        for _, hl in ipairs(highlights) do
+          local group, lnum, col_start, col_end = unpack(hl)
+          vim.api.nvim_buf_add_highlight(sidebar.bufnr, shrun_sidebar_hl_ns, group, lnum - 1, col_start, col_end)
+        end
+
         if sidebar.tasklist_winid then
           vim.api.nvim_win_set_cursor(sidebar.tasklist_winid, { 1, 0 })
+          highlight_focused()
         else
           -- task list panel is not opened, record the cursor here and defer the
           -- cursor update after `ListTask`
           sidebar.tasklist_cursor = { 1, 0 }
         end
-        render_sidebar()
       end
     end,
     {
@@ -465,10 +492,10 @@ M.setup = function()
           bufnr = new_tasklist_buffer(),
           task_ranges = {}
         }
-        render_sidebar()
+        render_sidebar_from_scratch()
       elseif not vim.api.nvim_buf_is_valid(sidebar.bufnr) then
         sidebar.bufnr = new_tasklist_buffer()
-        render_sidebar()
+        render_sidebar_from_scratch()
       end
 
       if sidebar.tasklist_winid then
