@@ -660,7 +660,7 @@ M.test = function()
     if not assertion then
       vim.uv.timer_stop(timer)
       vim.uv.close(timer)
-      assert(assertion)
+      error('assertion failed', 2)
     end
   end
 
