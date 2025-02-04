@@ -60,7 +60,7 @@ local default_highlights = {
   TaskFAILED = 'DiagnosticError',
   TaskFocus = 'CursorLine',
   TaskName = 'Title',
-  TaskOutPrefix = 'Comment'
+  TaskOutPrefix = 'Comment',
 }
 
 ---@param task shrun.Task
@@ -76,14 +76,24 @@ local function render_task(task, row_offset)
   table.insert(lines, task.status .. ': ' .. task.cmd)
   table.insert(highlights, {
     default_highlights['Task' .. task.status],
-    row_offset + #lines, 0, status_len
+    row_offset + #lines,
+    0,
+    status_len,
   })
   table.insert(highlights, {
-    default_highlights.TaskName, row_offset + #lines, cmd_offset, cmd_offset + string.len(task.cmd)
+    default_highlights.TaskName,
+    row_offset + #lines,
+    cmd_offset,
+    cmd_offset + string.len(task.cmd),
   })
   table.insert(lines, out_prefix .. task.output_tail)
   task.output_line_num = row_offset + #lines
-  table.insert(highlights, { default_highlights.TaskOutPrefix, row_offset + #lines, 0, string.len(out_prefix) })
+  table.insert(highlights, {
+    default_highlights.TaskOutPrefix,
+    row_offset + #lines,
+    0,
+    string.len(out_prefix),
+  })
 
   return lines, highlights
 end
@@ -112,10 +122,17 @@ local function switch_task_out_panel(task)
 end
 
 local function highlight_focused()
-  vim.api.nvim_buf_clear_namespace(task_panel.sidebar_bufnr, sidebar_focus_hl_ns, 0, -1)
+  vim.api.nvim_buf_clear_namespace(
+    task_panel.sidebar_bufnr,
+    sidebar_focus_hl_ns,
+    0,
+    -1
+  )
 
   local task_range = task_panel.focused_task_range
-  if not task_range then return end
+  if not task_range then
+    return
+  end
 
   if not task_range.end_line then
     -- slow path
@@ -127,10 +144,16 @@ local function highlight_focused()
     end
   end
 
-  vim.api.nvim_buf_set_extmark(task_panel.sidebar_bufnr, sidebar_focus_hl_ns, task_range.start_line - 1, 0, {
-    line_hl_group = default_highlights.TaskFocus,
-    end_row = task_range.end_line - 1,
-  })
+  vim.api.nvim_buf_set_extmark(
+    task_panel.sidebar_bufnr,
+    sidebar_focus_hl_ns,
+    task_range.start_line - 1,
+    0,
+    {
+      line_hl_group = default_highlights.TaskFocus,
+      end_row = task_range.end_line - 1,
+    }
+  )
 
   if task_panel.task_output_winid and task_panel.focused_task_range then
     switch_task_out_panel(all_tasks[task_panel.focused_task_range.task_id])
@@ -144,13 +167,26 @@ local function partial_render_sidebar(task)
   local lines, highlights = render_task(task, task_range.start_line - 1)
 
   vim.bo[task_panel.sidebar_bufnr].modifiable = true
-  vim.api.nvim_buf_set_lines(task_panel.sidebar_bufnr, task_range.start_line - 1, task_range.end_line, true, lines)
+  vim.api.nvim_buf_set_lines(
+    task_panel.sidebar_bufnr,
+    task_range.start_line - 1,
+    task_range.end_line,
+    true,
+    lines
+  )
   vim.bo[task_panel.sidebar_bufnr].modifiable = false
   vim.bo[task_panel.sidebar_bufnr].modified = false
 
   for _, hl in ipairs(highlights) do
     local group, lnum, col_start, col_end = unpack(hl)
-    vim.api.nvim_buf_add_highlight(task_panel.sidebar_bufnr, sidebar_hl_ns, group, lnum - 1, col_start, col_end)
+    vim.api.nvim_buf_add_highlight(
+      task_panel.sidebar_bufnr,
+      sidebar_hl_ns,
+      group,
+      lnum - 1,
+      col_start,
+      col_end
+    )
   end
 
   if not task_panel.sidebar_winid then
@@ -170,7 +206,11 @@ local function render_sidebar_from_scratch()
   for i = #all_tasks, 1, -1 do
     local task = all_tasks[i]
     local task_lines, task_highlights = render_task(task, #lines)
-    task_panel.task_ranges[i] = { start_line = #lines + 1, end_line = #lines + #task_lines, task_id = task.id }
+    task_panel.task_ranges[i] = {
+      start_line = #lines + 1,
+      end_line = #lines + #task_lines,
+      task_id = task.id,
+    }
     vim.list_extend(lines, task_lines)
     vim.list_extend(highlights, task_highlights)
     if i > 1 then
@@ -186,7 +226,14 @@ local function render_sidebar_from_scratch()
 
   for _, hl in ipairs(highlights) do
     local group, lnum, col_start, col_end = unpack(hl)
-    vim.api.nvim_buf_add_highlight(task_panel.sidebar_bufnr, sidebar_hl_ns, group, lnum - 1, col_start, col_end)
+    vim.api.nvim_buf_add_highlight(
+      task_panel.sidebar_bufnr,
+      sidebar_hl_ns,
+      group,
+      lnum - 1,
+      col_start,
+      col_end
+    )
   end
 
   if not task_panel.sidebar_winid then
@@ -218,7 +265,9 @@ local function sidebar_on_cursor_move()
     return
   end
 
-  if task_panel.focused_task_range and task_panel.focused_task_range == range then
+  if
+    task_panel.focused_task_range and task_panel.focused_task_range == range
+  then
     return
   end
 
@@ -228,8 +277,11 @@ end
 
 ---@param buf_id integer the bufnr of task output buffer, i.e., Task.buf_id
 local function new_task_output_window(buf_id)
-  local winid = vim.api.nvim_open_win(buf_id, false,
-    { split = 'right', width = vim.o.columns - sidebar_width })
+  local winid = vim.api.nvim_open_win(
+    buf_id,
+    false,
+    { split = 'right', width = vim.o.columns - sidebar_width }
+  )
   local default_opts = {
     winfixwidth = true,
     winfixheight = true,
@@ -254,7 +306,7 @@ local function new_task_output_window(buf_id)
           vim.api.nvim_win_hide(task_panel.sidebar_winid)
         end
       end)
-    end
+    end,
   })
   return winid
 end
@@ -316,7 +368,7 @@ local function start_task(task, restart)
         else
           task.no_follow_term_output = false
         end
-      end
+      end,
     })
   end
   task.status = 'RUNNING'
@@ -326,7 +378,7 @@ local function start_task(task, restart)
     task.term_id = vim.api.nvim_open_term(task.buf_id, {
       on_input = function(_, _, _, data)
         pcall(vim.api.nvim_chan_send, task.job_id, data)
-      end
+      end,
     })
   end)
 
@@ -336,9 +388,9 @@ local function start_task(task, restart)
       for i = #out, 1, -1 do
         if out[i]:len() > 0 then
           task.output_tail = out[i]
-              :gsub('\r$', '')
-              :gsub('\x1b%[[%d;]*m', '')
-              :gsub('\x1b%[%d*K', '')
+            :gsub('\r$', '')
+            :gsub('\x1b%[[%d;]*m', '')
+            :gsub('\x1b%[%d*K', '')
           break
         end
       end
@@ -353,29 +405,50 @@ local function start_task(task, restart)
         if task_panel then
           partial_render_sidebar(task)
         end
-        --TODO: currently relies on Snacks.nvim's markdown support to change the style, not a perfect solution
-        vim.notify(task.cmd .. ' `SUCCESS`', vim.log.levels.INFO, { timeout = 2000 })
-        vim.api.nvim_chan_send(task.term_id, ('\n[ Process exited with \x1b[32m%d\x1b[m ]'):format(exit_code))
+        --TODO: currently relies on Snacks.nvim's markdown support to change the
+        --style, not a perfect solution
+        vim.notify(
+          task.cmd .. ' `SUCCESS`',
+          vim.log.levels.INFO,
+          { timeout = 2000 }
+        )
+        vim.api.nvim_chan_send(
+          task.term_id,
+          ('\n[ Process exited with \x1b[32m%d\x1b[m ]'):format(exit_code)
+        )
       else
         task.status = 'FAILED'
         if task_panel then
           partial_render_sidebar(task)
         end
-        --TODO: currently relies on Snacks.nvim's markdown support to change the style, not a perfect solution
-        vim.notify(task.cmd .. ' **FAILED**', vim.log.levels.ERROR, { timeout = 2000 })
-        vim.api.nvim_chan_send(task.term_id, ('\n[ Process exited with \x1b[31m%d\x1b[m ]'):format(exit_code))
+        --TODO: currently relies on Snacks.nvim's markdown support to change the
+        --style, not a perfect solution
+        vim.notify(
+          task.cmd .. ' **FAILED**',
+          vim.log.levels.ERROR,
+          { timeout = 2000 }
+        )
+        vim.api.nvim_chan_send(
+          task.term_id,
+          ('\n[ Process exited with \x1b[31m%d\x1b[m ]'):format(exit_code)
+        )
       end
-    end
+    end,
   })
 
-  vim.api.nvim_buf_set_name(task.buf_id, string.format('task %d:%s', task.job_id, task.cmd))
+  vim.api.nvim_buf_set_name(
+    task.buf_id,
+    string.format('task %d:%s', task.job_id, task.cmd)
+  )
 end
 
 local function restart_task()
   local lnum = vim.api.nvim_win_get_cursor(0)[1]
   local range = sidebar_get_task_range_from_line(lnum)
 
-  if not range then return end
+  if not range then
+    return
+  end
 
   local task = all_tasks[range.task_id]
   if task.status == 'RUNNING' then
@@ -413,14 +486,15 @@ local function new_sidebar_buffer()
   vim.api.nvim_create_autocmd('BufHidden', {
     buffer = sidebar_bufnr,
     callback = function()
-      task_panel.sidebar_cursor = vim.api.nvim_win_get_cursor(task_panel.sidebar_winid)
+      task_panel.sidebar_cursor =
+        vim.api.nvim_win_get_cursor(task_panel.sidebar_winid)
       task_panel.sidebar_winid = nil
       vim.schedule(function()
         if task_panel.task_output_winid then
           vim.api.nvim_win_hide(task_panel.task_output_winid)
         end
       end)
-    end
+    end,
   })
 
   vim.api.nvim_create_autocmd('BufUnload', {
@@ -429,138 +503,148 @@ local function new_sidebar_buffer()
       -- set to -1 so that the nvim_buf_is_valid check inside `ListTask` command
       -- returns false and new task list buffer is created
       task_panel.sidebar_bufnr = -1
-    end
+    end,
   })
 
   vim.api.nvim_create_autocmd('CursorMoved', {
     buffer = sidebar_bufnr,
     nested = false, -- TODO: do we need nested?
-    callback = sidebar_on_cursor_move
+    callback = sidebar_on_cursor_move,
   })
 
   return sidebar_bufnr
 end
 
 M.setup = function()
-  vim.api.nvim_create_user_command('Task',
-    function(cmd)
-      local task = {
-        id = #all_tasks + 1,
-        cmd = cmd.args
-      }
+  vim.api.nvim_create_user_command('Task', function(cmd)
+    local task = {
+      id = #all_tasks + 1,
+      cmd = cmd.args,
+    }
 
-      start_task(task)
-      table.insert(all_tasks, task)
-      if task_panel then
-        task_panel.focused_task_range = { task_id = task.id }
+    start_task(task)
+    table.insert(all_tasks, task)
+    if task_panel then
+      task_panel.focused_task_range = { task_id = task.id }
 
-        local lines, highlights = render_task(task, 0)
-        task_panel.task_ranges[task.id] = { start_line = 1, end_line = #lines, task_id = task.id }
-        if #task_panel.task_ranges > 1 then
-          local separator = string.rep(separator_stem, vim.o.columns)
-          table.insert(lines, separator)
-          table.insert(highlights, { 'FloatBorder', #lines, 0, vim.o.columns })
-          for i = 1, #task_panel.task_ranges - 1 do
-            local r = task_panel.task_ranges[i]
-            r.start_line = r.start_line + #lines
-            r.end_line = r.end_line + #lines
-          end
-        end
-
-        vim.bo[task_panel.sidebar_bufnr].modifiable = true
-        if #task_panel.task_ranges == 1 then
-          vim.api.nvim_buf_set_lines(task_panel.sidebar_bufnr, 0, -1, true, lines)
-        else
-          vim.api.nvim_buf_set_lines(task_panel.sidebar_bufnr, 0, 0, true, lines)
-        end
-        vim.bo[task_panel.sidebar_bufnr].modifiable = false
-        vim.bo[task_panel.sidebar_bufnr].modified = false
-
-        for _, hl in ipairs(highlights) do
-          local group, lnum, col_start, col_end = unpack(hl)
-          vim.api.nvim_buf_add_highlight(task_panel.sidebar_bufnr, sidebar_hl_ns, group, lnum - 1, col_start, col_end)
-        end
-
-        if task_panel.sidebar_winid then
-          vim.api.nvim_win_set_cursor(task_panel.sidebar_winid, { 1, 0 })
-          highlight_focused()
-        else
-          -- task list panel is not opened, record the cursor here and defer the
-          -- cursor update after `ListTask`
-          task_panel.sidebar_cursor = { 1, 0 }
+      local lines, highlights = render_task(task, 0)
+      task_panel.task_ranges[task.id] =
+        { start_line = 1, end_line = #lines, task_id = task.id }
+      if #task_panel.task_ranges > 1 then
+        local separator = string.rep(separator_stem, vim.o.columns)
+        table.insert(lines, separator)
+        table.insert(highlights, { 'FloatBorder', #lines, 0, vim.o.columns })
+        for i = 1, #task_panel.task_ranges - 1 do
+          local r = task_panel.task_ranges[i]
+          r.start_line = r.start_line + #lines
+          r.end_line = r.end_line + #lines
         end
       end
-    end,
-    {
-      complete = vim.fn.has('nvim-0.11') == 0 and 'shellcmd' or 'shellcmdline',
-      nargs = '+',
-      desc = 'Run task'
-    })
 
-  vim.api.nvim_create_user_command('ListTask', function()
-      if not task_panel then
-        task_panel = {
-          sidebar_bufnr = new_sidebar_buffer(),
-          task_ranges = {}
-        }
-        render_sidebar_from_scratch()
-      elseif not vim.api.nvim_buf_is_valid(task_panel.sidebar_bufnr) then
-        task_panel.sidebar_bufnr = new_sidebar_buffer()
-        render_sidebar_from_scratch()
+      vim.bo[task_panel.sidebar_bufnr].modifiable = true
+      if #task_panel.task_ranges == 1 then
+        vim.api.nvim_buf_set_lines(task_panel.sidebar_bufnr, 0, -1, true, lines)
+      else
+        vim.api.nvim_buf_set_lines(task_panel.sidebar_bufnr, 0, 0, true, lines)
+      end
+      vim.bo[task_panel.sidebar_bufnr].modifiable = false
+      vim.bo[task_panel.sidebar_bufnr].modified = false
+
+      for _, hl in ipairs(highlights) do
+        local group, lnum, col_start, col_end = unpack(hl)
+        vim.api.nvim_buf_add_highlight(
+          task_panel.sidebar_bufnr,
+          sidebar_hl_ns,
+          group,
+          lnum - 1,
+          col_start,
+          col_end
+        )
       end
 
       if task_panel.sidebar_winid then
-        return
-      end
-      if not empty_task_output_buf then
-        empty_task_output_buf = vim.api.nvim_create_buf(false, true)
-        vim.api.nvim_buf_set_name(empty_task_output_buf, 'Task Output')
-        vim.bo[empty_task_output_buf].buftype = 'nofile'
-        vim.bo[empty_task_output_buf].bufhidden = 'hide'
-        vim.bo[empty_task_output_buf].buflisted = false
-        vim.bo[empty_task_output_buf].swapfile = false
-        vim.bo[empty_task_output_buf].modifiable = false
-      end
-      vim.cmd [[botright split]]
-      local sidebar_winid = vim.api.nvim_get_current_win()
-      vim.api.nvim_win_set_height(sidebar_winid, sidebar_height)
-      vim.api.nvim_win_set_width(sidebar_winid, sidebar_width)
-      vim.api.nvim_win_set_buf(sidebar_winid, task_panel.sidebar_bufnr)
-      if task_panel.sidebar_cursor then
-        vim.api.nvim_win_set_cursor(sidebar_winid, task_panel.sidebar_cursor)
-      end
-      local default_opts = {
-        winfixwidth = true,
-        winfixheight = true,
-        number = false,
-        signcolumn = 'no',
-        foldcolumn = '0',
-        relativenumber = false,
-        wrap = false,
-        spell = false,
-      }
-      for k, v in pairs(default_opts) do
-        vim.api.nvim_set_option_value(k, v, { scope = 'local', win = sidebar_winid })
-      end
-      task_panel.sidebar_winid = sidebar_winid
-      if task_panel.focused_task_range then
-        local task = all_tasks[task_panel.focused_task_range.task_id]
-        task_panel.task_output_winid = new_task_output_window(task.buf_id)
-        if task.no_follow_term_output then
-          vim.api.nvim_win_call(task_panel.task_output_winid, function()
-            vim.fn.winrestview(task.view)
-          end)
-        else
-          scroll_terminal_to_tail(task.buf_id)
-        end
+        vim.api.nvim_win_set_cursor(task_panel.sidebar_winid, { 1, 0 })
+        highlight_focused()
       else
-        task_panel.task_output_winid = new_task_output_window(empty_task_output_buf)
+        -- task list panel is not opened, record the cursor here and defer the
+        -- cursor update after `ListTask`
+        task_panel.sidebar_cursor = { 1, 0 }
       end
-    end,
-    {
-      nargs = 0,
-      desc = 'Show sidebar'
-    })
+    end
+  end, {
+    complete = vim.fn.has('nvim-0.11') == 0 and 'shellcmd' or 'shellcmdline',
+    nargs = '+',
+    desc = 'Run task',
+  })
+
+  vim.api.nvim_create_user_command('ListTask', function()
+    if not task_panel then
+      task_panel = {
+        sidebar_bufnr = new_sidebar_buffer(),
+        task_ranges = {},
+      }
+      render_sidebar_from_scratch()
+    elseif not vim.api.nvim_buf_is_valid(task_panel.sidebar_bufnr) then
+      task_panel.sidebar_bufnr = new_sidebar_buffer()
+      render_sidebar_from_scratch()
+    end
+
+    if task_panel.sidebar_winid then
+      return
+    end
+    if not empty_task_output_buf then
+      empty_task_output_buf = vim.api.nvim_create_buf(false, true)
+      vim.api.nvim_buf_set_name(empty_task_output_buf, 'Task Output')
+      vim.bo[empty_task_output_buf].buftype = 'nofile'
+      vim.bo[empty_task_output_buf].bufhidden = 'hide'
+      vim.bo[empty_task_output_buf].buflisted = false
+      vim.bo[empty_task_output_buf].swapfile = false
+      vim.bo[empty_task_output_buf].modifiable = false
+    end
+    vim.cmd([[botright split]])
+    local sidebar_winid = vim.api.nvim_get_current_win()
+    vim.api.nvim_win_set_height(sidebar_winid, sidebar_height)
+    vim.api.nvim_win_set_width(sidebar_winid, sidebar_width)
+    vim.api.nvim_win_set_buf(sidebar_winid, task_panel.sidebar_bufnr)
+    if task_panel.sidebar_cursor then
+      vim.api.nvim_win_set_cursor(sidebar_winid, task_panel.sidebar_cursor)
+    end
+    local default_opts = {
+      winfixwidth = true,
+      winfixheight = true,
+      number = false,
+      signcolumn = 'no',
+      foldcolumn = '0',
+      relativenumber = false,
+      wrap = false,
+      spell = false,
+    }
+    for k, v in pairs(default_opts) do
+      vim.api.nvim_set_option_value(
+        k,
+        v,
+        { scope = 'local', win = sidebar_winid }
+      )
+    end
+    task_panel.sidebar_winid = sidebar_winid
+    if task_panel.focused_task_range then
+      local task = all_tasks[task_panel.focused_task_range.task_id]
+      task_panel.task_output_winid = new_task_output_window(task.buf_id)
+      if task.no_follow_term_output then
+        vim.api.nvim_win_call(task_panel.task_output_winid, function()
+          vim.fn.winrestview(task.view)
+        end)
+      else
+        scroll_terminal_to_tail(task.buf_id)
+      end
+    else
+      task_panel.task_output_winid =
+        new_task_output_window(empty_task_output_buf)
+    end
+  end, {
+    nargs = 0,
+    desc = 'Show sidebar',
+  })
 end
 
 ---for development test purpose only
@@ -598,7 +682,6 @@ M.test = function()
     'Task ls',
     ------------------ end test ------------------------------------------------
 
-
     ------------------ test scroll to bottom -----------------------------------
     'Task seq 1 ' .. sidebar_height,
     function()
@@ -635,7 +718,6 @@ M.test = function()
     end,
     ------------------ end test ------------------------------------------------
 
-
     ------------------ test restarting task ------------------------------------
     '+2',
     'Task python --version',
@@ -647,14 +729,17 @@ M.test = function()
       -- if <cr> does restart the first task, then it should be running now
       abort_tests_if_not(task_panel.focused_task_range.task_id == 1)
       local task = all_tasks[task_panel.focused_task_range.task_id]
-      local header = vim.api.nvim_buf_get_lines(task_panel.sidebar_bufnr, task_panel.focused_task_range.start_line - 1,
-        task_panel.focused_task_range.end_line, true)
+      local header = vim.api.nvim_buf_get_lines(
+        task_panel.sidebar_bufnr,
+        task_panel.focused_task_range.start_line - 1,
+        task_panel.focused_task_range.end_line,
+        true
+      )
       abort_tests_if_not(task.cmd:match('^sleep'))
       abort_tests_if_not(task.status == 'RUNNING')
       abort_tests_if_not(header[1]:match('^RUNNING: sleep'))
     end,
     ------------------ end test ------------------------------------------------
-
 
     ------------------ test starting new task ----------------------------------
     '+5',
@@ -662,10 +747,11 @@ M.test = function()
     function()
       -- newly created task should be automatically focused and put in the front
       abort_tests_if_not(task_panel.focused_task_range.start_line == 1)
-      abort_tests_if_not(all_tasks[task_panel.focused_task_range.task_id].cmd == 'make')
+      abort_tests_if_not(
+        all_tasks[task_panel.focused_task_range.task_id].cmd == 'make'
+      )
     end,
     ------------------ end test ------------------------------------------------
-
 
     ------------------ test running tasks when panel is closed -----------------
     'Task cat longline',
@@ -677,7 +763,6 @@ M.test = function()
     '+2',
     '+5',
     ------------------ end test ------------------------------------------------
-
 
     ------------------ test closing and reopen panel ---------------------------
     'normal! gg',
@@ -697,13 +782,14 @@ M.test = function()
     end,
     'ListTask',
     function()
-      abort_tests_if_not(vim.api.nvim_get_current_win() == task_panel.sidebar_winid)
+      abort_tests_if_not(
+        vim.api.nvim_get_current_win() == task_panel.sidebar_winid
+      )
       local row, col = unpack(vim.api.nvim_win_get_cursor(0))
       -- cursor should not move after reopen
       abort_tests_if_not(row == 16 and col == 6)
     end,
     ------------------ end test ------------------------------------------------
-
 
     ------------------ test window view save and restore -----------------------
     'Task seq 1 200',
@@ -726,10 +812,12 @@ M.test = function()
     end,
     ------------------ end test ------------------------------------------------
 
-    'tabclose'
+    'tabclose',
   }
 
-  timer:start(delay, delay,
+  timer:start(
+    delay,
+    delay,
     vim.schedule_wrap(function()
       idx = idx + 1
       if idx > #commands then
