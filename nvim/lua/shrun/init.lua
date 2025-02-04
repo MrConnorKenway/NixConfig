@@ -741,7 +741,7 @@ end
 ---for development test purpose only
 M.test = function()
   local timer = vim.uv.new_timer()
-  local delay = 300
+  local delay = 100
   local winid
 
   if not timer then
