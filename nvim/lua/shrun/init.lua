@@ -386,6 +386,9 @@ local function start_task(task, restart)
   task.job_id = vim.fn.jobstart(task.cmd, {
     pty = true,
     on_stdout = function(_, out)
+      if task.status == 'CANCELED' then
+        return
+      end
       for i = #out, 1, -1 do
         if out[i]:len() > 0 then
           task.output_tail = out[i]
@@ -401,6 +404,9 @@ local function start_task(task, restart)
       vim.api.nvim_chan_send(task.term_id, table.concat(out, '\r\n'))
     end,
     on_exit = function(_, exit_code, _)
+      if task.status == 'CANCELED' then
+        return
+      end
       if exit_code == 0 then
         task.status = 'SUCCESS'
         if task_panel then
@@ -483,6 +489,77 @@ local function new_sidebar_buffer()
   vim.bo[sidebar_bufnr].modifiable = false
 
   vim.keymap.set('n', '<cr>', restart_task, { buffer = sidebar_bufnr })
+
+  vim.keymap.set('n', 'x', function()
+    local range = task_panel.focused_task_range
+    if not range then
+      return
+    end
+    task_panel.focused_task_range = nil
+
+    local task = all_tasks[range.task_id]
+
+    if task.status == 'RUNNING' then
+      task.status = 'CANCELED'
+      vim.api.nvim_chan_send(task.job_id, '\x03') -- send SIGKILL
+      vim.fn.chanclose(task.job_id)
+      vim.fn.chanclose(task.term_id)
+    end
+
+    all_tasks[task.id] = nil
+    task_panel.task_ranges[task.id] = nil
+
+    local nr_tasks = 0
+    for _ in pairs(all_tasks) do
+      nr_tasks = nr_tasks + 1
+    end
+
+    vim.bo[task_panel.sidebar_bufnr].modifiable = true
+    if nr_tasks == 0 then
+      vim.api.nvim_buf_set_lines(task_panel.sidebar_bufnr, 0, -1, true, {})
+      vim.api.nvim_buf_clear_namespace(task_panel.sidebar_bufnr, sidebar_focus_hl_ns, 0, -1)
+    else
+      if range.start_line == 1 then
+        vim.api.nvim_buf_set_lines(
+          task_panel.sidebar_bufnr,
+          0,
+          range.end_line + 1,
+          true,
+          {}
+        )
+      else
+        vim.api.nvim_buf_set_lines(
+          task_panel.sidebar_bufnr,
+          range.start_line - 2,
+          range.end_line,
+          false,
+          {}
+        )
+      end
+
+      local line_cnt = range.end_line - range.start_line + 1 + 1
+
+      for _, _range in pairs(task_panel.task_ranges) do
+        if _range.start_line > range.start_line then
+          local _task = all_tasks[_range.task_id]
+          _range.start_line = _range.start_line - line_cnt
+          _range.end_line = _range.end_line - line_cnt
+          _task.output_line_num = _task.output_line_num - line_cnt
+        end
+      end
+    end
+    vim.bo[task_panel.sidebar_bufnr].modifiable = false
+    vim.bo[task_panel.sidebar_bufnr].modified = false
+
+    vim.wo[task_panel.task_output_winid].winfixbuf = false
+    assert(empty_task_output_buf)
+    vim.api.nvim_win_set_buf(task_panel.task_output_winid, empty_task_output_buf)
+    vim.wo[task_panel.task_output_winid].winfixbuf = true
+
+    vim.schedule(function()
+      vim.api.nvim_buf_delete(task.buf_id, { force = true })
+    end)
+  end, { buffer = sidebar_bufnr })
 
   vim.api.nvim_create_autocmd('BufHidden', {
     buffer = sidebar_bufnr,
