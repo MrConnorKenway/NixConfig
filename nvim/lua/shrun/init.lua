@@ -366,6 +366,7 @@ local function start_task(task, restart)
         pcall(vim.api.nvim_chan_send, task.job_id, data)
       end,
     })
+    vim.api.nvim_chan_send(task.term_id, '\x1bc')
   end)
 
   task.job_id = vim.fn.jobstart(task.cmd, {
