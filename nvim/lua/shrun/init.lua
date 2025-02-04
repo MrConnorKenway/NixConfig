@@ -10,7 +10,7 @@ local M = {}
 ---@field job_id integer
 ---@field output_tail string
 ---@field output_line_num integer?
----@field no_follow_term_output boolean?
+---@field follow_term_output boolean
 
 ---@class shrun.TaskRange
 ---@field start_line integer?
@@ -112,7 +112,7 @@ local function switch_task_out_panel(task)
   vim.api.nvim_win_set_buf(task_panel.task_output_winid, task.buf_id)
   vim.wo[task_panel.task_output_winid].winfixbuf = true
 
-  if not task.no_follow_term_output then
+  if task.follow_term_output then
     scroll_terminal_to_tail(task.buf_id)
   else
     vim.api.nvim_win_call(task_panel.task_output_winid, function()
@@ -349,17 +349,17 @@ local function start_task(task, restart)
         -- if user moves cursor to non bottom, it is reasonable to assume that user
         -- wants to disable automatically scrolling and keeps the cursor fixed
         if row < vim.api.nvim_buf_line_count(task.buf_id) then
-          task.no_follow_term_output = true
+          task.follow_term_output = false
           task.view = vim.fn.winsaveview()
         else
-          task.no_follow_term_output = false
+          task.follow_term_output = true
         end
       end,
     })
   end
   task.status = 'RUNNING'
   task.output_tail = ''
-  task.no_follow_term_output = false
+  task.follow_term_output = true
 
   run_in_tmp_win(task.buf_id, function()
     task.term_id = vim.api.nvim_open_term(task.buf_id, {
@@ -556,12 +556,12 @@ M.display_panel = function()
   if task_panel.focused_task_range then
     local task = all_tasks[task_panel.focused_task_range.task_id]
     task_panel.task_output_winid = new_task_output_window(task.buf_id)
-    if task.no_follow_term_output then
+    if task.follow_term_output then
+      scroll_terminal_to_tail(task.buf_id)
+    else
       vim.api.nvim_win_call(task_panel.task_output_winid, function()
         vim.fn.winrestview(task.view)
       end)
-    else
-      scroll_terminal_to_tail(task.buf_id)
     end
   else
     task_panel.task_output_winid = new_task_output_window(empty_task_output_buf)
