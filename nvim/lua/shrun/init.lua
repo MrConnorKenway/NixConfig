@@ -359,6 +359,7 @@ local function start_task(task, restart)
   end
   task.status = 'RUNNING'
   task.output_tail = ''
+  task.no_follow_term_output = false
 
   run_in_tmp_win(task.buf_id, function()
     task.term_id = vim.api.nvim_open_term(task.buf_id, {
