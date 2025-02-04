@@ -18,12 +18,15 @@ local M = {}
 ---@field task_id integer
 
 ---all registered tasks
----@type shrun.Task[]
+---@type table<integer, shrun.Task>
 local all_tasks = {}
+local next_task_id = 1
 
 ---@class shrun.TaskPanel
 ---@field sidebar_bufnr integer
----@field task_ranges shrun.TaskRange[] -- map from line range to task
+---map from task id to task range
+---NOTE: do not use ipairs to iterate task_ranges
+---@field task_ranges table<integer, shrun.TaskRange>
 ---@field focused_task_range shrun.TaskRange?
 ---@field sidebar_winid integer? -- when winid == nil, the window is closed
 ---@field sidebar_cursor integer[]?
@@ -198,9 +201,14 @@ local function render_sidebar_from_scratch()
   local lines = {}
   local highlights = {}
   local separator = string.rep(separator_stem, vim.o.columns)
+  local sorted_task_ids = {}
 
   task_panel.task_ranges = {}
-  for i = #all_tasks, 1, -1 do
+  -- lua does not guarantee the order when iterating table, so we have to
+  -- manually sort task id
+  for task_id, _ in pairs(all_tasks) do table.insert(sorted_task_ids, task_id) end
+  table.sort(sorted_task_ids)
+  for i = #sorted_task_ids, 1, -1 do
     local task = all_tasks[i]
     local task_lines, task_highlights = render_task(task, #lines)
     task_panel.task_ranges[i] = {
@@ -222,8 +230,8 @@ end
 ---@param lnum integer
 ---@return shrun.TaskRange?
 local function sidebar_get_task_range_from_line(lnum)
-  for _, task_range in ipairs(task_panel.task_ranges) do
-    if task_range.start_line <= lnum then
+  for _, task_range in pairs(task_panel.task_ranges) do
+    if task_range.start_line <= lnum and lnum <= task_range.end_line then
       return task_range
     end
   end
@@ -570,30 +578,32 @@ end
 M.setup = function()
   vim.api.nvim_create_user_command('Task', function(cmd)
     local task = {
-      id = #all_tasks + 1,
+      id = next_task_id,
       cmd = cmd.args,
     }
+    next_task_id = next_task_id + 1
 
     start_task(task)
-    table.insert(all_tasks, task)
+    all_tasks[task.id] = task
     if task_panel then
       local lines, highlights = render_task(task, 0)
       local task_range = { start_line = 1, end_line = #lines, task_id = task.id }
-      task_panel.focused_task_range = task_range
-      task_panel.task_ranges[task.id] = task_range
-      if #task_panel.task_ranges > 1 then
+      local empty = next(task_panel.task_ranges) == nil
+
+      if not empty then
         local separator = string.rep(separator_stem, vim.o.columns)
         table.insert(lines, separator)
         table.insert(highlights, { 'FloatBorder', #lines, 0, vim.o.columns })
-        for i = 1, #task_panel.task_ranges - 1 do
-          local r = task_panel.task_ranges[i]
+        for _, r in pairs(task_panel.task_ranges) do
           r.start_line = r.start_line + #lines
           r.end_line = r.end_line + #lines
         end
       end
+      task_panel.task_ranges[task.id] = task_range
+      task_panel.focused_task_range = task_range
 
       vim.bo[task_panel.sidebar_bufnr].modifiable = true
-      if #task_panel.task_ranges == 1 then
+      if empty then
         vim.api.nvim_buf_set_lines(task_panel.sidebar_bufnr, 0, -1, true, lines)
       else
         vim.api.nvim_buf_set_lines(task_panel.sidebar_bufnr, 0, 0, true, lines)
