@@ -13,8 +13,8 @@ local M = {}
 ---@field follow_term_output boolean
 
 ---@class shrun.TaskRange
----@field start_line integer?
----@field end_line integer?
+---@field start_line integer
+---@field end_line integer
 ---@field task_id integer
 
 ---all registered tasks
@@ -132,16 +132,6 @@ local function highlight_focused()
   local task_range = task_panel.focused_task_range
   if not task_range then
     return
-  end
-
-  if not task_range.end_line then
-    -- slow path
-    for _, r in ipairs(task_panel.task_ranges) do
-      if r.task_id == task_range.task_id then
-        task_range = r
-        break
-      end
-    end
   end
 
   vim.api.nvim_buf_set_extmark(
@@ -587,11 +577,10 @@ M.setup = function()
     start_task(task)
     table.insert(all_tasks, task)
     if task_panel then
-      task_panel.focused_task_range = { task_id = task.id }
-
       local lines, highlights = render_task(task, 0)
-      task_panel.task_ranges[task.id] =
-        { start_line = 1, end_line = #lines, task_id = task.id }
+      local task_range = { start_line = 1, end_line = #lines, task_id = task.id }
+      task_panel.focused_task_range = task_range
+      task_panel.task_ranges[task.id] = task_range
       if #task_panel.task_ranges > 1 then
         local separator = string.rep(separator_stem, vim.o.columns)
         table.insert(lines, separator)
