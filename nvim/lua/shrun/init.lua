@@ -196,29 +196,44 @@ local function partial_render_sidebar(task)
   )
 end
 
+---@generic K, V
+---@param tbl table<K, V>
+---@return (fun(): K, V)
+local function desc_sorted_pairs(tbl)
+  local keys = {}
+  for k in pairs(tbl) do
+    keys[#keys + 1] = k
+  end
+  table.sort(keys, function(a, b) return a > b end)
+
+  local idx = 0
+  return function()
+    idx = idx + 1
+    if keys[idx] then
+      return keys[idx], tbl[keys[idx]]
+    end
+  end
+end
+
 ---caller should ensure that `task_panel` ~= nil
 local function render_sidebar_from_scratch()
   local lines = {}
   local highlights = {}
   local separator = string.rep(separator_stem, vim.o.columns)
-  local sorted_task_ids = {}
 
   task_panel.task_ranges = {}
   -- lua does not guarantee the order when iterating table, so we have to
   -- manually sort task id
-  for task_id, _ in pairs(all_tasks) do table.insert(sorted_task_ids, task_id) end
-  table.sort(sorted_task_ids)
-  for i = #sorted_task_ids, 1, -1 do
-    local task = all_tasks[i]
+  for task_id, task in desc_sorted_pairs(all_tasks) do
     local task_lines, task_highlights = render_task(task, #lines)
-    task_panel.task_ranges[i] = {
+    task_panel.task_ranges[task_id] = {
       start_line = #lines + 1,
       end_line = #lines + #task_lines,
       task_id = task.id,
     }
     vim.list_extend(lines, task_lines)
     vim.list_extend(highlights, task_highlights)
-    if i > 1 then
+    if task_id > 1 then
       table.insert(lines, separator)
       table.insert(highlights, { 'FloatBorder', #lines, 0, vim.o.columns })
     end
@@ -230,8 +245,8 @@ end
 ---@param lnum integer
 ---@return shrun.TaskRange?
 local function sidebar_get_task_range_from_line(lnum)
-  for _, task_range in pairs(task_panel.task_ranges) do
-    if task_range.start_line <= lnum and lnum <= task_range.end_line then
+  for _, task_range in desc_sorted_pairs(task_panel.task_ranges) do
+    if task_range.end_line >= lnum then
       return task_range
     end
   end
