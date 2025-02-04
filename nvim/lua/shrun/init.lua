@@ -903,6 +903,27 @@ M.test = function()
     end,
     ------------------ end test ------------------------------------------------
 
+    ------------------ test delete task ----------------------------------------
+    'wincmd c',
+    'ListTask',
+    'Task sleep 10 && echo done',
+    'normal x',
+    'normal! G',
+    'normal x',
+    'wincmd c',
+    'Task tree',
+    'ListTask',
+    'Task seq 1 20',
+    'normal! M',
+    [[ call feedkeys("\<cr>") ]],
+    'normal! H',
+    'normal x',
+    [[ call feedkeys("\<cr>") ]],
+    'normal! L',
+    'normal x',
+    [[ call feedkeys("\<cr>") ]],
+    ------------------ end test ------------------------------------------------
+
     'tabclose',
   }
 
