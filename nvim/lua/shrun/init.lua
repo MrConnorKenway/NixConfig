@@ -927,6 +927,37 @@ M.test = function()
     'tabclose',
   }
 
+  local function sanity_check()
+    if not task_panel then
+      return
+    end
+
+    local nr_tasks = 0
+    local nr_ranges = 0
+    local prev_end_line
+
+    for _ in pairs(all_tasks) do
+      nr_tasks = nr_tasks + 1
+    end
+
+    for _, r in desc_sorted_pairs(task_panel.task_ranges) do
+      nr_ranges = nr_ranges + 1
+      if prev_end_line then
+        -- currently there is only one seperator line between two tasks
+        abort_tests_if_not(prev_end_line + 2 == r.start_line)
+      end
+      prev_end_line = r.end_line
+      abort_tests_if_not(all_tasks[r.task_id].id == r.task_id)
+    end
+
+    abort_tests_if_not(nr_tasks == nr_ranges)
+    if prev_end_line then
+      abort_tests_if_not(prev_end_line == vim.api.nvim_buf_line_count(task_panel.sidebar_bufnr))
+    else
+      abort_tests_if_not(vim.api.nvim_buf_line_count(task_panel.sidebar_bufnr) == 1)
+    end
+  end
+
   timer:start(
     delay,
     delay,
@@ -944,6 +975,8 @@ M.test = function()
       else
         commands[idx]()
       end
+
+      sanity_check()
 
       if vim.fn.empty(vim.v.errmsg) == 0 then
         vim.uv.timer_stop(timer)
