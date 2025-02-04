@@ -160,17 +160,12 @@ local function highlight_focused()
   end
 end
 
----@param task shrun.Task
-local function partial_render_sidebar(task)
-  local task_range = task_panel.task_ranges[task.id]
-
-  local lines, highlights = render_task(task, task_range.start_line - 1)
-
+local function redraw_panel(lines, highlights, start_line, end_line)
   vim.bo[task_panel.sidebar_bufnr].modifiable = true
   vim.api.nvim_buf_set_lines(
     task_panel.sidebar_bufnr,
-    task_range.start_line - 1,
-    task_range.end_line,
+    start_line,
+    end_line,
     true,
     lines
   )
@@ -178,22 +173,34 @@ local function partial_render_sidebar(task)
   vim.bo[task_panel.sidebar_bufnr].modified = false
 
   for _, hl in ipairs(highlights) do
-    local group, lnum, col_start, col_end = unpack(hl)
+    local group, row_start, col_start, col_end = unpack(hl)
     vim.api.nvim_buf_add_highlight(
       task_panel.sidebar_bufnr,
       sidebar_hl_ns,
       group,
-      lnum - 1,
+      row_start - 1,
       col_start,
       col_end
     )
   end
 
-  if not task_panel.sidebar_winid then
-    return
+  if task_panel.sidebar_winid then
+    highlight_focused()
   end
+end
 
-  highlight_focused()
+---@param task shrun.Task
+local function partial_render_sidebar(task)
+  local task_range = task_panel.task_ranges[task.id]
+
+  local lines, highlights = render_task(task, task_range.start_line - 1)
+
+  redraw_panel(
+    lines,
+    highlights,
+    task_range.start_line - 1,
+    task_range.end_line
+  )
 end
 
 ---caller should ensure that `task_panel` ~= nil
@@ -219,28 +226,7 @@ local function render_sidebar_from_scratch()
     end
   end
 
-  vim.bo[task_panel.sidebar_bufnr].modifiable = true
-  vim.api.nvim_buf_set_lines(task_panel.sidebar_bufnr, 0, -1, true, lines)
-  vim.bo[task_panel.sidebar_bufnr].modifiable = false
-  vim.bo[task_panel.sidebar_bufnr].modified = false
-
-  for _, hl in ipairs(highlights) do
-    local group, lnum, col_start, col_end = unpack(hl)
-    vim.api.nvim_buf_add_highlight(
-      task_panel.sidebar_bufnr,
-      sidebar_hl_ns,
-      group,
-      lnum - 1,
-      col_start,
-      col_end
-    )
-  end
-
-  if not task_panel.sidebar_winid then
-    return
-  end
-
-  highlight_focused()
+  redraw_panel(lines, highlights, 0, -1)
 end
 
 ---@param lnum integer
