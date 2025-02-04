@@ -515,6 +515,80 @@ local function new_sidebar_buffer()
   return sidebar_bufnr
 end
 
+M.display_panel = function()
+  if not task_panel then
+    task_panel = {
+      sidebar_bufnr = new_sidebar_buffer(),
+      task_ranges = {},
+    }
+    render_sidebar_from_scratch()
+  elseif not vim.api.nvim_buf_is_valid(task_panel.sidebar_bufnr) then
+    task_panel.sidebar_bufnr = new_sidebar_buffer()
+    render_sidebar_from_scratch()
+  end
+
+  if task_panel.sidebar_winid then
+    return
+  end
+  if not empty_task_output_buf then
+    empty_task_output_buf = vim.api.nvim_create_buf(false, true)
+    vim.api.nvim_buf_set_name(empty_task_output_buf, 'Task Output')
+    vim.bo[empty_task_output_buf].buftype = 'nofile'
+    vim.bo[empty_task_output_buf].bufhidden = 'hide'
+    vim.bo[empty_task_output_buf].buflisted = false
+    vim.bo[empty_task_output_buf].swapfile = false
+    vim.bo[empty_task_output_buf].modifiable = false
+  end
+  vim.cmd([[botright split]])
+  local sidebar_winid = vim.api.nvim_get_current_win()
+  vim.api.nvim_win_set_height(sidebar_winid, sidebar_height)
+  vim.api.nvim_win_set_width(sidebar_winid, sidebar_width)
+  vim.api.nvim_win_set_buf(sidebar_winid, task_panel.sidebar_bufnr)
+  if task_panel.sidebar_cursor then
+    vim.api.nvim_win_set_cursor(sidebar_winid, task_panel.sidebar_cursor)
+  end
+  local default_opts = {
+    winfixwidth = true,
+    winfixheight = true,
+    number = false,
+    signcolumn = 'no',
+    foldcolumn = '0',
+    relativenumber = false,
+    wrap = false,
+    spell = false,
+  }
+  for k, v in pairs(default_opts) do
+    vim.api.nvim_set_option_value(
+      k,
+      v,
+      { scope = 'local', win = sidebar_winid }
+    )
+  end
+  task_panel.sidebar_winid = sidebar_winid
+  if task_panel.focused_task_range then
+    local task = all_tasks[task_panel.focused_task_range.task_id]
+    task_panel.task_output_winid = new_task_output_window(task.buf_id)
+    if task.no_follow_term_output then
+      vim.api.nvim_win_call(task_panel.task_output_winid, function()
+        vim.fn.winrestview(task.view)
+      end)
+    else
+      scroll_terminal_to_tail(task.buf_id)
+    end
+  else
+    task_panel.task_output_winid = new_task_output_window(empty_task_output_buf)
+  end
+end
+
+M.toggle_panel = function()
+  if task_panel and task_panel.sidebar_winid then
+    vim.api.nvim_win_hide(task_panel.sidebar_winid)
+    return
+  end
+
+  M.display_panel()
+end
+
 M.setup = function()
   vim.api.nvim_create_user_command('Task', function(cmd)
     local task = {
@@ -577,74 +651,12 @@ M.setup = function()
     desc = 'Run task',
   })
 
-  vim.api.nvim_create_user_command('ListTask', function()
-    if not task_panel then
-      task_panel = {
-        sidebar_bufnr = new_sidebar_buffer(),
-        task_ranges = {},
-      }
-      render_sidebar_from_scratch()
-    elseif not vim.api.nvim_buf_is_valid(task_panel.sidebar_bufnr) then
-      task_panel.sidebar_bufnr = new_sidebar_buffer()
-      render_sidebar_from_scratch()
-    end
-
-    if task_panel.sidebar_winid then
-      return
-    end
-    if not empty_task_output_buf then
-      empty_task_output_buf = vim.api.nvim_create_buf(false, true)
-      vim.api.nvim_buf_set_name(empty_task_output_buf, 'Task Output')
-      vim.bo[empty_task_output_buf].buftype = 'nofile'
-      vim.bo[empty_task_output_buf].bufhidden = 'hide'
-      vim.bo[empty_task_output_buf].buflisted = false
-      vim.bo[empty_task_output_buf].swapfile = false
-      vim.bo[empty_task_output_buf].modifiable = false
-    end
-    vim.cmd([[botright split]])
-    local sidebar_winid = vim.api.nvim_get_current_win()
-    vim.api.nvim_win_set_height(sidebar_winid, sidebar_height)
-    vim.api.nvim_win_set_width(sidebar_winid, sidebar_width)
-    vim.api.nvim_win_set_buf(sidebar_winid, task_panel.sidebar_bufnr)
-    if task_panel.sidebar_cursor then
-      vim.api.nvim_win_set_cursor(sidebar_winid, task_panel.sidebar_cursor)
-    end
-    local default_opts = {
-      winfixwidth = true,
-      winfixheight = true,
-      number = false,
-      signcolumn = 'no',
-      foldcolumn = '0',
-      relativenumber = false,
-      wrap = false,
-      spell = false,
-    }
-    for k, v in pairs(default_opts) do
-      vim.api.nvim_set_option_value(
-        k,
-        v,
-        { scope = 'local', win = sidebar_winid }
-      )
-    end
-    task_panel.sidebar_winid = sidebar_winid
-    if task_panel.focused_task_range then
-      local task = all_tasks[task_panel.focused_task_range.task_id]
-      task_panel.task_output_winid = new_task_output_window(task.buf_id)
-      if task.no_follow_term_output then
-        vim.api.nvim_win_call(task_panel.task_output_winid, function()
-          vim.fn.winrestview(task.view)
-        end)
-      else
-        scroll_terminal_to_tail(task.buf_id)
-      end
-    else
-      task_panel.task_output_winid =
-        new_task_output_window(empty_task_output_buf)
-    end
-  end, {
+  vim.api.nvim_create_user_command('ListTask', M.display_panel, {
     nargs = 0,
     desc = 'Show sidebar',
   })
+
+  vim.keymap.set({ 'n', 'i' }, '<D-r>', M.toggle_panel)
 end
 
 ---for development test purpose only
