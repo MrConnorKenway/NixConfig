@@ -958,6 +958,54 @@ M.test = function()
     end
   end
 
+  local function cleanup()
+    idx = 0
+
+    ---@type (string|function)[]
+    local cleanup_commands = { 'ListTask' }
+    for _ in pairs(all_tasks) do
+      cleanup_commands[#cleanup_commands + 1] = function()
+        local nr_lines = vim.api.nvim_buf_line_count(task_panel.sidebar_bufnr)
+        local seed = math.random()
+        local target_line = math.floor((nr_lines - 1) * seed + 0.5) + 1
+        vim.cmd(string.format('normal! %dG', target_line))
+      end
+      cleanup_commands[#cleanup_commands + 1] = 'normal x'
+    end
+    cleanup_commands[#cleanup_commands + 1] = 'wincmd q'
+
+    vim.notify(tostring(#cleanup_commands), vim.log.levels.TRACE)
+
+    timer:start(delay, delay, vim.schedule_wrap(function()
+      idx = idx + 1
+      if idx > #cleanup_commands then
+        abort_tests_if_not(next(all_tasks) == nil)
+        abort_tests_if_not(next(task_panel.task_ranges) == nil)
+
+        vim.uv.timer_stop(timer)
+        vim.uv.close(timer)
+
+        next_task_id = 1
+        vim.notify('All tests passed', vim.log.levels.INFO, { timeout = 5000 })
+        return
+      end
+
+      if type(cleanup_commands[idx]) == 'string' then
+        vim.cmd(cleanup_commands[idx])
+      else
+        cleanup_commands[idx]()
+      end
+
+      sanity_check()
+
+      if vim.fn.empty(vim.v.errmsg) == 0 then
+        vim.uv.timer_stop(timer)
+        vim.uv.close(timer)
+        return
+      end
+    end))
+  end
+
   timer:start(
     delay,
     delay,
@@ -965,8 +1013,8 @@ M.test = function()
       idx = idx + 1
       if idx > #commands then
         vim.uv.timer_stop(timer)
-        vim.uv.close(timer)
-        vim.notify('All tests passed', vim.log.levels.INFO, { timeout = 5000 })
+
+        cleanup()
         return
       end
 
