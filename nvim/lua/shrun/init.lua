@@ -392,7 +392,7 @@ local function start_task(task, restart)
       for i = #out, 1, -1 do
         if out[i]:len() > 0 then
           task.output_tail = out[i]
-            :gsub('\r$', '')
+            :gsub('\r', '')
             :gsub('\x1b%[[%d;]*m', '')
             :gsub('\x1b%[%d*K', '')
           break
