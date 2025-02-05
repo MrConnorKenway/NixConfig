@@ -266,9 +266,7 @@ local function sidebar_on_cursor_move()
     return
   end
 
-  if
-    task_panel.focused_task_range and task_panel.focused_task_range == range
-  then
+  if task_panel.focused_task_range == range then
     return
   end
 
