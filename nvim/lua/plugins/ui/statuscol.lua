@@ -15,7 +15,7 @@ return {
         { text = { ' ' } },
         {
           text = {
-            require('statuscol.builtin').lnumfunc
+            require('statuscol.builtin').lnumfunc,
           },
           click = 'v:lua.ScLa',
         },
@@ -27,7 +27,7 @@ return {
           },
           click = 'v:lua.ScSa',
         },
-        { text = { ' ' } }
+        { text = { ' ' } },
       },
       ft_ignore = {
         'help',
@@ -37,8 +37,8 @@ return {
         'noice',
         'lazy',
         'toggleterm',
-        'floggraph'
-      }
+        'floggraph',
+      },
     }
   end,
 }
