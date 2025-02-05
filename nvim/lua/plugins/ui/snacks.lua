@@ -9,100 +9,128 @@ return {
       function()
         require('snacks.picker').files({ matcher = { frecency = true } })
       end,
-      desc = 'Picker find files'
+      desc = 'Picker find files',
     },
     {
       '<D-p>',
       mode = { 'n', 't', 'i' },
       function()
-        require('snacks.picker').buffers {
+        require('snacks.picker').buffers({
           matcher = { frecency = true },
-          current = false
-        }
+          current = false,
+        })
       end,
-      desc = 'Picker switch buffers'
+      desc = 'Picker switch buffers',
     },
     {
       '<S-D-f>',
       mode = { 'n', 't', 'i' },
-      function() require('snacks.picker').grep() end,
-      desc = 'Picker live grep'
+      function()
+        require('snacks.picker').grep()
+      end,
+      desc = 'Picker live grep',
     },
     {
       '<S-M-f>',
       mode = { 'n', 't', 'i' },
-      function() require('snacks.picker').grep() end,
-      desc = 'Picker live grep'
+      function()
+        require('snacks.picker').grep()
+      end,
+      desc = 'Picker live grep',
     },
     {
       '<D-t>',
       mode = { 'n', 'i' },
-      function() require('snacks.picker').lsp_workspace_symbols() end,
-      desc = 'Picker find workspace symbols'
+      function()
+        require('snacks.picker').lsp_workspace_symbols()
+      end,
+      desc = 'Picker find workspace symbols',
     },
     {
       '<leader>s',
-      function() require('snacks.picker').lsp_workspace_symbols() end,
-      desc = 'Picker find workspace symbols'
+      function()
+        require('snacks.picker').lsp_workspace_symbols()
+      end,
+      desc = 'Picker find workspace symbols',
     },
     {
       '<leader>h',
-      function() require('snacks.picker').command_history() end,
-      desc = 'Picker find command history'
+      function()
+        require('snacks.picker').command_history()
+      end,
+      desc = 'Picker find command history',
     },
     {
       '<leader>S',
-      function() require('snacks.picker').lsp_symbols() end,
-      desc = 'Picker find document symbols'
+      function()
+        require('snacks.picker').lsp_symbols()
+      end,
+      desc = 'Picker find document symbols',
     },
     {
       '<S-D-o>',
-      function() require('snacks.picker').lsp_symbols() end,
-      desc = 'Picker find document symbols'
+      function()
+        require('snacks.picker').lsp_symbols()
+      end,
+      desc = 'Picker find document symbols',
     },
     {
       '<leader>r',
-      function() require('snacks.picker').lsp_references() end,
-      desc = 'Go to references'
+      function()
+        require('snacks.picker').lsp_references()
+      end,
+      desc = 'Go to references',
     },
     {
       'gd',
-      function() require('snacks.picker').lsp_definitions() end,
-      desc = 'Go to definitions'
+      function()
+        require('snacks.picker').lsp_definitions()
+      end,
+      desc = 'Go to definitions',
     },
     {
       'gy',
-      function() require('snacks.picker').lsp_type_definitions() end,
-      desc = 'Go to type definitions'
+      function()
+        require('snacks.picker').lsp_type_definitions()
+      end,
+      desc = 'Go to type definitions',
     },
     {
       '<leader>z',
       function()
         require('snacks.picker').zoxide()
       end,
-      desc = 'Find files from zoxide'
+      desc = 'Find files from zoxide',
     },
     {
       '<D-f>',
       mode = { 'n', 'i' },
-      function() require('snacks.picker').lines() end,
-      desc = 'Picker search current buffer'
+      function()
+        require('snacks.picker').lines()
+      end,
+      desc = 'Picker search current buffer',
     },
     {
       '<M-f>',
       mode = { 'n' },
-      function() require('snacks.picker').lines() end,
-      desc = 'Picker search current buffer'
+      function()
+        require('snacks.picker').lines()
+      end,
+      desc = 'Picker search current buffer',
     },
     {
       '<leader>n',
-      function() require('snacks.notifier').show_history() end,
-      desc = 'Notification History'
+      function()
+        require('snacks.notifier').show_history()
+      end,
+      desc = 'Notification History',
     },
     {
       '<leader>c',
-      function() require('snacks.bufdelete').delete() end,
-      desc = 'Close buffer'
+      function()
+        require('snacks.bufdelete').delete()
+      end,
+      desc = 'Close buffer',
     },
     {
       'gh',
@@ -115,8 +143,12 @@ return {
         end
 
         for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-          if vim.api.nvim_buf_is_loaded(bufnr) and vim.bo[bufnr].buftype:len() == 0 then
-            local filename = vim.api.nvim_buf_get_name(bufnr):gsub(cwd .. '/', '')
+          if
+            vim.api.nvim_buf_is_loaded(bufnr)
+            and vim.bo[bufnr].buftype:len() == 0
+          then
+            local filename =
+              vim.api.nvim_buf_get_name(bufnr):gsub(cwd .. '/', '')
             filename_bufnr[filename] = bufnr
           end
         end
@@ -127,7 +159,7 @@ return {
           local args = { '--no-pager', 'diff', '--no-color', '--no-ext-diff' }
           local finder = require('snacks.picker.source.proc').proc({
             opts,
-            { cmd = 'git', args = args }
+            { cmd = 'git', args = args },
           }, ctx)
 
           ---@async
@@ -171,7 +203,7 @@ return {
                           item = { hunk_line = line },
                           buf = bufnr,
                           file = file_name,
-                          pos = { line_number, 0 }
+                          pos = { line_number, 0 },
                         })
                         if line:sub(1, 1) == '+' then
                           line_number = line_number + 1
@@ -195,7 +227,8 @@ return {
 
               if diff_text:sub(1, 1) == '@' then
                 in_hunk = true
-                local new_line_number = diff_text:match('^@@ %-%d+,%d+ %+(%d+),%d+ @@')
+                local new_line_number =
+                  diff_text:match('^@@ %-%d+,%d+ %+(%d+),%d+ @@')
                 if new_line_number then
                   line_number = tonumber(new_line_number)
                   return
@@ -215,7 +248,7 @@ return {
                   text = file_name .. diff_text,
                   item = { hunk_line = diff_text },
                   file = file_name,
-                  pos = { line_number, 0 }
+                  pos = { line_number, 0 },
                 })
                 return
               end
@@ -225,7 +258,7 @@ return {
                   text = file_name .. diff_text,
                   item = { hunk_line = diff_text },
                   file = file_name,
-                  pos = { line_number, 0 }
+                  pos = { line_number, 0 },
                 })
                 line_number = line_number + 1
                 return
@@ -239,38 +272,45 @@ return {
           end
         end
 
-        require('snacks').picker {
+        require('snacks').picker({
           layout = {
             preset = 'ivy_split',
           },
           finder = git_hunks,
           formatters = {
             file = {
-              truncate = 20
-            }
+              truncate = 20,
+            },
           },
           format = function(item, picker)
             local ret = {}
             local line = item.item.hunk_line ---@type string
 
-            vim.list_extend(ret, require('snacks.picker.format').filename(item, picker))
-            local offset = require('snacks.picker').highlight.offset(ret, { char_idx = true })
+            vim.list_extend(
+              ret,
+              require('snacks.picker.format').filename(item, picker)
+            )
+            local offset = require('snacks.picker').highlight.offset(
+              ret,
+              { char_idx = true }
+            )
 
             require('snacks.picker').highlight.format(item, line:sub(2), ret)
             local hl = line:sub(1, 1) == '+' and 'DiffAdd' or 'DiffDelete'
-            ret[#ret + 1] = { string.rep(' ', vim.o.columns - offset - line:len()) }
+            ret[#ret + 1] =
+              { string.rep(' ', vim.o.columns - offset - line:len()) }
             ret[#ret + 1] = {
               col = 2,
               end_col = vim.o.columns,
               hl_group = hl,
-              strict = false
+              strict = false,
             }
             return ret
-          end
-        }
+          end,
+        })
       end,
-      desc = 'Picker search git hunks in opened buffers'
-    }
+      desc = 'Picker search git hunks in opened buffers',
+    },
   },
   opts = {
     notifier = {
@@ -279,14 +319,14 @@ return {
       timeout = 1000,
     },
     bufdelete = {
-      enabled = true
+      enabled = true,
     },
     picker = {
       enabled = true,
       layout = {
         layout = {
-          backdrop = false
-        }
+          backdrop = false,
+        },
       },
       win = {
         -- input window
@@ -299,18 +339,18 @@ return {
             ['<c-f>'] = { 'list_scroll_down', mode = { 'i', 'n' } },
             ['<c-d>'] = { 'preview_scroll_down', mode = { 'i', 'n' } },
             ['<c-b>'] = { 'list_scroll_up', mode = { 'i', 'n' } },
-            ['<c-a>'] = false
-          }
+            ['<c-a>'] = false,
+          },
         },
       },
       icons = {
         diagnostics = {
           Error = '',
-          Warn  = '󰔶',
-          Hint  = '',
-          Info  = '',
-        }
-      }
-    }
-  }
+          Warn = '󰔶',
+          Hint = '',
+          Info = '',
+        },
+      },
+    },
+  },
 }
