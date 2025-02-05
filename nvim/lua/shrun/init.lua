@@ -58,12 +58,12 @@ local sidebar_height = 12
 local separator_stem = '─'
 local out_prefix = 'out: '
 local default_highlights = {
-  TaskRUNNING = 'Constant',
-  TaskSUCCESS = 'DiagnosticOk',
-  TaskFAILED = 'DiagnosticError',
-  TaskFocus = 'CursorLine',
-  TaskName = 'Title',
-  TaskOutPrefix = 'Comment',
+  ShrunHighlightTaskRUNNING = 'Constant',
+  ShrunHighlightTaskSUCCESS = 'DiagnosticOk',
+  ShrunHighlightTaskFAILED = 'DiagnosticError',
+  ShrunHighlightTaskFocus = 'CursorLine',
+  ShrunHighlightTaskName = 'Title',
+  ShrunHighlightTaskOutPrefix = 'Comment',
 }
 
 ---@param task shrun.Task
@@ -78,13 +78,13 @@ local function render_task(task, row_offset)
 
   table.insert(lines, task.status .. ': ' .. task.cmd)
   table.insert(highlights, {
-    default_highlights['Task' .. task.status],
+    'ShrunHighlightTask' .. task.status,
     row_offset + #lines,
     0,
     status_len,
   })
   table.insert(highlights, {
-    default_highlights.TaskName,
+    'ShrunHighlightTaskName',
     row_offset + #lines,
     cmd_offset,
     cmd_offset + string.len(task.cmd),
@@ -92,7 +92,7 @@ local function render_task(task, row_offset)
   table.insert(lines, out_prefix .. task.output_tail)
   task.output_line_num = row_offset + #lines
   table.insert(highlights, {
-    default_highlights.TaskOutPrefix,
+    'ShrunHighlightTaskOutPrefix',
     row_offset + #lines,
     0,
     string.len(out_prefix),
@@ -143,7 +143,7 @@ local function highlight_focused()
     task_range.start_line - 1,
     0,
     {
-      line_hl_group = default_highlights.TaskFocus,
+      line_hl_group = 'ShrunHighlightTaskFocus',
       end_row = task_range.end_line - 1,
     }
   )
@@ -668,6 +668,10 @@ M.toggle_panel = function()
 end
 
 M.setup = function()
+  for hl, link in pairs(default_highlights) do
+    vim.api.nvim_set_hl(0, hl, { link = link })
+  end
+
   vim.api.nvim_create_user_command('Task', function(cmd)
     local task = {
       id = next_task_id,
