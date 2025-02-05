@@ -31,8 +31,7 @@ return {
       desc = 'Picker switch buffers',
     },
     {
-      '<M-p>',
-      mode = { 'n', 't', 'i' },
+      '<leader>p',
       function()
         require('snacks.picker').buffers {
           matcher = { frecency = true },
