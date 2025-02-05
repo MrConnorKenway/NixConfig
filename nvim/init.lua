@@ -54,6 +54,7 @@ vim.keymap.set({ 'i', 'n' }, '<D-s>', '<cmd>wa<cr>', { desc = 'Save workspace wi
 vim.keymap.set('n', '<leader>x', '<cmd>xa<cr>', { desc = 'Save and quit workspace' })
 vim.keymap.set('n', '<leader>q', '<cmd>qa<cr>', { desc = 'Quit workspace without save' })
 vim.keymap.set('v', '<leader>c', '"+y', { desc = 'OSC52 copy' })
+vim.keymap.set('v', '<D-c>', '"+y', { desc = 'OSC52 copy' })
 vim.keymap.set('t', '<C-;>', vim.api.nvim_replace_termcodes('<C-\\><C-N>', true, true, true),
   { silent = true, desc = 'Exit terminal mode' })
 vim.keymap.set({ 'n', 'i' }, '<D-z>', '<cmd>normal! u<cr>', { desc = 'Undo' })
