@@ -39,6 +39,10 @@ return {
         'toggleterm',
         'floggraph',
       },
+      bt_ignore = {
+        'terminal',
+        'nofile',
+      },
     }
   end,
 }
