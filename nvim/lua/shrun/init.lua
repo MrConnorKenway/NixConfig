@@ -719,7 +719,6 @@ M.setup = function()
         end
       end
       task_panel.task_ranges[task.id] = task_range
-      task_panel.focused_task_range = task_range
 
       vim.bo[task_panel.sidebar_bufnr].modifiable = true
       if empty then
