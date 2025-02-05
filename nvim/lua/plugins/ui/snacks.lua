@@ -12,7 +12,26 @@ return {
       desc = 'Picker find files',
     },
     {
+      '<M-o>',
+      mode = { 'n', 't', 'i' },
+      function()
+        require('snacks.picker').files({ matcher = { frecency = true } })
+      end,
+      desc = 'Picker find files',
+    },
+    {
       '<D-p>',
+      mode = { 'n', 't', 'i' },
+      function()
+        require('snacks.picker').buffers({
+          matcher = { frecency = true },
+          current = false,
+        })
+      end,
+      desc = 'Picker switch buffers',
+    },
+    {
+      '<M-p>',
       mode = { 'n', 't', 'i' },
       function()
         require('snacks.picker').buffers({
@@ -47,6 +66,14 @@ return {
       desc = 'Picker find workspace symbols',
     },
     {
+      '<M-t>',
+      mode = { 'n', 'i' },
+      function()
+        require('snacks.picker').lsp_workspace_symbols()
+      end,
+      desc = 'Picker find workspace symbols',
+    },
+    {
       '<leader>s',
       function()
         require('snacks.picker').lsp_workspace_symbols()
@@ -69,6 +96,13 @@ return {
     },
     {
       '<S-D-o>',
+      function()
+        require('snacks.picker').lsp_symbols()
+      end,
+      desc = 'Picker find document symbols',
+    },
+    {
+      '<S-M-o>',
       function()
         require('snacks.picker').lsp_symbols()
       end,
