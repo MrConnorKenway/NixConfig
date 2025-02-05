@@ -4,7 +4,7 @@ return {
   priority = 1000,
   lazy = false,
   init = function()
-    vim.cmd.colorscheme('catppuccin-mocha')
+    vim.cmd.colorscheme('catppuccin')
   end,
   config = function()
     require('catppuccin').setup {
