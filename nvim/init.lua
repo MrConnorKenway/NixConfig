@@ -233,3 +233,5 @@ require('lazy').setup {
 }
 
 vim.keymap.set('n', '<leader>l', function() require('lazy.view').show('home') end, { desc = 'Display lazy' })
+
+require('shrun').setup()
