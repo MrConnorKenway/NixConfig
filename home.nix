@@ -8,7 +8,6 @@
       git
       pahole
       fzf
-      cargo
       clang-tools
       nixd
       tree-sitter
@@ -16,6 +15,7 @@
       just
       python311Packages.python-lsp-server
       zoxide
+      rustup
     ];
 
     username = builtins.getEnv "USER";
