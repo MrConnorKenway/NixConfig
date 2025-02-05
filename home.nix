@@ -15,6 +15,7 @@
       lua-language-server
       just
       python311Packages.python-lsp-server
+      zoxide
     ];
 
     username = builtins.getEnv "USER";
@@ -51,6 +52,10 @@
     direnv = {
       enable = true;
       nix-direnv.enable = true;
+    };
+
+    zoxide = {
+      enable = true;
     };
 
     fd = {
