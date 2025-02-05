@@ -32,6 +32,7 @@ return {
       ft_ignore = {
         'help',
         'vim',
+        'git',
         'fugitive',
         'noice',
         'lazy',
