@@ -204,7 +204,9 @@ local function desc_sorted_pairs(tbl)
   for k in pairs(tbl) do
     keys[#keys + 1] = k
   end
-  table.sort(keys, function(a, b) return a > b end)
+  table.sort(keys, function(a, b)
+    return a > b
+  end)
 
   local idx = 0
   return function()
@@ -517,7 +519,12 @@ local function new_sidebar_buffer()
     vim.bo[task_panel.sidebar_bufnr].modifiable = true
     if nr_tasks == 0 then
       vim.api.nvim_buf_set_lines(task_panel.sidebar_bufnr, 0, -1, true, {})
-      vim.api.nvim_buf_clear_namespace(task_panel.sidebar_bufnr, sidebar_focus_hl_ns, 0, -1)
+      vim.api.nvim_buf_clear_namespace(
+        task_panel.sidebar_bufnr,
+        sidebar_focus_hl_ns,
+        0,
+        -1
+      )
     else
       if range.start_line == 1 then
         vim.api.nvim_buf_set_lines(
@@ -553,7 +560,10 @@ local function new_sidebar_buffer()
 
     vim.wo[task_panel.task_output_winid].winfixbuf = false
     assert(empty_task_output_buf)
-    vim.api.nvim_win_set_buf(task_panel.task_output_winid, empty_task_output_buf)
+    vim.api.nvim_win_set_buf(
+      task_panel.task_output_winid,
+      empty_task_output_buf
+    )
     vim.wo[task_panel.task_output_winid].winfixbuf = true
 
     vim.schedule(function()
@@ -697,7 +707,8 @@ M.setup = function()
     all_tasks[task.id] = task
     if task_panel then
       local lines, highlights = render_task(task, 0)
-      local task_range = { start_line = 1, end_line = #lines, task_id = task.id }
+      local task_range =
+        { start_line = 1, end_line = #lines, task_id = task.id }
       local empty = next(task_panel.task_ranges) == nil
 
       if not empty then
@@ -970,9 +981,13 @@ M.test = function()
 
     abort_tests_if_not(nr_tasks == nr_ranges)
     if prev_end_line then
-      abort_tests_if_not(prev_end_line == vim.api.nvim_buf_line_count(task_panel.sidebar_bufnr))
+      abort_tests_if_not(
+        prev_end_line == vim.api.nvim_buf_line_count(task_panel.sidebar_bufnr)
+      )
     else
-      abort_tests_if_not(vim.api.nvim_buf_line_count(task_panel.sidebar_bufnr) == 1)
+      abort_tests_if_not(
+        vim.api.nvim_buf_line_count(task_panel.sidebar_bufnr) == 1
+      )
     end
   end
 
@@ -994,34 +1009,42 @@ M.test = function()
 
     vim.notify(tostring(#cleanup_commands), vim.log.levels.TRACE)
 
-    timer:start(delay, delay, vim.schedule_wrap(function()
-      idx = idx + 1
-      if idx > #cleanup_commands then
-        abort_tests_if_not(next(all_tasks) == nil)
-        abort_tests_if_not(next(task_panel.task_ranges) == nil)
+    timer:start(
+      delay,
+      delay,
+      vim.schedule_wrap(function()
+        idx = idx + 1
+        if idx > #cleanup_commands then
+          abort_tests_if_not(next(all_tasks) == nil)
+          abort_tests_if_not(next(task_panel.task_ranges) == nil)
 
-        vim.uv.timer_stop(timer)
-        vim.uv.close(timer)
+          vim.uv.timer_stop(timer)
+          vim.uv.close(timer)
 
-        next_task_id = 1
-        vim.notify('All tests passed', vim.log.levels.INFO, { timeout = 5000 })
-        return
-      end
+          next_task_id = 1
+          vim.notify(
+            'All tests passed',
+            vim.log.levels.INFO,
+            { timeout = 5000 }
+          )
+          return
+        end
 
-      if type(cleanup_commands[idx]) == 'string' then
-        vim.cmd(cleanup_commands[idx])
-      else
-        cleanup_commands[idx]()
-      end
+        if type(cleanup_commands[idx]) == 'string' then
+          vim.cmd(cleanup_commands[idx])
+        else
+          cleanup_commands[idx]()
+        end
 
-      sanity_check()
+        sanity_check()
 
-      if vim.fn.empty(vim.v.errmsg) == 0 then
-        vim.uv.timer_stop(timer)
-        vim.uv.close(timer)
-        return
-      end
-    end))
+        if vim.fn.empty(vim.v.errmsg) == 0 then
+          vim.uv.timer_stop(timer)
+          vim.uv.close(timer)
+          return
+        end
+      end)
+    )
   end
 
   timer:start(

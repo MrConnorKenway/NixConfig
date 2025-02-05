@@ -43,7 +43,7 @@ return {
     vim.api.nvim_create_autocmd('VimLeavePre', {
       callback = function()
         leaving = true
-      end
+      end,
     })
 
     vim.api.nvim_create_autocmd('ColorScheme', {
@@ -108,7 +108,7 @@ return {
           r = 'heirline_color_replace',
           ['!'] = 'heirline_color_replace',
           t = 'heirline_color_terminal',
-        }
+        },
       },
       -- We can now access the value of mode() that, by now, would have been
       -- computed by `init()` and use it to index our strings dictionary.
@@ -123,7 +123,11 @@ return {
       -- Same goes for the highlight. Now the foreground will change according to the current mode.
       hl = function(self)
         local mode = vim.fn.mode(1):sub(1, 1) -- get only the first mode character
-        return { fg = 'heirline_color_base', bg = self.mode_bgs[mode], bold = true }
+        return {
+          fg = 'heirline_color_base',
+          bg = self.mode_bgs[mode],
+          bold = true,
+        }
       end,
       update = {
         'ModeChanged',
@@ -133,7 +137,7 @@ return {
           if not leaving then
             vim.cmd('redrawstatus')
           end
-        end
+        end,
       },
     }
 
@@ -146,23 +150,28 @@ return {
       -- %c  : column number
       -- %V  : virtual column number as -{num}.  Not displayed if equal to '%c'.
       provider = '%l:%-3(%v%)',
-      hl = { bold = true }
+      hl = { bold = true },
     }
 
     local ScrollBar = {
       static = {
-        sbar = { '🭶', '🭷', '🭸', '🭹', '🭺', '🭻' }
+        sbar = { '🭶', '🭷', '🭸', '🭹', '🭺', '🭻' },
       },
       provider = function(self)
         local curr_line = vim.api.nvim_win_get_cursor(0)[1]
         local lines = vim.api.nvim_buf_line_count(0)
-        local i = lines > 0 and math.floor((curr_line - 1) / lines * #self.sbar) + 1 or 1
+        local i = lines > 0
+            and math.floor((curr_line - 1) / lines * #self.sbar) + 1
+          or 1
         return string.rep(self.sbar[i], 2)
       end,
       hl = function()
         local mode = vim.fn.mode(1):sub(1, 1) -- get only the first mode character
-        return { fg = ViMode.static.mode_bgs[mode], bg = 'heirline_color_bright_bg' }
-      end
+        return {
+          fg = ViMode.static.mode_bgs[mode],
+          bg = 'heirline_color_bright_bg',
+        }
+      end,
     }
 
     local Diagnostics = {
@@ -176,10 +185,14 @@ return {
       },
 
       init = function(self)
-        self.errors = #vim.diagnostic.get(0, { severity = vim.diagnostic.severity.ERROR })
-        self.warnings = #vim.diagnostic.get(0, { severity = vim.diagnostic.severity.WARN })
-        self.hints = #vim.diagnostic.get(0, { severity = vim.diagnostic.severity.HINT })
-        self.info = #vim.diagnostic.get(0, { severity = vim.diagnostic.severity.INFO })
+        self.errors =
+          #vim.diagnostic.get(0, { severity = vim.diagnostic.severity.ERROR })
+        self.warnings =
+          #vim.diagnostic.get(0, { severity = vim.diagnostic.severity.WARN })
+        self.hints =
+          #vim.diagnostic.get(0, { severity = vim.diagnostic.severity.HINT })
+        self.info =
+          #vim.diagnostic.get(0, { severity = vim.diagnostic.severity.INFO })
       end,
 
       update = { 'DiagnosticChanged', 'BufEnter' },
@@ -215,15 +228,19 @@ return {
       init = function(self)
         local filename = self.filename
         local extension = vim.fn.fnamemodify(filename, ':e')
-        self.icon, self.icon_color = require('nvim-web-devicons').get_icon_color(filename, extension,
-          { default = true })
+        self.icon, self.icon_color =
+          require('nvim-web-devicons').get_icon_color(
+            filename,
+            extension,
+            { default = true }
+          )
       end,
       provider = function(self)
         return self.icon and (self.icon .. ' ')
       end,
       hl = function(self)
         return { fg = self.icon_color }
-      end
+      end,
     }
 
     local FileName = {
@@ -231,7 +248,9 @@ return {
         -- first, trim the pattern relative to the current directory. For other
         -- options, see :h filename-modifers
         local filename = vim.fn.fnamemodify(self.filename, ':.')
-        if filename == '' then return '[No Name]' end
+        if filename == '' then
+          return '[No Name]'
+        end
         -- now, if the filename would occupy more than 35% of the available
         -- space, we trim the file path to its initials
         -- See Flexible Components section below for dynamic truncation
@@ -279,7 +298,8 @@ return {
       end,
     }
 
-    FileNameBlock = utils.insert(FileNameBlock,
+    FileNameBlock = utils.insert(
+      FileNameBlock,
       FileIcon,
       utils.insert(FileNameModifer, FileName), -- a new table where FileName is a child of FileNameModifier
       FileFlags
@@ -305,7 +325,7 @@ return {
         provider = function(self)
           return ' ' .. self.status_dict.head
         end,
-        hl = { bold = true }
+        hl = { bold = true },
       },
       {
         provider = function(self)
@@ -329,8 +349,8 @@ return {
         hl = { fg = 'heirline_color_git_change' },
       },
       {
-        provider = ' %<'
-      }
+        provider = ' %<',
+      },
     }
 
     local HelpFileName = {
@@ -365,27 +385,27 @@ return {
 
     local SpecialStatusline = {
       condition = function()
-        return conditions.buffer_matches({
+        return conditions.buffer_matches {
           buftype = { 'nofile', 'prompt', 'help', 'quickfix' },
           filetype = { '^git.*', 'fugitive' },
-        })
+        }
       end,
 
       FileType,
       Space,
       HelpFileName,
-      Align
+      Align,
     }
 
     local SnacksExplorerStatusLine = {
       condition = function()
-        return conditions.buffer_matches({ filetype = { 'snacks_layout_box' } })
-      end
+        return conditions.buffer_matches { filetype = { 'snacks_layout_box' } }
+      end,
     }
 
     local TerminalStatusline = {
       condition = function()
-        return conditions.buffer_matches({ buftype = { 'terminal' } })
+        return conditions.buffer_matches { buftype = { 'terminal' } }
       end,
 
       -- Quickly add a condition to the ViMode to only show it when buffer is active!
@@ -441,7 +461,7 @@ return {
       -- Or complicate things a bit and get the servers names
       provider = function()
         local names = {}
-        for _, server in pairs(vim.lsp.get_clients({ bufnr = 0 })) do
+        for _, server in pairs(vim.lsp.get_clients { bufnr = 0 }) do
           table.insert(names, server.name)
         end
         return ' ' .. table.concat(names, ' ')
@@ -463,14 +483,14 @@ return {
       Space,
       Ruler,
       Space,
-      ScrollBar
+      ScrollBar,
     }
 
     local StatusBorder = {
       provider = function()
         return '  '
       end,
-      hl = { bg = 'heirline_color_bright_bg' }
+      hl = { bg = 'heirline_color_bright_bg' },
     }
 
     local InactiveStatusline = {
@@ -488,9 +508,9 @@ return {
         LSPActive,
         Space,
         Ruler,
-        Space
+        Space,
       },
-      StatusBorder
+      StatusBorder,
     }
 
     local StatusLines = {
@@ -513,6 +533,6 @@ return {
       DefaultStatusline,
     }
 
-    require('heirline').setup({ statusline = StatusLines })
-  end
+    require('heirline').setup { statusline = StatusLines }
+  end,
 }
