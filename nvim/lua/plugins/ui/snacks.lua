@@ -7,7 +7,7 @@ return {
       '<D-o>',
       mode = { 'n', 't', 'i' },
       function()
-        require('snacks.picker').files({ matcher = { frecency = true } })
+        require('snacks.picker').smart()
       end,
       desc = 'Picker find files',
     },
@@ -15,7 +15,7 @@ return {
       '<M-o>',
       mode = { 'n', 't', 'i' },
       function()
-        require('snacks.picker').files({ matcher = { frecency = true } })
+        require('snacks.picker').smart()
       end,
       desc = 'Picker find files',
     },
