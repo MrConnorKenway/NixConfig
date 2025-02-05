@@ -23,10 +23,6 @@
 
     stateVersion = "24.05";
 
-    sessionVariables = {
-      TERM = "xterm-256color";
-    };
-
     file = {
       ".clangd" = { text = ''
         CompileFlags:
