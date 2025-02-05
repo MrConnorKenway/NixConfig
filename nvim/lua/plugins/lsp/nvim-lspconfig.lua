@@ -13,7 +13,7 @@ return {
 
         vim.keymap.set('n', '<leader>i', function()
           vim.lsp.inlay_hint.enable(
-            not vim.lsp.inlay_hint.is_enabled({ bufnr = event.buf })
+            not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf }
           )
         end, { desc = 'Toggle LSP inlay hint' })
         vim.keymap.set('n', '<F2>', vim.lsp.buf.rename, { desc = 'LSP Rename' })
@@ -24,7 +24,7 @@ return {
           { desc = 'LSP code actions' }
         )
 
-        vim.diagnostic.config({
+        vim.diagnostic.config {
           signs = {
             text = {
               [vim.diagnostic.severity.ERROR] = '',
@@ -33,16 +33,16 @@ return {
               [vim.diagnostic.severity.HINT] = '',
             },
           },
-        })
+        }
       end,
     })
 
     local lspconfig = require('lspconfig')
-    lspconfig.clangd.setup({
+    lspconfig.clangd.setup {
       cmd = { 'clangd', '--header-insertion=never' },
-    })
-    lspconfig.nixd.setup({})
-    lspconfig.lua_ls.setup({})
-    lspconfig.basedpyright.setup({})
+    }
+    lspconfig.nixd.setup {}
+    lspconfig.lua_ls.setup {}
+    lspconfig.basedpyright.setup {}
   end,
 }

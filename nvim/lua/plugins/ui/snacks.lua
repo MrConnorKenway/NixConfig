@@ -23,10 +23,10 @@ return {
       '<D-p>',
       mode = { 'n', 't', 'i' },
       function()
-        require('snacks.picker').buffers({
+        require('snacks.picker').buffers {
           matcher = { frecency = true },
           current = false,
-        })
+        }
       end,
       desc = 'Picker switch buffers',
     },
@@ -34,10 +34,10 @@ return {
       '<M-p>',
       mode = { 'n', 't', 'i' },
       function()
-        require('snacks.picker').buffers({
+        require('snacks.picker').buffers {
           matcher = { frecency = true },
           current = false,
-        })
+        }
       end,
       desc = 'Picker switch buffers',
     },
@@ -232,13 +232,13 @@ return {
                       end
 
                       for _, line in ipairs(hunk.lines) do
-                        cb({
+                        cb {
                           text = file_name .. ' ' .. line,
                           item = { hunk_line = line },
                           buf = bufnr,
                           file = file_name,
                           pos = { line_number, 0 },
-                        })
+                        }
                         if line:sub(1, 1) == '+' then
                           line_number = line_number + 1
                         end
@@ -278,22 +278,22 @@ return {
               local char = diff_text:sub(1, 1)
 
               if char == '-' then
-                cb({
+                cb {
                   text = file_name .. diff_text,
                   item = { hunk_line = diff_text },
                   file = file_name,
                   pos = { line_number, 0 },
-                })
+                }
                 return
               end
 
               if char == '+' then
-                cb({
+                cb {
                   text = file_name .. diff_text,
                   item = { hunk_line = diff_text },
                   file = file_name,
                   pos = { line_number, 0 },
-                })
+                }
                 line_number = line_number + 1
                 return
               end
@@ -306,7 +306,7 @@ return {
           end
         end
 
-        require('snacks').picker({
+        require('snacks').picker {
           layout = {
             preset = 'ivy_split',
           },
@@ -341,7 +341,7 @@ return {
             }
             return ret
           end,
-        })
+        }
       end,
       desc = 'Picker search git hunks in opened buffers',
     },
