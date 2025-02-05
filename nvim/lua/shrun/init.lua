@@ -667,6 +667,20 @@ M.toggle_panel = function()
   M.display_panel()
 end
 
+M.nr_tasks_by_status = function()
+  local nr_tasks_by_status = {
+    ['CANCELED'] = 0,
+    ['FAILED'] = 0,
+    ['SUCCESS'] = 0,
+    ['RUNNING'] = 0,
+  }
+  for _, task in pairs(all_tasks) do
+    nr_tasks_by_status[task.status] = nr_tasks_by_status[task.status] + 1
+  end
+
+  return nr_tasks_by_status
+end
+
 M.setup = function()
   for hl, link in pairs(default_highlights) do
     vim.api.nvim_set_hl(0, hl, { link = link })

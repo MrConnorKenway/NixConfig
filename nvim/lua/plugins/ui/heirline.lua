@@ -394,6 +394,46 @@ return {
       Align,
     }
 
+    local function ShrunTasksOfStatus(status)
+      return {
+        condition = function(self)
+          return self.nr_tasks[status] > 0
+        end,
+        provider = function(self)
+          return string.format(
+            '%s%d ',
+            self.symbols[status],
+            self.nr_tasks[status]
+          )
+        end,
+        hl = function()
+          return { fg = utils.get_highlight('ShrunHighlightTask' .. status).fg }
+        end,
+      }
+    end
+
+    local ShrunStatus = {
+      condition = function()
+        return package.loaded.shrun
+      end,
+      init = function(self)
+        self.nr_tasks = require('shrun').nr_tasks_by_status()
+      end,
+      static = {
+        symbols = {
+          ['CANCELED'] = ' ',
+          ['FAILED'] = '󰅚 ',
+          ['SUCCESS'] = '󰄴 ',
+          ['RUNNING'] = '󰑮 ',
+        },
+      },
+
+      ShrunTasksOfStatus('CANCELED'),
+      ShrunTasksOfStatus('FAILED'),
+      ShrunTasksOfStatus('SUCCESS'),
+      ShrunTasksOfStatus('RUNNING'),
+    }
+
     local LSPActive = {
       condition = conditions.lsp_attached,
       update = { 'LspAttach', 'LspDetach' },
@@ -418,6 +458,7 @@ return {
       Align,
       Diagnostics,
       Space,
+      ShrunStatus,
       LSPActive,
       Space,
       Ruler,
