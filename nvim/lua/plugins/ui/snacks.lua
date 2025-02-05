@@ -171,11 +171,7 @@ return {
         ---@type table<string, integer>
         ---table that contains mapping from file name to bufnr attached by gitsigns
         local attached_bufnr = {}
-        local cwd = vim.uv.cwd()
-
-        if not cwd then
-          return
-        end
+        local cwd = vim.fs.normalize(vim.uv.cwd() or '.')
 
         for bufnr, cache in pairs(require('gitsigns.cache').cache) do
           local filename = cache.file:gsub(cwd .. '/', '')
