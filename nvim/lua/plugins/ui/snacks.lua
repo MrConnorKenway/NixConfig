@@ -168,27 +168,57 @@ return {
     {
       'gh',
       function()
-        local filename_bufnr = {}
+        ---@type table<string, integer>
+        ---table that contains mapping from file name to bufnr attached by gitsigns
+        local attached_bufnr = {}
         local cwd = vim.uv.cwd()
 
         if not cwd then
           return
         end
 
-        for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-          if
-            vim.api.nvim_buf_is_loaded(bufnr)
-            and vim.bo[bufnr].buftype:len() == 0
-          then
-            local filename =
-              vim.api.nvim_buf_get_name(bufnr):gsub(cwd .. '/', '')
-            filename_bufnr[filename] = bufnr
+        for bufnr, cache in pairs(require('gitsigns.cache').cache) do
+          local filename = cache.file:gsub(cwd .. '/', '')
+          attached_bufnr[filename] = bufnr
+        end
+
+        ---@type snacks.picker.finder
+        local function gitsigns_finder(_, ctx)
+          ---@type snacks.picker.finder.Item[]
+          local items = {}
+
+          for file, bufnr in pairs(attached_bufnr) do
+            ---@type Gitsigns.Hunk.Hunk_Public[] | nil
+            local hunks = require('gitsigns').get_hunks(bufnr)
+            if hunks then
+              for _, hunk in ipairs(hunks) do
+                local line_number = hunk.added.start
+                if line_number == 0 then
+                  line_number = 1
+                end
+
+                for _, line in ipairs(hunk.lines) do
+                  items[#items + 1] = {
+                    text = file .. line,
+                    item = { hunk_line = line },
+                    buf = bufnr,
+                    file = file,
+                    pos = { line_number, 0 },
+                    lang = vim.bo[bufnr].filetype,
+                  }
+                  if line:sub(1, 1) == '+' then
+                    line_number = line_number + 1
+                  end
+                end
+              end
+            end
           end
+          return ctx.filter:filter(items)
         end
 
         ---@param opts snacks.picker.Config
         ---@type snacks.picker.finder
-        local function git_hunks(opts, ctx)
+        local function git_diff_finder(opts, ctx)
           local args = { '--no-pager', 'diff', '--no-color', '--no-ext-diff' }
           local finder = require('snacks.picker.source.proc').proc({
             opts,
@@ -198,7 +228,6 @@ return {
           ---@async
           ---@param cb async fun(item: snacks.picker.finder.Item)
           return function(cb)
-            local async = require('snacks.picker.util.async').running()
             local file_name ---@type string
             local bufnr ---@type integer
             local in_hunk ---@type boolean
@@ -210,41 +239,8 @@ return {
 
               if diff_text:sub(1, 4) == 'diff' then
                 file_name = diff_text:match('^diff .* a/.* b/(.*)$')
-                bufnr = filename_bufnr[file_name]
-                if bufnr and require('gitsigns.cache').cache[bufnr] then
-                  ---@type Gitsigns.Hunk.Hunk_Public[] | nil
-                  local hunks
-
-                  vim.schedule(function()
-                    hunks = require('gitsigns').get_hunks(bufnr)
-                    async:resume()
-                  end)
-
-                  -- waiting for hunks
-                  async:suspend()
-
-                  if hunks then
-                    for _, hunk in ipairs(hunks) do
-                      line_number = hunk.added.start
-                      if line_number == 0 then
-                        line_number = 1
-                      end
-
-                      for _, line in ipairs(hunk.lines) do
-                        cb {
-                          text = file_name .. ' ' .. line,
-                          item = { hunk_line = line },
-                          buf = bufnr,
-                          file = file_name,
-                          pos = { line_number, 0 },
-                        }
-                        if line:sub(1, 1) == '+' then
-                          line_number = line_number + 1
-                        end
-                      end
-                    end
-                  end
-
+                bufnr = attached_bufnr[file_name]
+                if bufnr then
                   use_gitsigns = true
                 else
                   use_gitsigns = false
@@ -309,7 +305,7 @@ return {
           layout = {
             preset = 'vertical',
           },
-          finder = git_hunks,
+          finder = { git_diff_finder, gitsigns_finder },
           formatters = {
             file = {
               truncate = 20,
