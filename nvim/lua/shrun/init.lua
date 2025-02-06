@@ -302,7 +302,11 @@ local function new_task_output_window(buf_id)
       task_panel.task_output_winid = nil
       vim.schedule(function()
         if task_panel.sidebar_winid then
-          vim.api.nvim_win_hide(task_panel.sidebar_winid)
+          if vim.api.nvim_get_current_win() == task_panel.sidebar_winid then
+            vim.cmd('q')
+          else
+            vim.api.nvim_win_hide(task_panel.sidebar_winid)
+          end
         end
       end)
     end,
@@ -579,7 +583,11 @@ local function new_sidebar_buffer()
       task_panel.sidebar_winid = nil
       vim.schedule(function()
         if task_panel.task_output_winid then
-          vim.api.nvim_win_hide(task_panel.task_output_winid)
+          if vim.api.nvim_get_current_win() == task_panel.task_output_winid then
+            vim.cmd('q')
+          else
+            vim.api.nvim_win_hide(task_panel.task_output_winid)
+          end
         end
       end)
     end,
