@@ -7,8 +7,7 @@ return {
       auto_install = false,
       sync_install = false,
       highlight = {
-        enable = { 'python' },
-        additional_vim_regex_highlighting = true
+        enable = true,
       },
       indent = { enable = false },
       ensure_installed = {
