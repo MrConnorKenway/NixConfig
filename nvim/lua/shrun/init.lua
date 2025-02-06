@@ -689,10 +689,18 @@ M.nr_tasks_by_status = function()
   return nr_tasks_by_status
 end
 
-M.setup = function()
+local function setup_highlights()
   for hl, link in pairs(default_highlights) do
     vim.api.nvim_set_hl(0, hl, { link = link })
   end
+end
+
+M.setup = function()
+  setup_highlights()
+
+  vim.api.nvim_create_autocmd('ColorScheme', {
+    callback = setup_highlights,
+  })
 
   vim.api.nvim_create_user_command('Task', function(cmd)
     local task = {
