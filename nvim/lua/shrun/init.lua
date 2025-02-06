@@ -167,13 +167,12 @@ local function redraw_panel(lines, highlights, start_line, end_line)
 
   for _, hl in ipairs(highlights) do
     local group, row_start, col_start, col_end = unpack(hl)
-    vim.api.nvim_buf_add_highlight(
+    vim.hl.range(
       task_panel.sidebar_bufnr,
       sidebar_hl_ns,
       group,
-      row_start - 1,
-      col_start,
-      col_end
+      { row_start - 1, col_start },
+      { row_start - 1, col_end }
     )
   end
 
@@ -344,7 +343,7 @@ local function run_in_tmp_win(bufnr, fn)
   vim.api.nvim_set_current_win(winid)
   local ok, err = xpcall(fn, debug.traceback)
   if not ok then
-    vim.api.nvim_err_writeln(err)
+    vim.notify(vim.inspect(err), vim.log.levels.ERROR)
   end
   vim.api.nvim_win_close(winid, false)
   vim.api.nvim_set_current_win(start_winid)
@@ -749,13 +748,12 @@ M.setup = function()
 
       for _, hl in ipairs(highlights) do
         local group, lnum, col_start, col_end = unpack(hl)
-        vim.api.nvim_buf_add_highlight(
+        vim.hl.range(
           task_panel.sidebar_bufnr,
           sidebar_hl_ns,
           group,
-          lnum - 1,
-          col_start,
-          col_end
+          { lnum - 1, col_start },
+          { lnum - 1, col_end }
         )
       end
 
