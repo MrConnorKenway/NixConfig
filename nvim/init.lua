@@ -131,7 +131,9 @@ vim.api.nvim_create_autocmd({ 'WinEnter', 'BufWinEnter' }, {
       vim.wo[0][0].list = true
       vim.wo[0][0].listchars = 'tab:⇥ ,lead:·,trail:•,multispace:·'
       vim.wo[0][0].cursorline = true
-      vim.wo[0][0].signcolumn = 'yes'
+      vim.wo[0][0].signcolumn = 'yes:1'
+      vim.wo[0][0].numberwidth = 2
+      vim.wo[0][0].statuscolumn = '%l%s'
     end
   end
 })
