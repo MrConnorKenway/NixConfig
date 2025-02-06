@@ -506,7 +506,7 @@ local function new_sidebar_buffer()
 
     if task.status == 'RUNNING' then
       task.status = 'CANCELED'
-      vim.api.nvim_chan_send(task.job_id, '\x03') -- send SIGKILL
+      vim.fn.jobstop(task.job_id)
       vim.fn.chanclose(task.job_id)
       vim.fn.chanclose(task.term_id)
     end
