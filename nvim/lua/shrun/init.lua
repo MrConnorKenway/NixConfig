@@ -753,6 +753,7 @@ M.setup = function()
 
       if task_panel.sidebar_winid then
         vim.api.nvim_win_set_cursor(task_panel.sidebar_winid, { 1, 0 })
+        task_panel.focused_task_range = task_range
         highlight_focused()
       else
         -- task list panel is not opened, record the cursor here and defer the
