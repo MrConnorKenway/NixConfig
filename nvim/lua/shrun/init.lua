@@ -391,10 +391,12 @@ local function start_task(task, restart)
       end
       for i = #out, 1, -1 do
         if out[i]:len() > 0 then
+          -- delete control characters and ANSI escape sequences using regex
+          -- reference https://stackoverflow.com/questions/14693701
           task.output_tail = out[i]
             :gsub('\r', '')
-            :gsub('\x1b%[[%d;]*m', '')
-            :gsub('\x1b%[%d*K', '')
+            :gsub('\x1b[@-Z\\-_]', '') -- 7-bit C1 Fe (except CSI)
+            :gsub('\x1b%[[0-?]*[ -/]*[@-~]', '') -- second char is '[', i.e., CSI
           break
         end
       end
