@@ -421,7 +421,7 @@ return {
         end,
         provider = function(self)
           return string.format(
-            '%s%d ',
+            ' %s%d',
             self.symbols[status],
             self.nr_tasks[status]
           )
@@ -476,9 +476,9 @@ return {
       Space,
       Git,
       Align,
+      ShrunStatus,
       Diagnostics,
       Space,
-      ShrunStatus,
       LSPActive,
       Space,
       Ruler,
