@@ -386,7 +386,15 @@ local function start_task(task, restart)
     vim.api.nvim_chan_send(task.term_id, '\x1bc')
   end)
 
-  task.job_id = vim.fn.jobstart(task.cmd, {
+  -- Wrap arbitrary string as shell command argument
+  -- Reference: https://stackoverflow.com/a/33949338/8737125
+  local escaped_cmd = task.cmd:gsub("'", [['\'']])
+  -- '-i': Force command running as if inside interactive shell
+  -- 'sleep': wait 100ms before finishing job, giving neovim enough time to sync output
+  local new_cmd =
+    string.format("%s -ic '%s' && sleep 0.1", vim.o.shell, escaped_cmd)
+
+  task.job_id = vim.fn.jobstart(new_cmd, {
     pty = true,
     on_stdout = function(_, out)
       if task.status == 'CANCELED' then
