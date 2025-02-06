@@ -356,7 +356,7 @@ local function start_task(task, restart)
     -- reuse task output buffer
     task.buf_id = vim.api.nvim_create_buf(false, true)
 
-    vim.api.nvim_create_autocmd('CursorMoved', {
+    vim.api.nvim_create_autocmd({ 'WinScrolled', 'CursorMoved' }, {
       buffer = task.buf_id,
       callback = function()
         -- current buffer must be task's output buffer and current window must be
