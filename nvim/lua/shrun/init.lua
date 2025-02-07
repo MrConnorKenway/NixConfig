@@ -322,6 +322,21 @@ local function new_task_output_window(buf_id)
   return winid
 end
 
+local function get_terminal_size()
+  local width
+  local height
+
+  if task_panel and task_panel.task_output_winid then
+    width = vim.api.nvim_win_get_width(task_panel.task_output_winid)
+    height = vim.api.nvim_win_get_height(task_panel.task_output_winid)
+  else
+    width = vim.o.columns - sidebar_width
+    height = sidebar_height
+  end
+
+  return width, height
+end
+
 ---Currently when calling `vim.api.nvim_open_term`, neovim's libvterm will use
 ---the width of current window to render terminal output, thus we have to create
 ---a temporary window that has equal size with task output panel to mitigate such
@@ -417,8 +432,12 @@ local function start_task(task, restart)
     timer_running = false
   end)
 
+  local width, height = get_terminal_size()
+
   task.job_id = vim.fn.jobstart(new_cmd, {
     pty = true,
+    width = width,
+    height = height,
     on_stdout = function(_, out)
       if task.status == 'CANCELED' then
         return
