@@ -345,20 +345,11 @@ end
 ---@param fn fun()
 local function run_in_tmp_win(bufnr, fn)
   local start_winid = vim.api.nvim_get_current_win()
-  local width
-  local height
-
-  if task_panel and task_panel.sidebar_winid then
-    width = vim.api.nvim_win_get_width(task_panel.sidebar_winid)
-    height = vim.api.nvim_win_get_height(task_panel.sidebar_winid)
-  else
-    width = sidebar_width
-    height = sidebar_height
-  end
+  local width, height = get_terminal_size()
 
   local winid = vim.api.nvim_open_win(bufnr, false, {
     relative = 'editor',
-    width = vim.o.columns - width,
+    width = width,
     height = height,
     row = 0,
     col = 0,
