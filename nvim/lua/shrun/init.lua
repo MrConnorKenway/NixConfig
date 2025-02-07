@@ -52,6 +52,8 @@ local sidebar_focus_hl_ns = vim.api.nvim_create_namespace('shrun_sidebar_focus')
 ---@type integer?
 local empty_task_output_buf
 
+local original_winid = -1
+
 --TODO: make configurable
 local sidebar_width = 32
 local sidebar_height = 12
@@ -282,6 +284,17 @@ local function sidebar_on_cursor_move()
   highlight_focused()
 end
 
+local function save_original_winid()
+  local prev_winnr = vim.fn.winnr('#')
+  local prev_winid = vim.fn.win_getid(prev_winnr)
+  if
+    prev_winid ~= task_panel.task_output_winid
+    and prev_winid ~= task_panel.sidebar_winid
+  then
+    original_winid = prev_winid
+  end
+end
+
 ---@param buf_id integer the bufnr of task output buffer, i.e., Task.buf_id
 local function new_task_output_window(buf_id)
   local winid = vim.api.nvim_open_win(
@@ -303,15 +316,24 @@ local function new_task_output_window(buf_id)
   for k, v in pairs(default_opts) do
     vim.api.nvim_set_option_value(k, v, { scope = 'local', win = winid })
   end
+
+  local autocmd_id = vim.api.nvim_create_autocmd('WinEnter', {
+    pattern = tostring(winid),
+    callback = save_original_winid,
+  })
+
   vim.api.nvim_create_autocmd('WinClosed', {
     pattern = tostring(winid),
     once = true,
     callback = function()
       task_panel.task_output_winid = nil
+      vim.api.nvim_del_autocmd(autocmd_id)
       vim.schedule(function()
         if task_panel.sidebar_winid then
           if vim.api.nvim_get_current_win() == task_panel.sidebar_winid then
             vim.cmd('q')
+            pcall(vim.api.nvim_set_current_win, original_winid)
+            original_winid = -1
           else
             vim.api.nvim_win_hide(task_panel.sidebar_winid)
           end
@@ -616,6 +638,11 @@ local function new_sidebar_buffer()
     end)
   end, { buffer = sidebar_bufnr })
 
+  vim.api.nvim_create_autocmd('BufEnter', {
+    buffer = sidebar_bufnr,
+    callback = save_original_winid,
+  })
+
   vim.api.nvim_create_autocmd('BufHidden', {
     buffer = sidebar_bufnr,
     callback = function()
@@ -626,6 +653,8 @@ local function new_sidebar_buffer()
         if task_panel.task_output_winid then
           if vim.api.nvim_get_current_win() == task_panel.task_output_winid then
             vim.cmd('q')
+            pcall(vim.api.nvim_set_current_win, original_winid)
+            original_winid = -1
           else
             vim.api.nvim_win_hide(task_panel.task_output_winid)
           end
