@@ -456,6 +456,11 @@ local function start_task(task, restart)
     end,
   })
 
+  if task.job_id <= 0 then
+    vim.fn.chanclose(task.term_id)
+    error(string.format('Failed to start task "%s"', task.cmd))
+  end
+
   vim.api.nvim_buf_set_name(
     task.buf_id,
     string.format('task %d:%s', task.job_id, task.cmd)
