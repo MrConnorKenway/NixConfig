@@ -89,7 +89,16 @@ local function render_task(task, row_offset)
     cmd_offset,
     cmd_offset + string.len(task.cmd),
   })
-  table.insert(lines, out_prefix .. task.output_tail)
+
+  -- Remove control characters and ANSI escape sequences using regex
+  -- Reference: https://stackoverflow.com/questions/14693701
+  local striped_str = task
+    .output_tail
+    :gsub('[\r\x07]', '')
+    :gsub('\x1b[@-Z\\-_]', '') -- 7-bit C1 Fe (except CSI)
+    :gsub('\x1b%[[0-?]*[ -/]*[@-~]', '') -- second char is '[', i.e., CSI
+  table.insert(lines, out_prefix .. striped_str)
+
   task.output_line_num = row_offset + #lines
   table.insert(highlights, {
     'ShrunHighlightTaskOutPrefix',
@@ -394,6 +403,20 @@ local function start_task(task, restart)
   local new_cmd =
     string.format("%s -ic '%s' && sleep 0.1", vim.o.shell, escaped_cmd)
 
+  local render_timer = vim.uv.new_timer()
+  if not render_timer then
+    vim.fn.chanclose(task.term_id)
+    error('Failed to create uv timer')
+  end
+
+  local timer_running = false
+  local render_fn = vim.schedule_wrap(function()
+    if task_panel and task.output_line_num then
+      partial_render_sidebar(task)
+    end
+    timer_running = false
+  end)
+
   task.job_id = vim.fn.jobstart(new_cmd, {
     pty = true,
     on_stdout = function(_, out)
@@ -402,17 +425,13 @@ local function start_task(task, restart)
       end
       for i = #out, 1, -1 do
         if out[i]:len() > 0 then
-          -- delete control characters and ANSI escape sequences using regex
-          -- reference https://stackoverflow.com/questions/14693701
           task.output_tail = out[i]
-            :gsub('[\r\x07]', '')
-            :gsub('\x1b[@-Z\\-_]', '') -- 7-bit C1 Fe (except CSI)
-            :gsub('\x1b%[[0-?]*[ -/]*[@-~]', '') -- second char is '[', i.e., CSI
           break
         end
       end
-      if task_panel and task.output_line_num then
-        partial_render_sidebar(task)
+      if not timer_running then
+        timer_running = true
+        render_timer:start(0, 0, render_fn)
       end
       vim.api.nvim_chan_send(task.term_id, table.concat(out, '\r\n'))
     end,
