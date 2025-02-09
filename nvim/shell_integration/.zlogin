@@ -1,0 +1,1 @@
+shellIntegration-login.zsh

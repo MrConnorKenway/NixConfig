@@ -775,6 +775,67 @@ local function setup_highlights()
   end
 end
 
+local function init_task_from_cmd(cmd)
+  local task = {
+    id = next_task_id,
+    cmd = cmd.args or cmd,
+  }
+  next_task_id = next_task_id + 1
+
+  start_task(task)
+  all_tasks[task.id] = task
+  if task_panel then
+    local lines, highlights = render_task(task, 0)
+    local task_range = { start_line = 1, end_line = #lines, task_id = task.id }
+    local empty = next(task_panel.task_ranges) == nil
+
+    if not empty then
+      local separator = string.rep(separator_stem, vim.o.columns)
+      table.insert(lines, separator)
+      table.insert(highlights, { 'FloatBorder', #lines, 0, vim.o.columns })
+      for _, r in pairs(task_panel.task_ranges) do
+        r.start_line = r.start_line + #lines
+        r.end_line = r.end_line + #lines
+      end
+    end
+    task_panel.task_ranges[task.id] = task_range
+
+    vim.bo[task_panel.sidebar_bufnr].modifiable = true
+    if empty then
+      vim.api.nvim_buf_set_lines(task_panel.sidebar_bufnr, 0, -1, true, lines)
+    else
+      vim.api.nvim_buf_set_lines(task_panel.sidebar_bufnr, 0, 0, true, lines)
+    end
+    vim.bo[task_panel.sidebar_bufnr].modifiable = false
+    vim.bo[task_panel.sidebar_bufnr].modified = false
+
+    for _, hl in ipairs(highlights) do
+      local group, lnum, col_start, col_end = unpack(hl)
+      vim.hl.range(
+        task_panel.sidebar_bufnr,
+        sidebar_hl_ns,
+        group,
+        { lnum - 1, col_start },
+        { lnum - 1, col_end }
+      )
+    end
+
+    if task_panel.sidebar_winid then
+      vim.api.nvim_win_set_cursor(task_panel.sidebar_winid, { 1, 0 })
+      task_panel.focused_task_range = task_range
+      highlight_focused()
+    else
+      -- task list panel is not opened, record the cursor here and defer the
+      -- cursor update after `ListTask`
+      task_panel.sidebar_cursor = { 1, 0 }
+    end
+  end
+end
+
+local shell_buf
+local shell_job
+local shell_win
+
 M.setup = function()
   setup_highlights()
 
@@ -782,63 +843,95 @@ M.setup = function()
     callback = setup_highlights,
   })
 
-  vim.api.nvim_create_user_command('Task', function(cmd)
-    local task = {
-      id = next_task_id,
-      cmd = cmd.args,
+  vim.keymap.set('n', '``', function()
+    local shell = vim.o.shell:gsub('(.*)/', '')
+    local shell_args
+    local shell_envs = {
+      TERM_PROGRAM = 'neovim',
     }
-    next_task_id = next_task_id + 1
+    local home_dir = vim.uv.os_homedir()
+    -- FIXME: hard coded config
+    local width = 80
+    local height = 2
+    local max_height = 20
 
-    start_task(task)
-    all_tasks[task.id] = task
-    if task_panel then
-      local lines, highlights = render_task(task, 0)
-      local task_range =
-        { start_line = 1, end_line = #lines, task_id = task.id }
-      local empty = next(task_panel.task_ranges) == nil
-
-      if not empty then
-        local separator = string.rep(separator_stem, vim.o.columns)
-        table.insert(lines, separator)
-        table.insert(highlights, { 'FloatBorder', #lines, 0, vim.o.columns })
-        for _, r in pairs(task_panel.task_ranges) do
-          r.start_line = r.start_line + #lines
-          r.end_line = r.end_line + #lines
-        end
-      end
-      task_panel.task_ranges[task.id] = task_range
-
-      vim.bo[task_panel.sidebar_bufnr].modifiable = true
-      if empty then
-        vim.api.nvim_buf_set_lines(task_panel.sidebar_bufnr, 0, -1, true, lines)
-      else
-        vim.api.nvim_buf_set_lines(task_panel.sidebar_bufnr, 0, 0, true, lines)
-      end
-      vim.bo[task_panel.sidebar_bufnr].modifiable = false
-      vim.bo[task_panel.sidebar_bufnr].modified = false
-
-      for _, hl in ipairs(highlights) do
-        local group, lnum, col_start, col_end = unpack(hl)
-        vim.hl.range(
-          task_panel.sidebar_bufnr,
-          sidebar_hl_ns,
-          group,
-          { lnum - 1, col_start },
-          { lnum - 1, col_end }
-        )
-      end
-
-      if task_panel.sidebar_winid then
-        vim.api.nvim_win_set_cursor(task_panel.sidebar_winid, { 1, 0 })
-        task_panel.focused_task_range = task_range
-        highlight_focused()
-      else
-        -- task list panel is not opened, record the cursor here and defer the
-        -- cursor update after `ListTask`
-        task_panel.sidebar_cursor = { 1, 0 }
-      end
+    -- Currently only support zsh with p10k prompt
+    if shell == 'zsh' and vim.uv.os_getenv('PATH'):find('powerlevel10k') then
+      shell_args = { 'zsh' }
+      shell_envs = vim.tbl_extend('force', shell_envs, {
+        ITERM_SHELL_INTEGRATION_INSTALLED = 'Yes', -- enable p10k OSC 133 support
+        USER_ZDOTDIR = home_dir,
+        ZDOTDIR = string.format('%s/.config/nvim/shell_integration', home_dir),
+        FZF_DEFAULT_OPTS = '--layout=reverse --height=-1',
+      })
+    else
+      error(string.format('Unsupported shell "%s"', shell))
     end
-  end, {
+
+    if not shell_buf then
+      shell_buf = vim.api.nvim_create_buf(false, true)
+
+      vim.api.nvim_create_autocmd('BufEnter', {
+        buffer = shell_buf,
+        callback = function()
+          vim.cmd('startinsert')
+        end,
+      })
+
+      vim.keymap.set('t', '<C-r>', function()
+        vim.cmd('resize ' .. max_height)
+        vim.api.nvim_chan_send(shell_job, '\x12')
+      end, { buffer = shell_buf })
+
+      vim.keymap.set('t', '<C-d>', function()
+        vim.api.nvim_win_hide(shell_win)
+      end, { buffer = shell_buf })
+    end
+
+    shell_win = vim.api.nvim_open_win(shell_buf, true, {
+      relative = 'editor',
+      width = width,
+      height = height,
+      row = math.floor((vim.o.lines - max_height) / 2),
+      col = math.floor((vim.o.columns - width) / 2),
+      style = 'minimal',
+      border = 'rounded',
+    })
+
+    if not shell_job then
+      shell_job = vim.fn.jobstart(shell_args, {
+        term = true,
+        env = shell_envs,
+        on_stdout = function(_, out) ---@param out string[]
+          for _, line in ipairs(out) do
+            local found = line:find('\x1b]633')
+            if found then
+              local cmd = line:match('\x1b]633;E;([^\a]*)\a', found)
+              if cmd then
+                -- Now we get the actual command by parsing OSC 633;E
+                pcall(vim.api.nvim_win_hide, shell_win)
+                init_task_from_cmd(cmd)
+                vim.schedule(M.display_panel)
+                return
+              end
+            end
+
+            found = line:find('\x1b]133;B\a')
+            if found and vim.api.nvim_win_is_valid(shell_win) then
+              -- Resize to original height if we meet prompt end, i.e., OSC 133;B
+              vim.cmd('resize ' .. height)
+            end
+          end
+        end,
+        on_exit = function()
+          shell_buf = nil
+          shell_job = nil
+        end,
+      })
+    end
+  end)
+
+  vim.api.nvim_create_user_command('Task', init_task_from_cmd, {
     complete = vim.fn.has('nvim-0.11') == 0 and 'shellcmd' or 'shellcmdline',
     nargs = '+',
     desc = 'Run task',
