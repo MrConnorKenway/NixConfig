@@ -425,13 +425,13 @@ local function start_task(task, restart)
     vim.api.nvim_chan_send(task.term_id, '\x1bc')
   end)
 
-  -- Wrap arbitrary string as shell command argument
-  -- Reference: https://stackoverflow.com/a/33949338/8737125
-  local escaped_cmd = task.cmd:gsub("'", [['\'']])
   -- '-i': Force command running as if inside interactive shell
   -- 'sleep': wait 100ms before finishing job, giving neovim enough time to sync output
-  local new_cmd =
-    string.format("%s -ic '%s' && sleep 0.1", vim.o.shell, escaped_cmd)
+  local new_cmd = {
+    vim.o.shell,
+    '-ic',
+    string.format('set -e; %s; sleep 0.1', task.cmd),
+  }
 
   local render_timer = vim.uv.new_timer()
   if not render_timer then
