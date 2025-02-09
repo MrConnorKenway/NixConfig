@@ -30,8 +30,34 @@ if [ -z "$SHRUN_SHELL_INTEGRATION" ]; then
 	builtin return
 fi
 
+__vsc_escape_value() {
+	builtin emulate -L zsh
+
+	# Process text byte by byte, not by codepoint.
+	builtin local LC_ALL=C str="$1" i byte token out=''
+
+	for (( i = 0; i < ${#str}; ++i )); do
+		byte="${str:$i:1}"
+
+		# Escape backslashes, semi-colons and newlines
+		if [ "$byte" = "\\" ]; then
+			token="\\\\"
+		elif [ "$byte" = ";" ]; then
+			token="\\x3b"
+		elif [ "$byte" = $'\n' ]; then
+			token="\\x0a"
+		else
+			token="$byte"
+		fi
+
+		out+="$token"
+	done
+
+	builtin print -r "$out"
+}
+
 __shrun_preexec() {
-	printf "\033]633;E;$2\a"
+	printf "\033]633;E;%s\033\\" "$(__vsc_escape_value $3)"
 	print -s $2
 	USER_ZDOTDIR=$HOME ZDOTDIR=$HOME/.config/nvim/shell_integration exec zsh -i
 }

@@ -3,6 +3,7 @@ local M = {}
 ---@class shrun.Task
 ---@field id integer
 ---@field cmd string
+---@field escaped_cmd string
 ---@field view vim.fn.winsaveview.ret
 ---@field status string
 ---@field buf_id integer
@@ -78,7 +79,7 @@ local function render_task(task, row_offset)
   local status_len = string.len(task.status)
   local cmd_offset = status_len + 2 -- 2 == len(': ')
 
-  table.insert(lines, task.status .. ': ' .. task.cmd)
+  table.insert(lines, task.status .. ': ' .. task.escaped_cmd)
   table.insert(highlights, {
     'ShrunHighlightTask' .. task.status,
     row_offset + #lines,
@@ -89,7 +90,7 @@ local function render_task(task, row_offset)
     'ShrunHighlightTaskName',
     row_offset + #lines,
     cmd_offset,
-    cmd_offset + string.len(task.cmd),
+    cmd_offset + string.len(task.escaped_cmd),
   })
 
   -- Remove control characters and ANSI escape sequences using regex
@@ -413,6 +414,7 @@ local function start_task(task, restart)
   task.status = 'RUNNING'
   task.output_tail = ''
   task.follow_term_output = true
+  task.escaped_cmd = task.cmd:gsub('\n', ' 󰌑 ')
 
   run_in_tmp_win(task.buf_id, function()
     task.term_id = vim.api.nvim_open_term(task.buf_id, {
@@ -479,7 +481,7 @@ local function start_task(task, restart)
         --TODO: currently relies on Snacks.nvim's markdown support to change the
         --style, not a perfect solution
         vim.notify(
-          task.cmd .. ' `SUCCESS`',
+          task.escaped_cmd .. ' `SUCCESS`',
           vim.log.levels.INFO,
           { timeout = 2000 }
         )
@@ -495,7 +497,7 @@ local function start_task(task, restart)
         --TODO: currently relies on Snacks.nvim's markdown support to change the
         --style, not a perfect solution
         vim.notify(
-          task.cmd .. ' **FAILED**',
+          task.escaped_cmd .. ' **FAILED**',
           vim.log.levels.ERROR,
           { timeout = 2000 }
         )
@@ -509,12 +511,12 @@ local function start_task(task, restart)
 
   if task.job_id <= 0 then
     vim.fn.chanclose(task.term_id)
-    error(string.format('Failed to start task "%s"', task.cmd))
+    error(string.format('Failed to start task "%s"', task.escaped_cmd))
   end
 
   vim.api.nvim_buf_set_name(
     task.buf_id,
-    string.format('task %d:%s', task.job_id, task.cmd)
+    string.format('task %d:%s', task.job_id, task.escaped_cmd)
   )
 end
 
@@ -907,10 +909,13 @@ M.setup = function()
           for _, line in ipairs(out) do
             local found = line:find('\x1b]633')
             if found then
-              local cmd = line:match('\x1b]633;E;([^\a]*)\a', found)
+              local cmd = line:match('\x1b]633;E;(.*)\x1b\\', found)
               if cmd then
                 -- Now we get the actual command by parsing OSC 633;E
                 pcall(vim.api.nvim_win_hide, shell_win)
+                -- Revert escape
+                cmd =
+                  cmd:gsub('\\x3b', ';'):gsub('\\x0a', '\n'):gsub('\\\\', '\\')
                 init_task_from_cmd(cmd)
                 vim.schedule(M.display_panel)
                 return
