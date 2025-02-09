@@ -897,6 +897,7 @@ M.setup = function()
       style = 'minimal',
       border = 'rounded',
     })
+    vim.wo[shell_win].winhighlight = 'NormalFloat:Normal'
 
     if not shell_job then
       shell_job = vim.fn.jobstart(shell_args, {
