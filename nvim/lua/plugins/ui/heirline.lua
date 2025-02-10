@@ -369,13 +369,7 @@ return {
       -- or we could do that later (see #conditional-statuslines below)
       provider = function()
         local tname, _ = vim.api.nvim_buf_get_name(0):gsub('.*:', '')
-        local idx = tname:match(';#toggleterm#(.*)')
-        if idx ~= nil then
-          tname = tname:gsub(';#.*', '')
-          return string.format(' %s [%d]', tname, idx)
-        else
-          return ' ' .. tname
-        end
+        return ' ' .. tname
       end,
       hl = { fg = 'heirline_color_file_name', bold = true },
     }

@@ -30,7 +30,6 @@
   "tabout.nvim": { "branch": "master", "commit": "9a3499480a8e53dcaa665e2836f287e3b7764009" },
   "tiny-inline-diagnostic.nvim": { "branch": "main", "commit": "e6445d7b57da19238c9490b79d9758fc5220a79e" },
   "todo-comments.nvim": { "branch": "main", "commit": "304a8d204ee787d2544d8bc23cd38d2f929e7cc5" },
-  "toggleterm.nvim": { "branch": "main", "commit": "e76134e682c1a866e3dfcdaeb691eb7b01068668" },
   "undotree": { "branch": "master", "commit": "2556c6800b210b2096b55b66e74b4cc1d9ebbe4f" },
   "vim-buffer-ring": { "branch": "release", "commit": "cd1b362046a62405519f471211c5c0b8a1751eb1" },
   "vim-cool": { "branch": "master", "commit": "662e7b11064cbeedad17c45d2fe926e78d3cd0b6" },

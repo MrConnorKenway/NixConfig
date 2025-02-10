@@ -4,6 +4,24 @@ return {
   lazy = false,
   keys = {
     {
+      '<D-j>',
+      mode = { 'n', 'i', 't' },
+      function()
+        require('shrun').hide_panel()
+        require('snacks.terminal').toggle()
+      end,
+      desc = 'Toggle terminal',
+    },
+    {
+      '<C-`>',
+      mode = { 'n', 'i', 't' },
+      function()
+        require('shrun').hide_panel()
+        require('snacks.terminal').toggle()
+      end,
+      desc = 'Toggle terminal',
+    },
+    {
       '<D-o>',
       mode = { 'n', 't', 'i' },
       function()
@@ -375,6 +393,15 @@ return {
           Hint = '',
           Info = '',
         },
+      },
+    },
+    terminal = {
+      enabled = true,
+      win = {
+        wo = {
+          winbar = '',
+        },
+        height = 16,
       },
     },
   },

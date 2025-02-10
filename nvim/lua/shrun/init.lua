@@ -748,10 +748,22 @@ M.display_panel = function()
   end
 end
 
+M.hide_panel = function()
+  if task_panel and task_panel.sidebar_winid then
+    vim.api.nvim_win_hide(task_panel.sidebar_winid)
+  end
+end
+
 M.toggle_panel = function()
   if task_panel and task_panel.sidebar_winid then
     vim.api.nvim_win_hide(task_panel.sidebar_winid)
     return
+  end
+
+  for _, term in ipairs(require('snacks.terminal').list()) do
+    if not term.closed then
+      term:hide()
+    end
   end
 
   M.display_panel()
