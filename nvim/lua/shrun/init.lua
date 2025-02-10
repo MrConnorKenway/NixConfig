@@ -26,7 +26,7 @@ local next_task_id = 1
 ---@class shrun.TaskPanel
 ---@field sidebar_bufnr integer
 ---map from task id to task range
----NOTE: do not use ipairs to iterate task_ranges
+--- NOTE: do not use ipairs to iterate task_ranges
 ---@field task_ranges table<integer, shrun.TaskRange>
 ---@field focused_task_range shrun.TaskRange?
 ---@field sidebar_winid integer? -- when winid == nil, the window is closed
@@ -55,7 +55,7 @@ local empty_task_output_buf
 
 local original_winid = -1
 
---TODO: make configurable
+-- TODO: make configurable
 local sidebar_width = 32
 local sidebar_height = 12
 local separator_stem = '─'
@@ -478,7 +478,7 @@ local function start_task(task, restart)
         if task_panel then
           partial_render_sidebar(task)
         end
-        --TODO: currently relies on Snacks.nvim's markdown support to change the
+        -- TODO: currently relies on Snacks.nvim's markdown support to change the
         --style, not a perfect solution
         vim.notify(
           task.escaped_cmd .. ' `SUCCESS`',
@@ -494,7 +494,7 @@ local function start_task(task, restart)
         if task_panel then
           partial_render_sidebar(task)
         end
-        --TODO: currently relies on Snacks.nvim's markdown support to change the
+        -- TODO: currently relies on Snacks.nvim's markdown support to change the
         --style, not a perfect solution
         vim.notify(
           task.escaped_cmd .. ' **FAILED**',
