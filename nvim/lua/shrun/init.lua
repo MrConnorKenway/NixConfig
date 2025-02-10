@@ -883,7 +883,7 @@ M.setup = function()
         ITERM_SHELL_INTEGRATION_INSTALLED = 'Yes', -- enable p10k OSC 133 support
         USER_ZDOTDIR = home_dir,
         ZDOTDIR = string.format('%s/.config/nvim/shell_integration', home_dir),
-        FZF_DEFAULT_OPTS = '--layout=reverse --height=-1',
+        FZF_DEFAULT_OPTS = '--layout=reverse --height=100%',
       })
     else
       error(string.format('Unsupported shell "%s"', shell))
