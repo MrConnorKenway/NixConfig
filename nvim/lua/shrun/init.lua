@@ -858,7 +858,7 @@ M.setup = function()
     local max_height = 20
 
     -- Currently only support zsh with p10k prompt
-    if shell == 'zsh' and vim.uv.os_getenv('PATH'):find('powerlevel10k') then
+    if shell == 'zsh' and vim.fn.environ()['PATH']:find('powerlevel10k') then
       shell_args = { 'zsh' }
       shell_envs = vim.tbl_extend('force', shell_envs, {
         ITERM_SHELL_INTEGRATION_INSTALLED = 'Yes', -- enable p10k OSC 133 support
