@@ -869,6 +869,11 @@ M.setup = function()
     local height = 2
     local max_height = 20
 
+    if shell_win and vim.api.nvim_win_is_valid(shell_win) then
+      vim.cmd('startinsert')
+      return
+    end
+
     -- Currently only support zsh with p10k prompt
     if shell == 'zsh' and vim.fn.environ()['PATH']:find('powerlevel10k') then
       shell_args = { 'zsh' }
