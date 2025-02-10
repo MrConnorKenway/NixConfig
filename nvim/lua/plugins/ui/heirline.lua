@@ -22,12 +22,12 @@ return {
         heirline_color_git_branch = utils.get_highlight('Constant').fg,
         heirline_color_file_name = utils.get_highlight('Directory').fg,
         heirline_color_file_type = utils.get_highlight('Type').fg,
-        heirline_color_normal = theme_colors.blue,
+        heirline_color_normal = theme_colors.lavender,
         heirline_color_insert = theme_colors.green,
-        heirline_color_visual = theme_colors.mauve,
+        heirline_color_visual = theme_colors.flamingo,
         heirline_color_command = theme_colors.peach,
         heirline_color_select = utils.get_highlight('Statement').fg,
-        heirline_color_replace = theme_colors.red,
+        heirline_color_replace = theme_colors.maroon,
         heirline_color_terminal = theme_colors.green,
         heirline_color_lsp = theme_colors.green,
       }
@@ -515,8 +515,15 @@ return {
 
     local StatusLines = {
       hl = function()
+        local theme_colors = require('catppuccin.palettes').get_palette()
         if conditions.is_active() then
-          return { bg = 'heirline_color_surface0' }
+          return {
+            bg = require('catppuccin.utils.colors').vary_color(
+              { latte = theme_colors.crust },
+              theme_colors.surface0
+            ),
+            fg = theme_colors.overlay1
+          }
         else
           return 'StatusLineNC'
         end
