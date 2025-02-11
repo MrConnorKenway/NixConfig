@@ -4,7 +4,6 @@
   "blink.cmp": { "branch": "main", "commit": "5b0f52d42ecbb374695da1a93fa40eca4dc7a7ff" },
   "catppuccin-colorscheme": { "branch": "main", "commit": "4965db2d6155c25db4e8417465fc2703fdf4c2b7" },
   "conform.nvim": { "branch": "master", "commit": "363243c03102a531a8203311d4f2ae704c620d9b" },
-  "dressing.nvim": { "branch": "master", "commit": "56ef6a969a4990d938c5fed40c370f65e125fc97" },
   "flash.nvim": { "branch": "main", "commit": "f899265876ecdcf7352dbc9f0adf87068cedefbb" },
   "git-conflict.nvim": { "branch": "main", "commit": "a1badcd070d176172940eb55d9d59029dad1c5a6" },
   "gitsigns.nvim": { "branch": "main", "commit": "d8918f06624dd53b9a82bd0e29c31bcfd541b40d" },
