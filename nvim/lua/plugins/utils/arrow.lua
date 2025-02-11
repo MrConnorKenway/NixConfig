@@ -1,3 +1,4 @@
+---@type LazyPluginSpec
 return {
   'otavioschwanck/arrow.nvim',
   event = 'UIEnter',

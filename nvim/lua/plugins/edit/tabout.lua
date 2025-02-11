@@ -1,3 +1,4 @@
+---@type LazyPluginSpec
 return {
   'abecodes/tabout.nvim',
   opts = {

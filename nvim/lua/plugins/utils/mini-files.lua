@@ -1,3 +1,4 @@
+---@type LazyPluginSpec
 vim.api.nvim_create_autocmd('User', {
   pattern = 'MiniFilesWindowOpen',
   callback = function(args)

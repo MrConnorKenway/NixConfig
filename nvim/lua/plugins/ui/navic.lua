@@ -1,3 +1,4 @@
+---@type LazyPluginSpec
 return {
   'SmiteshP/nvim-navic',
   opts = {

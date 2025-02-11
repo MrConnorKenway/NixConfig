@@ -1,3 +1,4 @@
+---@type LazyPluginSpec
 vim.g.undotree_SetFocusWhenToggle = 1
 
 return {

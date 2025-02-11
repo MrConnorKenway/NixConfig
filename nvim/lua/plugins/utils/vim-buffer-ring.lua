@@ -1,3 +1,4 @@
+---@type LazyPluginSpec
 return {
   'landonb/vim-buffer-ring',
   config = function()

@@ -1,3 +1,4 @@
+---@type LazyPluginSpec
 return {
   'MrConnorKenway/vim-illuminate',
   event = 'LspAttach',
