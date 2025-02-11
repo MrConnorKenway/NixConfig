@@ -8,7 +8,7 @@ return {
       mode = { 'n', 'i', 't' },
       function()
         require('shrun').hide_panel()
-        require('snacks.terminal').toggle()
+        vim.schedule(require('snacks.terminal').toggle)
       end,
       desc = 'Toggle terminal',
     },
@@ -17,7 +17,7 @@ return {
       mode = { 'n', 'i', 't' },
       function()
         require('shrun').hide_panel()
-        require('snacks.terminal').toggle()
+        vim.schedule(require('snacks.terminal').toggle)
       end,
       desc = 'Toggle terminal',
     },
