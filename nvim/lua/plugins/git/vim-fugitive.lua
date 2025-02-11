@@ -1,6 +1,7 @@
 ---@type LazyPluginSpec
 return {
   'tpope/vim-fugitive',
+  cmd = { 'G', 'Gread', 'Gclog' },
   keys = {
     { 'gs',        '<cmd>G<cr>',                              desc = 'Git status' },
     { 'gv',        '<cmd>vertical G<cr>',                     desc = 'Git status vertical' },
@@ -12,7 +13,6 @@ return {
     { '<leader>D', '<cmd>Gvdiffsplit @:%<cr>',                desc = 'Git diff with staged' },
     { '<leader>g', ':G ',                                     desc = 'Git cmdline' }
   },
-  event = 'CmdlineEnter',
   init = function()
     vim.api.nvim_create_autocmd('FileType', {
       pattern = { 'fugitive', 'git' },
