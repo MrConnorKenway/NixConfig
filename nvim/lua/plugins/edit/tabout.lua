@@ -21,9 +21,6 @@ return {
     ignore_beginning = false, -- only tabout if at beginning of configured tabout chars
     exclude = {}              -- tabout will ignore these filetypes
   },
-  dependencies = {            -- These are optional
-    'nvim-treesitter/nvim-treesitter'
-  },
   opt = true, -- Set this to true if the plugin is optional
   event = 'InsertEnter'
 }
