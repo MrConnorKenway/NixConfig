@@ -91,7 +91,7 @@ return {
           cv = 'Ex',
           r = '...',
           rm = 'M',
-          ['r?'] = '?',
+          ['r?'] = 'CONFIRM',
           ['!'] = '!',
           t = 'TERMINAL',
         },
