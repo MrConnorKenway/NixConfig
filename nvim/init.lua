@@ -255,6 +255,52 @@ vim.api.nvim_create_autocmd('LspProgress', {
   end,
 })
 
+vim.api.nvim_create_autocmd('LspAttach', {
+  callback = function(event)
+    local orig_util_open_floating_preview = vim.lsp.util.open_floating_preview
+    function vim.lsp.util.open_floating_preview(contents, syntax, opts, ...)
+      opts = opts or {}
+      opts.border = 'rounded'
+      return orig_util_open_floating_preview(contents, syntax, opts, ...)
+    end
+
+    vim.keymap.set('n', '<leader>i', function()
+      vim.lsp.inlay_hint.enable(
+        not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf }
+      )
+    end, { desc = 'Toggle LSP inlay hint' })
+    vim.keymap.set('n', '<F2>', vim.lsp.buf.rename, { desc = 'LSP Rename' })
+    vim.keymap.set(
+      'n',
+      'g.',
+      vim.lsp.buf.code_action,
+      { desc = 'LSP code actions' }
+    )
+
+    vim.diagnostic.config {
+      signs = {
+        text = {
+          [vim.diagnostic.severity.ERROR] = '',
+          [vim.diagnostic.severity.WARN] = '',
+          [vim.diagnostic.severity.INFO] = '',
+          [vim.diagnostic.severity.HINT] = '',
+        },
+        numhl = {
+          [vim.diagnostic.severity.ERROR] = 'DiagnosticError',
+          [vim.diagnostic.severity.WARN] = 'DiagnosticWarn',
+          [vim.diagnostic.severity.INFO] = 'DiagnosticInfo',
+          [vim.diagnostic.severity.HINT] = 'DiagnosticHint',
+        },
+      },
+    }
+  end,
+})
+
+vim.lsp.enable('lua_ls')
+vim.lsp.enable('clangd')
+vim.lsp.enable('nixd')
+vim.lsp.enable('basedpyright')
+
 require('lazy').setup {
   spec = {
     { import = 'plugins.ui' },
