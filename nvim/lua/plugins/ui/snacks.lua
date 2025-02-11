@@ -7,8 +7,12 @@ return {
       '<D-j>',
       mode = { 'n', 'i', 't' },
       function()
-        require('shrun').hide_panel()
-        vim.schedule(require('snacks.terminal').toggle)
+        if package.loaded.shrun then
+          require('shrun').hide_panel()
+          vim.schedule(require('snacks.terminal').toggle)
+        else
+          require('snacks.terminal').toggle()
+        end
       end,
       desc = 'Toggle terminal',
     },
@@ -16,8 +20,12 @@ return {
       '<C-`>',
       mode = { 'n', 'i', 't' },
       function()
-        require('shrun').hide_panel()
-        vim.schedule(require('snacks.terminal').toggle)
+        if package.loaded.shrun then
+          require('shrun').hide_panel()
+          vim.schedule(require('snacks.terminal').toggle)
+        else
+          require('snacks.terminal').toggle()
+        end
       end,
       desc = 'Toggle terminal',
     },

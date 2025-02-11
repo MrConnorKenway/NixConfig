@@ -760,9 +760,11 @@ M.toggle_panel = function()
     return
   end
 
-  for _, term in ipairs(require('snacks.terminal').list()) do
-    if not term.closed then
-      term:hide()
+  if package.loaded.snacks.terminal then
+    for _, term in ipairs(require('snacks.terminal').list()) do
+      if not term.closed then
+        term:hide()
+      end
     end
   end
 
