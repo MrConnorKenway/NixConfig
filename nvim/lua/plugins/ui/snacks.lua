@@ -280,7 +280,7 @@ return {
               if diff_text:sub(1, 1) == '@' then
                 in_hunk = true
                 local new_line_number =
-                  diff_text:match('^@@ %-%d+,%d+ %+(%d+),%d+ @@')
+                  diff_text:match('^@@ %-%d+,?%d* %+(%d+),%d+ @@')
                 if new_line_number then
                   line_number = tonumber(new_line_number)
                   return
