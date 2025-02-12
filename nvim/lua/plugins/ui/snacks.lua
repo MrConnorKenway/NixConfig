@@ -1,3 +1,49 @@
+---@type snacks.win?
+local term_win
+local prev_win = -1
+
+local function create_snacks_terminal()
+  term_win = require('snacks.terminal').get(nil, {
+    win = {
+      on_win = function()
+        prev_win = vim.fn.win_getid(vim.fn.winnr('#'))
+      end,
+      on_close = function()
+        if vim.api.nvim_win_is_valid(prev_win) then
+          vim.api.nvim_set_current_win(prev_win)
+        end
+      end,
+    },
+  })
+end
+
+local function snacks_terminal_toggle()
+  if not term_win then
+    create_snacks_terminal()
+    return
+  end
+
+  term_win:toggle()
+end
+
+local function snacks_terminal_toggle_or_focus()
+  if not term_win then
+    create_snacks_terminal()
+    return
+  end
+
+  if term_win.closed then
+    term_win:toggle()
+    return
+  end
+
+  if vim.api.nvim_get_current_win() == term_win.win then
+    term_win:hide()
+  else
+    vim.api.nvim_set_current_win(term_win.win)
+  end
+end
+
 ---@type LazyPluginSpec
 return {
   'folke/snacks.nvim',
@@ -10,9 +56,9 @@ return {
       function()
         if package.loaded.shrun then
           require('shrun').hide_panel()
-          vim.schedule(require('snacks.terminal').toggle)
+          vim.schedule(snacks_terminal_toggle)
         else
-          require('snacks.terminal').toggle()
+          snacks_terminal_toggle()
         end
       end,
       desc = 'Toggle terminal',
@@ -23,9 +69,9 @@ return {
       function()
         if package.loaded.shrun then
           require('shrun').hide_panel()
-          vim.schedule(require('snacks.terminal').toggle)
+          vim.schedule(snacks_terminal_toggle_or_focus)
         else
-          require('snacks.terminal').toggle()
+          snacks_terminal_toggle_or_focus()
         end
       end,
       desc = 'Toggle terminal',
