@@ -188,9 +188,9 @@ local function redraw_panel(lines, highlights, start_line, end_line)
     )
   end
 
-  if task_panel.sidebar_winid then
-    highlight_focused()
-  end
+  -- Since extmark highlight is bound to buffer, we should highlight focused
+  -- task even if task panel is not opened
+  highlight_focused()
 end
 
 ---@param task shrun.Task
