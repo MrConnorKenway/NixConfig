@@ -1156,6 +1156,36 @@ M.test = function()
     [[ call feedkeys("\<cr>") ]],
     ------------------ end test ------------------------------------------------
 
+    ------------------ test highlight focus for background tasks ---------------
+    'ListTask',
+    'Task sleep 10',
+    'wincmd c',
+    function()
+      vim.api.nvim_chan_send(all_tasks[next_task_id - 1].job_id, 'data\ndata')
+    end,
+    'ListTask',
+    function()
+      local extmarks = vim.api.nvim_buf_get_extmarks(
+        task_panel.sidebar_bufnr,
+        sidebar_focus_hl_ns,
+        0,
+        -1,
+        { details = true }
+      )
+
+      -- focused task should be on the top
+      abort_tests_if_not(task_panel.focused_task_range.start_line == 1)
+      abort_tests_if_not(#extmarks == 1)
+      abort_tests_if_not(
+        extmarks[1][2] == task_panel.focused_task_range.start_line - 1
+      )
+      abort_tests_if_not(
+        extmarks[1][4].end_row == task_panel.focused_task_range.end_line - 1
+      )
+    end,
+    'normal x',
+    ------------------ end test ------------------------------------------------
+
     'tabclose',
   }
 
