@@ -31,6 +31,7 @@ return {
             },
           },
         })
+        return
       end
     end
   end,
