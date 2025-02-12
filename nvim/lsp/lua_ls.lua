@@ -15,6 +15,10 @@ return {
   single_file_support = true,
   log_level = vim.lsp.protocol.MessageType.Warning,
   on_init = function(client)
+    if not client.workspace_folders then
+      return
+    end
+
     for _, workspace in ipairs(client.workspace_folders) do
       if workspace.name:match('[Nn]ix[Cc]onfig') then
         client.settings = vim.tbl_deep_extend('force', client.settings, {
