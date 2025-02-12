@@ -52,7 +52,57 @@ if os.getenv('SSH_TTY') ~= nil then
   }
 end
 
-vim.keymap.set('n', 'q', '<cmd>q<cr>', { desc = 'Close window' })
+local function is_last_window()
+  local wins = vim.api.nvim_list_wins()
+  local count = 0
+
+  for _, win in ipairs(wins) do
+    -- According to ':h nvim_win_get_config()', `relative` is empty for
+    -- normal windows
+    if vim.api.nvim_win_get_config(win).relative == '' then
+      count = count + 1
+    end
+  end
+
+  return count == 1
+end
+
+local function confirm_to_exit()
+  if require('shrun').nr_tasks_by_status()['RUNNING'] > 0 then
+    local choice = vim.fn.confirm(
+      'Are you asure to exit? There are running tasks.',
+      '&Yes\n&No',
+      2,
+      'Question'
+    )
+    return choice == 1
+  end
+
+  return true
+end
+
+vim.keymap.set('n', 'q', function()
+  if vim.fn.tabpagenr('$') == 1 and is_last_window() then
+    if not confirm_to_exit() then
+      return
+    end
+  end
+
+  vim.cmd('q')
+end, { desc = 'Close window' })
+
+vim.keymap.set('n', '<leader>q', function()
+  if confirm_to_exit() then
+    vim.cmd('qa')
+  end
+end, { desc = 'Quit workspace without save' })
+
+vim.keymap.set('n', '<leader>x', function()
+  if confirm_to_exit() then
+    vim.cmd('xa')
+  end
+end, { desc = 'Save and quit workspace' })
+
 vim.keymap.set('n', 'cq', '<cmd>cclose<cr>', { desc = 'Close quickfix' })
 vim.keymap.set(
   'n',
@@ -65,18 +115,6 @@ vim.keymap.set(
   '<D-s>',
   '<cmd>wa<cr>',
   { desc = 'Save workspace without quit' }
-)
-vim.keymap.set(
-  'n',
-  '<leader>x',
-  '<cmd>xa<cr>',
-  { desc = 'Save and quit workspace' }
-)
-vim.keymap.set(
-  'n',
-  '<leader>q',
-  '<cmd>qa<cr>',
-  { desc = 'Quit workspace without save' }
 )
 vim.keymap.set('v', '<leader>c', '"+y', { desc = 'OSC52 copy' })
 vim.keymap.set('v', '<D-c>', '"+y', { desc = 'OSC52 copy' })
