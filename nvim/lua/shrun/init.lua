@@ -967,7 +967,8 @@ M.setup = function()
     desc = 'Show sidebar',
   })
 
-  vim.keymap.set({ 'n', 'i' }, '<D-r>', M.toggle_panel)
+  vim.keymap.set({ 'n', 'i', 't' }, '<D-r>', M.toggle_panel)
+  vim.keymap.set({ 'n', 'i', 't' }, '<M-r>', M.toggle_panel)
 end
 
 ---for development test purpose only
