@@ -374,3 +374,52 @@ vim.api.nvim_create_autocmd('FileType', {
     pcall(vim.treesitter.start)
   end,
 })
+
+vim.api.nvim_create_user_command('LspRestart', function()
+  local clients = vim.lsp.get_clients { bufnr = 0 }
+  if not clients or next(clients) == nil then
+    return
+  end
+
+  local clients_to_restart = {}
+
+  for _, client in ipairs(clients) do
+    client:stop()
+    clients_to_restart[client.name] =
+      { client, vim.tbl_keys(client.attached_buffers) }
+  end
+
+  local timer = assert(vim.uv.new_timer())
+  local retry_count = 0
+  timer:start(
+    500,
+    100,
+    vim.schedule_wrap(function()
+      if retry_count == 3 then
+        timer:close()
+      end
+
+      retry_count = retry_count + 1
+
+      for client_name, tuple in pairs(clients_to_restart) do
+        ---@type vim.lsp.Client
+        local client, attached_buffers = unpack(tuple)
+        local config = vim.tbl_deep_extend(
+          'force',
+          vim.lsp.config[client_name],
+          client.config
+        )
+        if client:is_stopped() then
+          for _, buf in ipairs(attached_buffers) do
+            vim.lsp.start(config, { bufnr = buf })
+          end
+          clients_to_restart[client_name] = nil
+        end
+      end
+
+      if next(clients_to_restart) == nil and not timer:is_closing() then
+        timer:close()
+      end
+    end)
+  )
+end, { desc = 'Restart the LSP server attached to current buffer' })
