@@ -18,7 +18,7 @@ local function create_snacks_terminal()
 end
 
 local function snacks_terminal_toggle()
-  if not term_win then
+  if not term_win or not term_win:buf_valid() then
     create_snacks_terminal()
     return
   end
@@ -27,7 +27,7 @@ local function snacks_terminal_toggle()
 end
 
 local function snacks_terminal_toggle_or_focus()
-  if not term_win then
+  if not term_win or not term_win:buf_valid() then
     create_snacks_terminal()
     return
   end
