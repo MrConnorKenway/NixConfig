@@ -225,6 +225,13 @@ return {
       desc = 'Picker search current buffer',
     },
     {
+      'U',
+      function()
+        require('snacks.picker').undo()
+      end,
+      desc = 'Picker search undo history',
+    },
+    {
       '<leader>n',
       function()
         require('snacks.notifier').show_history()
