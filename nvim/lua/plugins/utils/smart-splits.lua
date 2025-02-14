@@ -22,7 +22,7 @@ return {
     },
     {
       '<C-l>',
-      mode = { 'n', 'i', 't' },
+      mode = { 'n', 'i' },
       function() require('smart-splits').move_cursor_right() end,
       desc = 'Move cursort right'
     },
