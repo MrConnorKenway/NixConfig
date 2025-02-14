@@ -425,11 +425,10 @@ local function start_task(task, restart)
     vim.api.nvim_chan_send(task.term_id, '\x1bc')
   end)
 
-  -- '-i': Force command running as if inside interactive shell
   -- 'sleep': wait 100ms before finishing job, giving neovim enough time to sync output
   local new_cmd = {
     vim.o.shell,
-    '-ic',
+    '-c',
     string.format('set -e; %s; sleep 0.1', task.cmd),
   }
 
