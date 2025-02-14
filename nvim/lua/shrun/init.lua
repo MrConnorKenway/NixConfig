@@ -56,8 +56,8 @@ local empty_task_output_buf
 local original_winid = -1
 
 -- TODO: make configurable
-local sidebar_width = 32
-local sidebar_height = 12
+local sidebar_width = 48
+local sidebar_height = 16
 local separator_stem = '─'
 local out_prefix = 'out: '
 local default_highlights = {
