@@ -297,25 +297,25 @@ vim.api.nvim_create_autocmd('LspAttach', {
       vim.lsp.buf.code_action,
       { desc = 'LSP code actions', buffer = event.buf }
     )
-
-    vim.diagnostic.config {
-      signs = {
-        text = {
-          [vim.diagnostic.severity.ERROR] = '',
-          [vim.diagnostic.severity.WARN] = '',
-          [vim.diagnostic.severity.INFO] = '',
-          [vim.diagnostic.severity.HINT] = '',
-        },
-        numhl = {
-          [vim.diagnostic.severity.ERROR] = 'DiagnosticError',
-          [vim.diagnostic.severity.WARN] = 'DiagnosticWarn',
-          [vim.diagnostic.severity.INFO] = 'DiagnosticInfo',
-          [vim.diagnostic.severity.HINT] = 'DiagnosticHint',
-        },
-      },
-    }
   end,
 })
+
+vim.diagnostic.config {
+  signs = {
+    text = {
+      [vim.diagnostic.severity.ERROR] = '',
+      [vim.diagnostic.severity.WARN] = '',
+      [vim.diagnostic.severity.INFO] = '',
+      [vim.diagnostic.severity.HINT] = '',
+    },
+    numhl = {
+      [vim.diagnostic.severity.ERROR] = 'DiagnosticError',
+      [vim.diagnostic.severity.WARN] = 'DiagnosticWarn',
+      [vim.diagnostic.severity.INFO] = 'DiagnosticInfo',
+      [vim.diagnostic.severity.HINT] = 'DiagnosticHint',
+    },
+  },
+}
 
 vim.lsp.enable('lua_ls')
 vim.lsp.enable('clangd')
