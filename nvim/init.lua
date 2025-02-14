@@ -271,12 +271,9 @@ vim.api.nvim_create_autocmd('LspProgress', {
 
 vim.api.nvim_create_autocmd('LspAttach', {
   callback = function(event)
-    local orig_util_open_floating_preview = vim.lsp.util.open_floating_preview
-    function vim.lsp.util.open_floating_preview(contents, syntax, opts, ...)
-      opts = opts or {}
-      opts.border = 'rounded'
-      return orig_util_open_floating_preview(contents, syntax, opts, ...)
-    end
+    vim.keymap.set('n', 'K', function()
+      vim.lsp.buf.hover { border = 'rounded' }
+    end, { desc = 'LSP hover', buffer = event.buf })
 
     vim.keymap.set('n', '<leader>i', function()
       vim.lsp.inlay_hint.enable(
