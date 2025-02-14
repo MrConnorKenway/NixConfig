@@ -282,13 +282,20 @@ vim.api.nvim_create_autocmd('LspAttach', {
       vim.lsp.inlay_hint.enable(
         not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf }
       )
-    end, { desc = 'Toggle LSP inlay hint' })
-    vim.keymap.set('n', '<F2>', vim.lsp.buf.rename, { desc = 'LSP Rename' })
+    end, { desc = 'Toggle LSP inlay hint', buffer = event.buf })
+
+    vim.keymap.set(
+      'n',
+      '<F2>',
+      vim.lsp.buf.rename,
+      { desc = 'LSP Rename', buffer = event.buf }
+    )
+
     vim.keymap.set(
       'n',
       'g.',
       vim.lsp.buf.code_action,
-      { desc = 'LSP code actions' }
+      { desc = 'LSP code actions', buffer = event.buf }
     )
 
     vim.diagnostic.config {
