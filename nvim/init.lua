@@ -183,68 +183,44 @@ vim.api.nvim_create_autocmd('BufRead', {
   end,
 })
 
+local function set_wo_for_special_buf(filetype)
+  if filetype == 'floggraph' then
+    vim.wo.cursorline = true
+  else
+    vim.wo.cursorline = false
+  end
+  vim.wo.number = false
+  vim.wo.list = false
+  vim.wo.signcolumn = 'no'
+end
+
 vim.api.nvim_create_autocmd('FileType', {
-  pattern = 'floggraph',
-  callback = function()
-    vim.wo[0][0].cursorline = true
-    vim.wo[0][0].number = false
-    vim.wo[0][0].list = false
+  pattern = { 'floggraph', 'fugitive', 'git' },
+  callback = function(args)
+    set_wo_for_special_buf(args.match)
   end,
 })
 
 vim.api.nvim_create_autocmd({ 'WinEnter', 'BufWinEnter' }, {
   callback = function()
     if vim.bo.buftype:len() > 0 then
-      -- current buf is special buf
-      if vim.bo.filetype == 'floggraph' then
-        vim.wo[0][0].cursorline = true
-      end
+      set_wo_for_special_buf(vim.bo.filetype)
       return
     end
 
-    if not vim.wo[0][0].number then
-      vim.wo[0][0].number = true
-    end
-
-    if vim.wo[0][0].number then
-      vim.wo[0][0].list = true
-      vim.wo[0][0].listchars = 'tab:⇥ ,lead:·,trail:•,multispace:·'
-      vim.wo[0][0].cursorline = true
-      vim.wo[0][0].signcolumn = 'yes:1'
-      vim.wo[0][0].numberwidth = 2
-      vim.wo[0][0].statuscolumn = '%l%s'
-    end
-  end,
-})
-
-vim.api.nvim_create_autocmd('BufEnter', {
-  callback = function()
-    if vim.b.termmode == 't' then
-      vim.cmd('startinsert')
-    end
-  end,
-  pattern = { 'term://*' },
-})
-
-vim.api.nvim_create_autocmd('WinLeave', {
-  callback = function()
-    vim.b.termmode = vim.fn.mode(1)
-  end,
-  pattern = { 'term://*' },
-})
-
-vim.api.nvim_create_autocmd('TermOpen', {
-  callback = function()
-    vim.wo[0][0].number = false
-    vim.wo[0][0].list = false
-    vim.wo[0][0].cursorline = false
-    vim.wo[0][0].signcolumn = 'no'
+    vim.wo.number = true
+    vim.wo.list = true
+    vim.wo.listchars = 'tab:⇥ ,lead:·,trail:•,multispace:·'
+    vim.wo.cursorline = true
+    vim.wo.signcolumn = 'yes:1'
+    vim.wo.numberwidth = 2
+    vim.wo.statuscolumn = '%l%s'
   end,
 })
 
 vim.api.nvim_create_autocmd('WinLeave', {
   callback = function()
-    vim.wo[0][0].cursorline = false
+    vim.wo.cursorline = false
   end,
 })
 
