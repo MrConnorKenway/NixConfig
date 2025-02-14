@@ -516,7 +516,7 @@ local function start_task(task, restart)
 
   vim.api.nvim_buf_set_name(
     task.buf_id,
-    string.format('task %d:%s', task.job_id, task.escaped_cmd)
+    string.format('shrun://%d//%s', task.job_id, task.escaped_cmd)
   )
 end
 

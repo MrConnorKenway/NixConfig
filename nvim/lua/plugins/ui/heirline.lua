@@ -369,8 +369,18 @@ return {
       -- we could add a condition to check that buftype == 'terminal'
       -- or we could do that later (see #conditional-statuslines below)
       provider = function()
-        local tname, _ = vim.api.nvim_buf_get_name(0):gsub('.*:', '')
-        return ' ' .. tname
+        local buf_name = vim.api.nvim_buf_get_name(0)
+        local match = buf_name:match('^term://.*//%d+:(.*)')
+        if match then
+          return ' ' .. match
+        end
+
+        match = buf_name:match('^shrun://%d+//(.*)')
+        if match then
+          return ' ' .. match
+        end
+
+        return ' '
       end,
       hl = { fg = 'heirline_color_file_name', bold = true },
     }
