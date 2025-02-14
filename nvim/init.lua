@@ -24,6 +24,9 @@ vim.opt.rtp:prepend(lazypath)
 
 vim.o.sessionoptions = 'buffers,curdir,folds,help,tabpages,winsize'
 vim.o.equalalways = false
+vim.o.numberwidth = 2
+vim.o.statuscolumn = '%l%s'
+vim.o.listchars = 'tab:⇥ ,lead:·,trail:•,multispace:·'
 
 vim.opt.ignorecase = true
 vim.opt.termguicolors = true
@@ -210,11 +213,8 @@ vim.api.nvim_create_autocmd({ 'WinEnter', 'BufWinEnter' }, {
 
     vim.wo.number = true
     vim.wo.list = true
-    vim.wo.listchars = 'tab:⇥ ,lead:·,trail:•,multispace:·'
     vim.wo.cursorline = true
     vim.wo.signcolumn = 'yes:1'
-    vim.wo.numberwidth = 2
-    vim.wo.statuscolumn = '%l%s'
   end,
 })
 
