@@ -12,6 +12,8 @@ local M = {}
 ---@field output_tail string
 ---@field output_line_num integer?
 ---@field follow_term_output boolean
+---@field elapsed_time integer
+---@field timer uv.uv_timer_t?
 
 ---@class shrun.TaskRange
 ---@field start_line integer
@@ -67,6 +69,7 @@ local default_highlights = {
   ShrunHighlightTaskName = 'Title',
   ShrunHighlightTaskOutPrefix = 'Comment',
 }
+local timer_repeat_interval = 1000
 
 ---@param task shrun.Task
 ---@param row_offset integer zero-based indexing start row
@@ -91,6 +94,11 @@ local function render_task(task, row_offset)
     cmd_offset,
     cmd_offset + string.len(task.escaped_cmd),
   })
+
+  -- TODO: make minimum interval configurable
+  if task.elapsed_time > 3000 then
+    table.insert(lines, tostring(task.elapsed_time / 1000) .. 's')
+  end
 
   -- Remove control characters and ANSI escape sequences using regex
   -- Reference: https://stackoverflow.com/questions/14693701
@@ -192,18 +200,36 @@ local function redraw_panel(lines, highlights, start_line, end_line)
   highlight_focused()
 end
 
+--- add offset to every task range after start_line
+---@param offset integer
+---@param start_line integer
+local function move_task_ranges(offset, start_line)
+  for _, range in pairs(task_panel.task_ranges) do
+    if range.start_line > start_line then
+      local task = all_tasks[range.task_id]
+      if task.output_line_num then
+        task.output_line_num = task.output_line_num + offset
+      end
+      range.start_line = range.start_line + offset
+      range.end_line = range.end_line + offset
+    end
+  end
+end
+
 ---@param task shrun.Task
 local function partial_render_sidebar(task)
   local task_range = task_panel.task_ranges[task.id]
+  local old_end_line = task_range.end_line
 
   local lines, highlights = render_task(task, task_range.start_line - 1)
+  task_range.end_line = task_range.start_line + #lines - 1
 
-  redraw_panel(
-    lines,
-    highlights,
-    task_range.start_line - 1,
-    task_range.end_line
-  )
+  local offset = task_range.end_line - old_end_line
+  if offset ~= 0 then
+    move_task_ranges(offset, task_range.start_line)
+  end
+
+  redraw_panel(lines, highlights, task_range.start_line - 1, old_end_line)
 end
 
 ---@generic K, V
@@ -425,6 +451,12 @@ local function new_task_output_buffer(task)
 end
 
 ---@param task shrun.Task
+local function update_time_in_task_output(task)
+  task.elapsed_time = task.elapsed_time + timer_repeat_interval
+  partial_render_sidebar(task)
+end
+
+---@param task shrun.Task
 ---@param restart boolean?
 local function start_task(task, restart)
   if not restart then
@@ -434,6 +466,21 @@ local function start_task(task, restart)
   task.output_tail = ''
   task.follow_term_output = true
   task.escaped_cmd = task.cmd:gsub('\n', ' 󰌑 ')
+  task.elapsed_time = 0
+  task.timer = vim.uv.new_timer()
+
+  task.timer:start(
+    0,
+    timer_repeat_interval,
+    vim.schedule_wrap(function()
+      if task.status ~= 'RUNNING' then
+        task.timer:close()
+        task.timer = nil
+        return
+      end
+      update_time_in_task_output(task)
+    end)
+  )
 
   run_in_tmp_win(task.buf_id, function()
     task.term_id = vim.api.nvim_open_term(task.buf_id, {
@@ -488,6 +535,9 @@ local function start_task(task, restart)
       vim.api.nvim_chan_send(task.term_id, table.concat(out, '\r\n'))
     end,
     on_exit = function(_, exit_code, _)
+      if task.timer and not task.timer:is_closing() then
+        task.timer:close()
+      end
       if task.status == 'CANCELED' then
         return
       end
@@ -634,16 +684,9 @@ local function new_sidebar_buffer()
         )
       end
 
-      local line_cnt = range.end_line - range.start_line + 1 + 1
-
-      for _, _range in pairs(task_panel.task_ranges) do
-        if _range.start_line > range.start_line then
-          local _task = all_tasks[_range.task_id]
-          _range.start_line = _range.start_line - line_cnt
-          _range.end_line = _range.end_line - line_cnt
-          _task.output_line_num = _task.output_line_num - line_cnt
-        end
-      end
+      -- offset = -(range.end_line - range.start_line + 2)
+      --        = range.start_line - 2 - range.end_line
+      move_task_ranges(range.start_line - 2 - range.end_line, range.start_line)
     end
     vim.bo[task_panel.sidebar_bufnr].modifiable = false
     vim.bo[task_panel.sidebar_bufnr].modified = false
@@ -838,10 +881,7 @@ local function init_task_from_cmd(cmd)
       local separator = string.rep(separator_stem, vim.o.columns)
       table.insert(lines, separator)
       table.insert(highlights, { 'FloatBorder', #lines, 0, vim.o.columns })
-      for _, r in pairs(task_panel.task_ranges) do
-        r.start_line = r.start_line + #lines
-        r.end_line = r.end_line + #lines
-      end
+      move_task_ranges(#lines, 0)
     end
     task_panel.task_ranges[task.id] = task_range
 
