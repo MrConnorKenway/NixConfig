@@ -1005,6 +1005,8 @@ M.test = function()
   local timer = vim.uv.new_timer()
   local delay = 100
   local winid
+  ---@type vim.fn.winsaveview.ret
+  local saved_winview
 
   if not timer then
     return
@@ -1153,15 +1155,16 @@ M.test = function()
       abort_tests_if_not(line_cnt == vim.api.nvim_win_get_cursor(0)[1])
       vim.cmd('normal! 120G3|')
       vim.cmd('normal! H')
+      saved_winview = vim.fn.winsaveview()
     end,
     'wincmd c',
     'ListTask',
     function()
       vim.api.nvim_set_current_win(task_panel.task_output_winid)
-      -- the top line should be line 115
-      abort_tests_if_not(vim.fn.line('w0') == 115)
-      -- cursor should stay at 115
-      abort_tests_if_not(vim.api.nvim_win_get_cursor(0)[1] == 115)
+      local current_winview = vim.fn.winsaveview()
+      for k, v in pairs(saved_winview) do
+        abort_tests_if_not(current_winview[k] == v)
+      end
     end,
     ------------------ end test ------------------------------------------------
 
