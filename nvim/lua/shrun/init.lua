@@ -822,6 +822,11 @@ local function init_task_from_cmd(cmd)
   }
   next_task_id = next_task_id + 1
 
+  if task_panel and not vim.api.nvim_buf_is_valid(task_panel.sidebar_bufnr) then
+    task_panel.sidebar_bufnr = new_sidebar_buffer()
+    render_sidebar_from_scratch()
+  end
+
   start_task(task)
   all_tasks[task.id] = task
   if task_panel then
