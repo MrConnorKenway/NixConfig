@@ -7,7 +7,6 @@
       procs
       git
       pahole
-      fzf
       clang-tools
       nixd
       tree-sitter
@@ -37,6 +36,11 @@
   };
 
   programs = {
+
+    fzf = {
+      package = pkgs-unstable.fzf;
+      enable = true;
+    };
 
     bat = {
       enable = true;
