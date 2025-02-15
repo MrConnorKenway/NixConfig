@@ -26,8 +26,7 @@ local next_task_id = 1
 ---@class shrun.TaskPanel
 ---@field sidebar_bufnr integer
 ---map from task id to task range
---- NOTE: do not use ipairs to iterate task_ranges
----@field task_ranges table<integer, shrun.TaskRange>
+---@field task_ranges table<integer, shrun.TaskRange> NOTE: do not use ipairs to iterate task_ranges
 ---@field focused_task_range shrun.TaskRange?
 ---@field sidebar_winid integer? -- when winid == nil, the window is closed
 ---@field sidebar_cursor integer[]?
@@ -478,7 +477,7 @@ local function start_task(task, restart)
           partial_render_sidebar(task)
         end
         -- TODO: currently relies on Snacks.nvim's markdown support to change the
-        --style, not a perfect solution
+        -- style, not a perfect solution
         vim.notify(
           task.escaped_cmd .. ' `SUCCESS`',
           vim.log.levels.INFO,
@@ -494,7 +493,7 @@ local function start_task(task, restart)
           partial_render_sidebar(task)
         end
         -- TODO: currently relies on Snacks.nvim's markdown support to change the
-        --style, not a perfect solution
+        -- style, not a perfect solution
         vim.notify(
           task.escaped_cmd .. ' **FAILED**',
           vim.log.levels.ERROR,
