@@ -297,9 +297,9 @@ return {
     {
       '<leader>z',
       function()
-        require('snacks.picker').zoxide()
+        require('snacks.zen').zoom()
       end,
-      desc = 'Find files from zoxide',
+      desc = 'Toggle snacks zoom',
     },
     {
       '<D-f>',
@@ -552,6 +552,17 @@ return {
           winbar = '',
         },
         height = 16,
+      },
+    },
+    zen = {
+      win = {
+        style = {
+          keys = {
+            q = function()
+              require('snacks.zen').zoom()
+            end,
+          },
+        },
       },
     },
   },
