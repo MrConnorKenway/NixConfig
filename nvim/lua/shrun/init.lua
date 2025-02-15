@@ -49,8 +49,8 @@ local task_panel
 local sidebar_hl_ns = vim.api.nvim_create_namespace('shrun_sidebar')
 local sidebar_focus_hl_ns = vim.api.nvim_create_namespace('shrun_sidebar_focus')
 
----@type integer?
-local empty_task_output_buf
+---@type integer
+local empty_task_output_buf = -1
 
 local original_winid = -1
 
@@ -719,7 +719,7 @@ M.display_panel = function()
   if task_panel.sidebar_winid then
     return
   end
-  if not empty_task_output_buf then
+  if not vim.api.nvim_buf_is_valid(empty_task_output_buf) then
     empty_task_output_buf = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_buf_set_name(empty_task_output_buf, 'Task Output')
     vim.bo[empty_task_output_buf].buftype = 'nofile'
