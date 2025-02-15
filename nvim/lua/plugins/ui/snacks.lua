@@ -503,6 +503,7 @@ return {
       desc = 'Picker search git hunks in opened buffers',
     },
   },
+  ---@type snacks.Config
   opts = {
     notifier = {
       enabled = true,
