@@ -393,6 +393,23 @@ local function start_task(task, restart)
     -- reuse task output buffer
     task.buf_id = vim.api.nvim_create_buf(false, true)
 
+    vim.keymap.set('n', 'gf', function()
+      local f = vim.fn.findfile(vim.fn.expand('<cfile>'), '**')
+      if f == '' then
+        Snacks.notify.warn('No file under cursor')
+      else
+        if vim.api.nvim_win_is_valid(original_winid) then
+          vim.api.nvim_set_current_win(original_winid)
+        else
+          vim.api.nvim_win_hide(task_panel.task_output_winid)
+        end
+
+        vim.schedule(function()
+          vim.cmd('e ' .. f)
+        end)
+      end
+    end, { buffer = task.buf_id })
+
     vim.api.nvim_create_autocmd({ 'WinScrolled', 'CursorMoved' }, {
       buffer = task.buf_id,
       callback = function()
