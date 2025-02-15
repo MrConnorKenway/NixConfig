@@ -12,9 +12,10 @@
       tree-sitter
       lua-language-server
       just
-      python311Packages.python-lsp-server
+      basedpyright
       zoxide
       rustup
+      stylua
     ];
 
     username = builtins.getEnv "USER";
