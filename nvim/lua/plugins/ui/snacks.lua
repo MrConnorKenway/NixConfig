@@ -3,7 +3,7 @@ local term_win
 local prev_win = -1
 
 local function create_snacks_terminal()
-  term_win = require('snacks.terminal').get(nil, {
+  term_win = Snacks.terminal.get(nil, {
     win = {
       on_win = function()
         prev_win = vim.fn.win_getid(vim.fn.winnr('#'))
@@ -125,21 +125,21 @@ return {
     {
       '<leader><leader>',
       function()
-        require('snacks.picker').pickers()
+        Snacks.picker.pickers()
       end,
       desc = 'Show all snacks picker',
     },
     {
       '<leader>,',
       function()
-        require('snacks.picker').resume()
+        Snacks.picker.resume()
       end,
       desc = 'Resume last snacks picker',
     },
     {
       '<leader>f',
       function()
-        require('snacks.picker').explorer()
+        Snacks.picker.explorer()
       end,
       desc = 'Open snacks explorer',
     },
@@ -173,7 +173,7 @@ return {
       '<D-o>',
       mode = { 'n', 't', 'i' },
       function()
-        require('snacks.picker').smart()
+        Snacks.picker.smart()
       end,
       desc = 'Picker find files',
     },
@@ -181,7 +181,7 @@ return {
       '<M-o>',
       mode = { 'n', 't', 'i' },
       function()
-        require('snacks.picker').smart()
+        Snacks.picker.smart()
       end,
       desc = 'Picker find files',
     },
@@ -189,7 +189,7 @@ return {
       '<D-p>',
       mode = { 'n', 't', 'i' },
       function()
-        require('snacks.picker').buffers {
+        Snacks.picker.buffers {
           matcher = { frecency = true },
           current = false,
         }
@@ -199,7 +199,7 @@ return {
     {
       '<leader>p',
       function()
-        require('snacks.picker').buffers {
+        Snacks.picker.buffers {
           matcher = { frecency = true },
           current = false,
         }
@@ -210,7 +210,7 @@ return {
       '<S-D-f>',
       mode = { 'n', 't', 'i' },
       function()
-        require('snacks.picker').grep()
+        Snacks.picker.grep()
       end,
       desc = 'Picker live grep',
     },
@@ -218,7 +218,7 @@ return {
       '<S-M-f>',
       mode = { 'n', 't', 'i' },
       function()
-        require('snacks.picker').grep()
+        Snacks.picker.grep()
       end,
       desc = 'Picker live grep',
     },
@@ -226,7 +226,7 @@ return {
       '<D-t>',
       mode = { 'n', 'i' },
       function()
-        require('snacks.picker').lsp_workspace_symbols()
+        Snacks.picker.lsp_workspace_symbols()
       end,
       desc = 'Picker find workspace symbols',
     },
@@ -234,70 +234,70 @@ return {
       '<M-t>',
       mode = { 'n', 'i' },
       function()
-        require('snacks.picker').lsp_workspace_symbols()
+        Snacks.picker.lsp_workspace_symbols()
       end,
       desc = 'Picker find workspace symbols',
     },
     {
       '<leader>s',
       function()
-        require('snacks.picker').lsp_workspace_symbols()
+        Snacks.picker.lsp_workspace_symbols()
       end,
       desc = 'Picker find workspace symbols',
     },
     {
       '<leader>h',
       function()
-        require('snacks.picker').command_history()
+        Snacks.picker.command_history()
       end,
       desc = 'Picker find command history',
     },
     {
       '<leader>S',
       function()
-        require('snacks.picker').lsp_symbols()
+        Snacks.picker.lsp_symbols()
       end,
       desc = 'Picker find document symbols',
     },
     {
       '<S-D-o>',
       function()
-        require('snacks.picker').lsp_symbols()
+        Snacks.picker.lsp_symbols()
       end,
       desc = 'Picker find document symbols',
     },
     {
       '<S-M-o>',
       function()
-        require('snacks.picker').lsp_symbols()
+        Snacks.picker.lsp_symbols()
       end,
       desc = 'Picker find document symbols',
     },
     {
       '<leader>r',
       function()
-        require('snacks.picker').lsp_references()
+        Snacks.picker.lsp_references()
       end,
       desc = 'Go to references',
     },
     {
       'gd',
       function()
-        require('snacks.picker').lsp_definitions()
+        Snacks.picker.lsp_definitions()
       end,
       desc = 'Go to definitions',
     },
     {
       'gy',
       function()
-        require('snacks.picker').lsp_type_definitions()
+        Snacks.picker.lsp_type_definitions()
       end,
       desc = 'Go to type definitions',
     },
     {
       '<leader>z',
       function()
-        require('snacks.zen').zoom()
+        Snacks.zen.zoom()
       end,
       desc = 'Toggle snacks zoom',
     },
@@ -305,7 +305,7 @@ return {
       '<D-f>',
       mode = { 'n', 'i' },
       function()
-        require('snacks.picker').lines()
+        Snacks.picker.lines()
       end,
       desc = 'Picker search current buffer',
     },
@@ -313,21 +313,21 @@ return {
       '<M-f>',
       mode = { 'n' },
       function()
-        require('snacks.picker').lines()
+        Snacks.picker.lines()
       end,
       desc = 'Picker search current buffer',
     },
     {
       'U',
       function()
-        require('snacks.picker').undo()
+        Snacks.picker.undo()
       end,
       desc = 'Picker search undo history',
     },
     {
       '<leader>n',
       function()
-        require('snacks.notifier').show_history()
+        Snacks.notifier.show_history()
       end,
       desc = 'Notification History',
     },
@@ -468,7 +468,7 @@ return {
           end
         end
 
-        require('snacks').picker {
+        Snacks.picker {
           layout = {
             preset = 'vertical',
           },
@@ -482,16 +482,11 @@ return {
             local ret = {}
             local line = item.item.hunk_line ---@type string
 
-            vim.list_extend(
-              ret,
-              require('snacks.picker.format').filename(item, picker)
-            )
-            local offset = require('snacks.picker').highlight.offset(
-              ret,
-              { char_idx = true }
-            )
+            vim.list_extend(ret, Snacks.picker.format.filename(item, picker))
+            local offset =
+              Snacks.picker.highlight.offset(ret, { char_idx = true })
 
-            require('snacks.picker').highlight.format(item, line:sub(2), ret)
+            Snacks.picker.highlight.format(item, line:sub(2), ret)
             local hl = line:sub(1, 1) == '+' and 'DiffAdd' or 'DiffDelete'
             ret[#ret + 1] =
               { string.rep(' ', vim.o.columns - offset - line:len()) }
@@ -559,7 +554,7 @@ return {
         style = {
           keys = {
             q = function()
-              require('snacks.zen').zoom()
+              Snacks.zen.zoom()
             end,
           },
         },
