@@ -123,6 +123,27 @@ return {
   lazy = false,
   keys = {
     {
+      '<leader><leader>',
+      function()
+        require('snacks.picker').pickers()
+      end,
+      desc = 'Show all snacks picker',
+    },
+    {
+      '<leader>,',
+      function()
+        require('snacks.picker').resume()
+      end,
+      desc = 'Resume last snacks picker',
+    },
+    {
+      '<leader>f',
+      function()
+        require('snacks.picker').explorer()
+      end,
+      desc = 'Open snacks explorer',
+    },
+    {
       '<D-j>',
       mode = { 'n', 'i', 't' },
       function()
