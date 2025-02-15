@@ -386,46 +386,49 @@ local function run_in_tmp_win(bufnr, fn)
   vim.api.nvim_set_current_win(start_winid)
 end
 
+local function new_task_output_buffer(task)
+  task.buf_id = vim.api.nvim_create_buf(false, true)
+
+  vim.keymap.set('n', 'gf', function()
+    local f = vim.fn.findfile(vim.fn.expand('<cfile>'), '**')
+    if f == '' then
+      Snacks.notify.warn('No file under cursor')
+    else
+      if vim.api.nvim_win_is_valid(original_winid) then
+        vim.api.nvim_set_current_win(original_winid)
+      else
+        vim.api.nvim_win_hide(task_panel.task_output_winid)
+      end
+
+      vim.schedule(function()
+        vim.cmd('e ' .. f)
+      end)
+    end
+  end, { buffer = task.buf_id })
+
+  vim.api.nvim_create_autocmd({ 'WinScrolled', 'CursorMoved' }, {
+    buffer = task.buf_id,
+    callback = function()
+      -- current buffer must be task's output buffer and current window must be
+      -- task output window
+      local row = vim.api.nvim_win_get_cursor(task_panel.task_output_winid)[1]
+      -- if user moves cursor to non bottom, it is reasonable to assume that user
+      -- wants to disable automatically scrolling and keeps the cursor fixed
+      if row < vim.api.nvim_buf_line_count(task.buf_id) then
+        task.follow_term_output = false
+        task.view = vim.fn.winsaveview()
+      else
+        task.follow_term_output = true
+      end
+    end,
+  })
+end
+
 ---@param task shrun.Task
 ---@param restart boolean?
 local function start_task(task, restart)
   if not restart then
-    -- reuse task output buffer
-    task.buf_id = vim.api.nvim_create_buf(false, true)
-
-    vim.keymap.set('n', 'gf', function()
-      local f = vim.fn.findfile(vim.fn.expand('<cfile>'), '**')
-      if f == '' then
-        Snacks.notify.warn('No file under cursor')
-      else
-        if vim.api.nvim_win_is_valid(original_winid) then
-          vim.api.nvim_set_current_win(original_winid)
-        else
-          vim.api.nvim_win_hide(task_panel.task_output_winid)
-        end
-
-        vim.schedule(function()
-          vim.cmd('e ' .. f)
-        end)
-      end
-    end, { buffer = task.buf_id })
-
-    vim.api.nvim_create_autocmd({ 'WinScrolled', 'CursorMoved' }, {
-      buffer = task.buf_id,
-      callback = function()
-        -- current buffer must be task's output buffer and current window must be
-        -- task output window
-        local row = vim.api.nvim_win_get_cursor(task_panel.task_output_winid)[1]
-        -- if user moves cursor to non bottom, it is reasonable to assume that user
-        -- wants to disable automatically scrolling and keeps the cursor fixed
-        if row < vim.api.nvim_buf_line_count(task.buf_id) then
-          task.follow_term_output = false
-          task.view = vim.fn.winsaveview()
-        else
-          task.follow_term_output = true
-        end
-      end,
-    })
+    new_task_output_buffer(task)
   end
   task.status = 'RUNNING'
   task.output_tail = ''
@@ -548,9 +551,12 @@ local function restart_task()
     return
   end
 
-  -- move cursor to the bottom to prevent "[Terminal closed]" message
-  vim.api.nvim_chan_send(task.term_id, ('\x1b[%d;f'):format(vim.o.lines))
-  vim.fn.chanclose(task.term_id)
+  -- check if channel is closed
+  if next(vim.api.nvim_get_chan_info(task.term_id)) then
+    -- move cursor to the bottom to prevent "[Terminal closed]" message
+    vim.api.nvim_chan_send(task.term_id, ('\x1b[%d;f'):format(vim.o.lines))
+    vim.fn.chanclose(task.term_id)
+  end
 
   vim.bo[task.buf_id].modifiable = true
   vim.api.nvim_buf_set_lines(task.buf_id, 0, -1, false, {})
@@ -750,6 +756,9 @@ M.display_panel = function()
   task_panel.sidebar_winid = sidebar_winid
   if task_panel.focused_task_range then
     local task = all_tasks[task_panel.focused_task_range.task_id]
+    if not vim.api.nvim_buf_is_valid(task.buf_id) then
+      new_task_output_buffer(task)
+    end
     task_panel.task_output_winid = new_task_output_window(task.buf_id)
     if task.follow_term_output then
       scroll_terminal_to_tail(task.buf_id)
