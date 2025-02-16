@@ -972,6 +972,10 @@ M.setup = function()
     callback = setup_highlights,
   })
 
+  vim.keymap.set('n', 'gu', function()
+    M.restart_task_from_cmd('git push')
+  end, { desc = 'Git push' })
+
   vim.keymap.set('n', '``', function()
     local shell = vim.o.shell:gsub('(.*)/', '')
     local shell_args
