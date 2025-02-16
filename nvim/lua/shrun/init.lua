@@ -457,7 +457,7 @@ local function new_task_output_buffer(task)
         vim.cmd('e ' .. f)
       end)
     end
-  end, { buffer = task.buf_id })
+  end, { buffer = task.buf_id, desc = 'Open file under cursor' })
 
   vim.api.nvim_create_autocmd({ 'WinScrolled', 'CursorMoved' }, {
     buffer = task.buf_id,
@@ -656,6 +656,7 @@ local function new_sidebar_buffer()
     if task.status ~= 'RUNNING' then
       restart_task(task)
     end
+  end, { buffer = sidebar_bufnr, desc = 'Restart task under cursor' })
   end, { buffer = sidebar_bufnr })
 
   vim.keymap.set('n', 'x', function()
@@ -728,7 +729,7 @@ local function new_sidebar_buffer()
     vim.schedule(function()
       vim.api.nvim_buf_delete(task.buf_id, { force = true })
     end)
-  end, { buffer = sidebar_bufnr })
+  end, { buffer = sidebar_bufnr, desc = 'Delete task under cursor' })
 
   vim.api.nvim_create_autocmd('BufEnter', {
     buffer = sidebar_bufnr,
@@ -1021,7 +1022,7 @@ M.setup = function()
 
       vim.keymap.set('t', '<C-d>', function()
         vim.api.nvim_win_hide(shell_win)
-      end, { buffer = shell_buf })
+      end, { buffer = shell_buf, desc = 'Hide shrun launcher' })
     end
 
     shell_win = vim.api.nvim_open_win(shell_buf, true, {
@@ -1069,7 +1070,7 @@ M.setup = function()
         end,
       })
     end
-  end)
+  end, { desc = 'Open shrun launcher' })
 
   vim.api.nvim_create_user_command('Task', init_task_from_cmd, {
     complete = vim.fn.has('nvim-0.11') == 0 and 'shellcmd' or 'shellcmdline',
@@ -1082,8 +1083,18 @@ M.setup = function()
     desc = 'Show sidebar',
   })
 
-  vim.keymap.set({ 'n', 'i', 't' }, '<D-r>', M.toggle_panel)
-  vim.keymap.set({ 'n', 'i', 't' }, '<M-r>', M.toggle_panel)
+  vim.keymap.set(
+    { 'n', 'i', 't' },
+    '<D-r>',
+    M.toggle_panel,
+    { desc = 'Toggle shrun task panel' }
+  )
+  vim.keymap.set(
+    { 'n', 'i', 't' },
+    '<M-r>',
+    M.toggle_panel,
+    { desc = 'Toggle shrun task panel' }
+  )
 end
 
 ---for development test purpose only
