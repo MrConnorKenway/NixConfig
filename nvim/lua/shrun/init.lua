@@ -947,8 +947,10 @@ end
 ---@param cmd string
 M.restart_task_from_cmd = function(cmd)
   for _, task in pairs(all_tasks) do
-    if task.cmd == cmd and task.status ~= 'RUNNING' then
-      restart_task(task)
+    if task.cmd == cmd then
+      if not task.status == 'RUNNING' then
+        restart_task(task)
+      end
       return
     end
   end
