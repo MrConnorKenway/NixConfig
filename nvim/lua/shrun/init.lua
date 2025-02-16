@@ -1100,6 +1100,36 @@ M.setup = function()
         end,
       })
 
+      vim.api.nvim_create_autocmd('TermRequest', {
+        buffer = shell_buf,
+        callback = function(args)
+          local request = args.data
+          local found = request:find('\x1b]633')
+          if found then
+            local cmd = request:match('\x1b]633;E;(.*)', found)
+            if cmd then
+              -- Now we get the actual command by parsing OSC 633;E
+              pcall(vim.api.nvim_win_hide, shell_win)
+              vim.cmd('stopinsert')
+              if task_panel and task_panel.sidebar_winid then
+                vim.api.nvim_set_current_win(task_panel.sidebar_winid)
+              end
+              -- Revert escape
+              cmd =
+                cmd:gsub('\\x3b', ';'):gsub('\\x0a', '\n'):gsub('\\\\', '\\')
+              init_task_from_cmd(cmd)
+              vim.schedule(M.display_panel)
+              return
+            end
+          end
+
+          found = request:find('\x1b]133;B')
+          if found and vim.api.nvim_win_is_valid(shell_win) then
+            -- Resize to original height if we meet prompt end, i.e., OSC 133;B
+            vim.cmd('resize ' .. height)
+          end
+        end,
+      })
       vim.keymap.set('t', '<C-r>', function()
         vim.cmd('resize ' .. max_height)
         vim.api.nvim_chan_send(shell_job, '\x12')
@@ -1125,34 +1155,6 @@ M.setup = function()
       shell_job = vim.fn.jobstart(shell_args, {
         term = true,
         env = shell_envs,
-        on_stdout = function(_, out) ---@param out string[]
-          for _, line in ipairs(out) do
-            local found = line:find('\x1b]633')
-            if found then
-              local cmd = line:match('\x1b]633;E;(.*)\x1b\\', found)
-              if cmd then
-                -- Now we get the actual command by parsing OSC 633;E
-                pcall(vim.api.nvim_win_hide, shell_win)
-                vim.cmd('stopinsert')
-                if task_panel and task_panel.sidebar_winid then
-                  vim.api.nvim_set_current_win(task_panel.sidebar_winid)
-                end
-                -- Revert escape
-                cmd =
-                  cmd:gsub('\\x3b', ';'):gsub('\\x0a', '\n'):gsub('\\\\', '\\')
-                init_task_from_cmd(cmd)
-                vim.schedule(M.display_panel)
-                return
-              end
-            end
-
-            found = line:find('\x1b]133;B\a')
-            if found and vim.api.nvim_win_is_valid(shell_win) then
-              -- Resize to original height if we meet prompt end, i.e., OSC 133;B
-              vim.cmd('resize ' .. height)
-            end
-          end
-        end,
         on_exit = function()
           shell_buf = nil
           shell_job = nil
