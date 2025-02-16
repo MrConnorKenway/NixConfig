@@ -475,23 +475,6 @@ local function start_task(task, restart)
   task.elapsed_time = 0
   task.timer = vim.uv.new_timer()
 
-  if task.timer then
-    task.timer:start(
-      0,
-      timer_repeat_interval,
-      vim.schedule_wrap(function()
-        if task.status ~= 'RUNNING' then
-          task.timer:close()
-          task.timer = nil
-          return
-        end
-        update_time_in_task_output(task)
-      end)
-    )
-  else
-    vim.notify('Shrun failed to start uv.timer', vim.log.levels.ERROR)
-  end
-
   run_in_tmp_win(task.buf_id, function()
     task.term_id = vim.api.nvim_open_term(task.buf_id, {
       on_input = function(_, _, _, data)
@@ -590,6 +573,23 @@ local function start_task(task, restart)
   if task.job_id <= 0 then
     vim.fn.chanclose(task.term_id)
     error(string.format('Failed to start task "%s"', task.escaped_cmd))
+  end
+
+  if task.timer then
+    task.timer:start(
+      timer_repeat_interval,
+      timer_repeat_interval,
+      vim.schedule_wrap(function()
+        if task.status ~= 'RUNNING' then
+          task.timer:close()
+          task.timer = nil
+          return
+        end
+        update_time_in_task_output(task)
+      end)
+    )
+  else
+    vim.notify('Shrun failed to start uv.timer', vim.log.levels.ERROR)
   end
 
   vim.api.nvim_buf_set_name(
