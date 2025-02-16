@@ -1064,6 +1064,9 @@ M.setup = function()
                 -- Now we get the actual command by parsing OSC 633;E
                 pcall(vim.api.nvim_win_hide, shell_win)
                 vim.cmd('stopinsert')
+                if task_panel and task_panel.sidebar_winid then
+                  vim.api.nvim_set_current_win(task_panel.sidebar_winid)
+                end
                 -- Revert escape
                 cmd =
                   cmd:gsub('\\x3b', ';'):gsub('\\x0a', '\n'):gsub('\\\\', '\\')
