@@ -675,6 +675,49 @@ local function new_sidebar_buffer()
   vim.bo[sidebar_bufnr].swapfile = false
   vim.bo[sidebar_bufnr].modifiable = false
 
+  vim.keymap.set('n', '<C-n>', function()
+    local range = task_panel.focused_task_range
+    if not range then
+      return
+    end
+
+    if range.end_line == vim.api.nvim_buf_line_count(sidebar_bufnr) then
+      return
+    end
+
+    local col = vim.api.nvim_win_get_cursor(task_panel.sidebar_winid)[2]
+    vim.api.nvim_win_set_cursor(
+      task_panel.sidebar_winid,
+      -- FIXME: if the sperator takes more than one line in the future
+      { range.end_line + 2, col }
+    )
+  end, { buffer = sidebar_bufnr, desc = 'Goto next task' })
+
+  vim.keymap.set('n', '<C-p>', function()
+    local range = task_panel.focused_task_range
+    if not range then
+      return
+    end
+
+    if range.start_line == 1 then
+      return
+    end
+
+    local col = vim.api.nvim_win_get_cursor(task_panel.sidebar_winid)[2]
+    -- In sidebar, task with larger ID comes closer to the top, so the task
+    -- ranges are actually sorted in ascending order
+    for _, prev_range in desc_sorted_pairs(task_panel.task_ranges) do
+      -- FIXME: if the sperator takes more than one line in the future
+      if prev_range.end_line + 2 == range.start_line then
+        vim.api.nvim_win_set_cursor(
+          task_panel.sidebar_winid,
+          { prev_range.start_line, col }
+        )
+        return
+      end
+    end
+  end, { buffer = sidebar_bufnr, desc = 'Goto previous task' })
+
   vim.keymap.set('n', '<cr>', function()
     local task = get_task_under_cursor()
     if task.status ~= 'RUNNING' then
