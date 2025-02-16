@@ -459,7 +459,9 @@ end
 ---@param task shrun.Task
 local function update_time_in_task_output(task)
   task.elapsed_time = task.elapsed_time + timer_repeat_interval
-  partial_render_sidebar(task)
+  if task_panel then
+    partial_render_sidebar(task)
+  end
 end
 
 ---@param task shrun.Task
