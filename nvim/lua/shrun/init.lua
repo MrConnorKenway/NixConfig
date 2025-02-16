@@ -458,6 +458,7 @@ local function run_in_tmp_win(bufnr, fn)
   vim.api.nvim_set_current_win(start_winid)
 end
 
+---@param task shrun.Task
 local function new_task_output_buffer(task)
   task.buf_id = vim.api.nvim_create_buf(false, true)
 
