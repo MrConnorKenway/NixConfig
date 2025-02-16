@@ -617,19 +617,8 @@ local function start_task(task, restart)
   )
 end
 
-local function restart_task()
-  local lnum = vim.api.nvim_win_get_cursor(0)[1]
-  local range = sidebar_get_task_range_from_line(lnum)
-
-  if not range then
-    return
-  end
-
-  local task = all_tasks[range.task_id]
-  if task.status == 'RUNNING' then
-    return
-  end
-
+---@param task shrun.Task
+local function restart_task(task)
   -- check if channel is closed
   if next(vim.api.nvim_get_chan_info(task.term_id)) then
     -- move cursor to the bottom to prevent "[Terminal closed]" message
@@ -659,7 +648,19 @@ local function new_sidebar_buffer()
   vim.bo[sidebar_bufnr].swapfile = false
   vim.bo[sidebar_bufnr].modifiable = false
 
-  vim.keymap.set('n', '<cr>', restart_task, { buffer = sidebar_bufnr })
+  vim.keymap.set('n', '<cr>', function()
+    local lnum = vim.api.nvim_win_get_cursor(0)[1]
+    local range = sidebar_get_task_range_from_line(lnum)
+
+    if not range then
+      return
+    end
+
+    local task = all_tasks[range.task_id]
+    if task.status ~= 'RUNNING' then
+      restart_task(task)
+    end
+  end, { buffer = sidebar_bufnr })
 
   vim.keymap.set('n', 'x', function()
     local range = task_panel.focused_task_range
@@ -944,6 +945,20 @@ local function init_task_from_cmd(cmd)
       task_panel.sidebar_cursor = { 1, 0 }
     end
   end
+end
+
+---Find task by cmd and reuse it instead of creating new task to execute cmd
+---@param cmd string
+M.restart_task_from_cmd = function(cmd)
+  for _, task in pairs(all_tasks) do
+    if task.cmd == cmd and task.status ~= 'RUNNING' then
+      restart_task(task)
+      return
+    end
+  end
+
+  -- No reusable task
+  init_task_from_cmd(cmd)
 end
 
 local shell_buf
