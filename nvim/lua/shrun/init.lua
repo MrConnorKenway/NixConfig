@@ -1048,6 +1048,7 @@ M.setup = function()
               if cmd then
                 -- Now we get the actual command by parsing OSC 633;E
                 pcall(vim.api.nvim_win_hide, shell_win)
+                vim.cmd('stopinsert')
                 -- Revert escape
                 cmd =
                   cmd:gsub('\\x3b', ';'):gsub('\\x0a', '\n'):gsub('\\\\', '\\')
