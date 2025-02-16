@@ -21,21 +21,13 @@ return {
       ['<C-f>'] = { 'scroll_documentation_down', 'fallback' },
     },
     cmdline = { keymap = { preset = 'super-tab' } },
-    sources = {
-      default = { 'lsp', 'path' },
-    },
+    sources = { default = { 'lsp', 'path' } },
     completion = {
       accept = { auto_brackets = { enabled = false } },
-      list = {
-        selection = {
-          auto_insert = false,
-        },
-      },
+      list = { selection = { auto_insert = false } },
       menu = {
         winhighlight = 'Normal:Normal,FloatBorder:FloatBorder,CursorLine:BlinkCmpMenuSelection,Search:None',
-        draw = {
-          treesitter = { 'lsp' },
-        },
+        draw = { treesitter = { 'lsp' } },
         border = 'rounded',
       },
       documentation = {
