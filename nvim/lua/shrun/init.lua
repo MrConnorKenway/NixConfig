@@ -645,13 +645,10 @@ local function new_sidebar_buffer()
   vim.bo[sidebar_bufnr].modifiable = false
 
   vim.keymap.set('n', '<cr>', function()
-    local lnum = vim.api.nvim_win_get_cursor(0)[1]
-    local range = sidebar_get_task_range_from_line(lnum)
-
+    local range = task_panel.focused_task_range
     if not range then
       return
     end
-
     local task = all_tasks[range.task_id]
     if task.status ~= 'RUNNING' then
       restart_task(task)
