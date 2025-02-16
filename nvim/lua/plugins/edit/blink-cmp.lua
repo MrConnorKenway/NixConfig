@@ -5,23 +5,16 @@ return {
   version = 'v0.*',
   opts = {
     keymap = {
-      ['<C-space>'] = { 'show', 'show_documentation', 'hide_documentation' },
-      ['<C-e>'] = { 'hide', 'fallback' },
-      ['<CR>'] = { 'accept', 'fallback' },
-      ['<Tab>'] = {
-        function(cmp)
-          if cmp.snippet_active() then
-            return cmp.accept()
-          else
-            return cmp.select_and_accept()
-          end
-        end,
-        'snippet_forward',
+      ['<C-space>'] = {
+        'show',
+        'show_documentation',
+        'hide_documentation',
         'fallback',
       },
+      ['<C-e>'] = { 'hide', 'fallback' },
+      ['<CR>'] = { 'select_and_accept', 'fallback' },
+      ['<Tab>'] = { 'select_and_accept', 'snippet_forward', 'fallback' },
       ['<S-Tab>'] = { 'snippet_backward', 'fallback' },
-      ['<Up>'] = { 'select_prev', 'fallback' },
-      ['<Down>'] = { 'select_next', 'fallback' },
       ['<C-p>'] = { 'select_prev', 'fallback' },
       ['<C-n>'] = { 'select_next', 'fallback' },
       ['<C-b>'] = { 'scroll_documentation_up', 'fallback' },
