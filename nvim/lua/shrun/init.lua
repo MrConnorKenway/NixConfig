@@ -471,7 +471,7 @@ local function start_task(task, restart)
   task.status = 'RUNNING'
   task.output_tail = ''
   task.follow_term_output = true
-  task.escaped_cmd = task.cmd:gsub('\n', ' 󰌑 ')
+  task.escaped_cmd = task.cmd:gsub('\n', ' 󰌑 '):gsub('\t', '')
   task.elapsed_time = 0
   task.timer = vim.uv.new_timer()
 
