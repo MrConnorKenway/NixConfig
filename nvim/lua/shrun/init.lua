@@ -1117,8 +1117,10 @@ M.setup = function()
               -- Revert escape
               cmd =
                 cmd:gsub('\\x3b', ';'):gsub('\\x0a', '\n'):gsub('\\\\', '\\')
-              init_task_from_cmd(cmd)
-              vim.schedule(M.display_panel)
+              vim.schedule(function()
+                M.display_panel()
+                init_task_from_cmd(cmd)
+              end)
               return
             end
           end
