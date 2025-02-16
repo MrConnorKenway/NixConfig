@@ -1,8 +1,11 @@
+---@module 'blink.cmp'
+
 ---@type LazyPluginSpec
 return {
   'saghen/blink.cmp',
   lazy = false, -- lazy loading handled internally
   version = 'v0.*',
+  ---@type blink.cmp.Config
   opts = {
     keymap = {
       ['<C-space>'] = {
