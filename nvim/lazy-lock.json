@@ -7,7 +7,7 @@
   "flash.nvim": { "branch": "main", "commit": "f899265876ecdcf7352dbc9f0adf87068cedefbb" },
   "git-conflict.nvim": { "branch": "main", "commit": "a1badcd070d176172940eb55d9d59029dad1c5a6" },
   "gitsigns.nvim": { "branch": "main", "commit": "d8918f06624dd53b9a82bd0e29c31bcfd541b40d" },
-  "goto-preview": { "branch": "main", "commit": "4972fcd01c568c2ae981f3f48182e7832ed544ec" },
+  "goto-preview": { "branch": "main", "commit": "4751e70a6ebce4fb78327b097cb8fdff55f38f3a" },
   "guess-indent.nvim": { "branch": "main", "commit": "6cd61f7a600bb756e558627cd2e740302c58e32d" },
   "heirline.nvim": { "branch": "master", "commit": "cc359b628266cb9a84b2d71c883f2b99e16473a0" },
   "incline.nvim": { "branch": "main", "commit": "16fc9c073e3ea4175b66ad94375df6d73fc114c0" },
