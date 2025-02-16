@@ -573,6 +573,8 @@ local function start_task(task, restart)
   if task.job_id <= 0 then
     vim.fn.chanclose(task.term_id)
     error(string.format('Failed to start task "%s"', task.escaped_cmd))
+    task.status = 'FAILED'
+    return
   end
 
   if task.timer then
