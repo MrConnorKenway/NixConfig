@@ -654,7 +654,21 @@ local function new_sidebar_buffer()
       restart_task(task)
     end
   end, { buffer = sidebar_bufnr, desc = 'Restart task under cursor' })
-  end, { buffer = sidebar_bufnr })
+
+  vim.keymap.set('n', 'i', function()
+    local range = task_panel.focused_task_range
+    if not range then
+      return
+    end
+    local task = all_tasks[range.task_id]
+    vim.api.nvim_set_current_win(task_panel.task_output_winid)
+    if task.status == 'RUNNING' then
+      vim.cmd('startinsert')
+    end
+  end, {
+    buffer = sidebar_bufnr,
+    desc = 'Switch to task under cursor',
+  })
 
   vim.keymap.set('n', 'x', function()
     local range = task_panel.focused_task_range
