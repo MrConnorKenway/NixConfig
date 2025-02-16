@@ -77,6 +77,8 @@ local default_highlights = {
 }
 local timer_repeat_interval = 1000
 
+--- Helper function that generate line content and highlight metadata of task
+--- based on the row offset, which will be then used for sidebar rendering
 ---@param task shrun.Task
 ---@param row_offset integer zero-based indexing start row
 local function render_task(task, row_offset)
@@ -164,6 +166,8 @@ local function switch_task_out_panel(task)
   end
 end
 
+--- Highlight current focused task in sidebar and switch task output panel
+--- to display the output buffer of focused task
 local function highlight_focused()
   vim.api.nvim_buf_clear_namespace(
     task_panel.sidebar_bufnr,
@@ -237,6 +241,8 @@ local function move_task_ranges(offset, start_line)
   end
 end
 
+--- Partially update the content of sidebar buffer (called "render") in the
+--- range of `task`. Following tasks' ranges will be updated accordingly.
 ---@param task shrun.Task
 local function partial_render_sidebar(task)
   local task_range = task_panel.task_ranges[task.id]
