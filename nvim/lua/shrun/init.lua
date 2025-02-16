@@ -1,11 +1,17 @@
 local M = {}
 
+---@alias shrun.TaskStatus
+---| 'RUNNING'
+---| 'CANCELED'
+---| 'SUCCESS'
+---| 'FAILED'
+
 ---@class shrun.Task
 ---@field id integer
 ---@field cmd string
 ---@field escaped_cmd string
 ---@field view vim.fn.winsaveview.ret
----@field status string
+---@field status shrun.TaskStatus
 ---@field buf_id integer
 ---@field term_id integer
 ---@field job_id integer
