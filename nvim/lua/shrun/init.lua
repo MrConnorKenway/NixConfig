@@ -480,11 +480,8 @@ local function update_time_in_task_output(task)
 end
 
 ---@param task shrun.Task
----@param restart boolean?
-local function start_task(task, restart)
-  if not restart then
-    new_task_output_buffer(task)
-  end
+local function start_task(task)
+  new_task_output_buffer(task)
   task.status = 'RUNNING'
   task.output_tail = ''
   task.follow_term_output = true
@@ -498,7 +495,6 @@ local function start_task(task, restart)
         pcall(vim.api.nvim_chan_send, task.job_id, data)
       end,
     })
-    vim.api.nvim_chan_send(task.term_id, '\x1bc')
   end)
 
   -- 'sleep': wait 100ms before finishing job, giving neovim enough time to sync output
@@ -619,20 +615,14 @@ end
 
 ---@param task shrun.Task
 local function restart_task(task)
-  -- check if channel is closed
-  if next(vim.api.nvim_get_chan_info(task.term_id)) then
-    -- move cursor to the bottom to prevent "[Terminal closed]" message
-    vim.api.nvim_chan_send(task.term_id, ('\x1b[%d;f'):format(vim.o.lines))
-    vim.fn.chanclose(task.term_id)
-  end
-
-  vim.bo[task.buf_id].modifiable = true
-  vim.api.nvim_buf_set_lines(task.buf_id, 0, -1, false, {})
-  vim.bo[task.buf_id].modifiable = false
-  vim.bo[task.buf_id].modified = false
-
-  start_task(task, true)
-
+  vim.fn.chanclose(task.term_id)
+  local old_buf = task.buf_id
+  -- Delay buffer delete after new buffer is opened in task output window,
+  -- otherwise the task output window will be instantly closed
+  vim.schedule(function()
+    vim.api.nvim_buf_delete(old_buf, {})
+  end)
+  start_task(task)
   partial_render_sidebar(task)
 end
 
