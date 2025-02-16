@@ -547,6 +547,9 @@ local function start_task(task)
       vim.api.nvim_chan_send(task.term_id, table.concat(out, '\r\n'))
     end,
     on_exit = function(_, exit_code, _)
+      if vim.api.nvim_get_current_buf() == task.buf_id then
+        vim.cmd('stopinsert')
+      end
       if task.timer and not task.timer:is_closing() then
         task.timer:close()
       end
