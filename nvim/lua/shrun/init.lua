@@ -482,6 +482,10 @@ local function new_task_output_buffer(task)
   vim.api.nvim_create_autocmd({ 'WinScrolled', 'CursorMoved' }, {
     buffer = task.buf_id,
     callback = function()
+      if vim.api.nvim_get_current_buf() ~= task.buf_id then
+        return
+      end
+
       -- current buffer must be task's output buffer and current window must be
       -- task output window
       local row = vim.api.nvim_win_get_cursor(task_panel.task_output_winid)[1]
