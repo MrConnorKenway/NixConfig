@@ -103,7 +103,22 @@ local function render_task(task, row_offset)
 
   -- TODO: make minimum interval configurable
   if task.elapsed_time > 3000 then
-    table.insert(lines, tostring(task.elapsed_time / 1000) .. 's')
+    local seconds = task.elapsed_time / 1000
+    local minutes
+    local hours
+
+    if seconds < 60 then
+      table.insert(lines, tostring(seconds) .. 's')
+    elseif seconds < 3600 then
+      minutes = math.floor(seconds / 60)
+      seconds = seconds % 60
+      table.insert(lines, string.format('%dm %ds', minutes, seconds))
+    else
+      hours = math.floor(seconds / 3600)
+      minutes = math.floor(seconds / 60) % 60
+      seconds = seconds % 60
+      table.insert(lines, string.format('%dh %dm %ds', hours, minutes, seconds))
+    end
   end
 
   -- Remove control characters and ANSI escape sequences using regex
