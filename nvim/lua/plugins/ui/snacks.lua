@@ -555,7 +555,9 @@ return {
         style = {
           keys = {
             q = function()
-              Snacks.zen.zoom()
+              vim.cmd('q')
+              -- In WinLeave we turn cursorline off, so now turn it on
+              vim.wo.cursorline = true
             end,
           },
         },
