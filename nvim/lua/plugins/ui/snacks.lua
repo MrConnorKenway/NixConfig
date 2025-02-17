@@ -555,17 +555,12 @@ return {
     },
     zen = {
       win = {
-        style = {
-          keys = {
-            q = function()
-              vim.cmd('q')
-              -- In WinLeave we turn cursorline off, so now turn it on
-              vim.wo.cursorline = true
-              -- Revert to default statusline layout
-              vim.o.laststatus = 2
-            end,
-          },
-        },
+        on_close = function()
+          -- In WinLeave we turn cursorline off, so now turn it on
+          vim.wo.cursorline = true
+          -- Revert to default statusline layout
+          vim.o.laststatus = 2
+        end,
       },
     },
   },
