@@ -554,6 +554,7 @@ return {
       },
     },
     zen = {
+      enabled = true,
       win = {
         on_close = function()
           -- In WinLeave we turn cursorline off, so now turn it on
