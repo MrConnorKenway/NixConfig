@@ -13,7 +13,6 @@ local M = {}
 ---@field view vim.fn.winsaveview.ret
 ---@field status shrun.TaskStatus
 ---@field buf_id integer
----@field term_id integer
 ---@field job_id integer
 ---@field output_tail string
 ---@field output_line_num integer?
@@ -517,14 +516,6 @@ local function start_task(task)
   task.elapsed_time = 0
   task.timer = vim.uv.new_timer()
 
-  run_in_tmp_win(task.buf_id, function()
-    task.term_id = vim.api.nvim_open_term(task.buf_id, {
-      on_input = function(_, _, _, data)
-        pcall(vim.api.nvim_chan_send, task.job_id, data)
-      end,
-    })
-  end)
-
   -- 'sleep': wait 100ms before finishing job, giving neovim enough time to sync output
   local new_cmd = {
     vim.o.shell,
@@ -534,7 +525,6 @@ local function start_task(task)
 
   local render_timer = vim.uv.new_timer()
   if not render_timer then
-    vim.fn.chanclose(task.term_id)
     error('Failed to create uv timer')
   end
 
@@ -546,72 +536,60 @@ local function start_task(task)
     timer_running = false
   end)
 
-  local width, height = get_terminal_size()
-
-  task.job_id = vim.fn.jobstart(new_cmd, {
-    pty = true,
-    width = width,
-    height = height,
-    on_stdout = function(_, out)
-      if task.status == 'CANCELED' then
-        return
-      end
-      for i = #out, 1, -1 do
-        if out[i]:len() > 0 and out[i] ~= '\r' then
-          task.output_tail = out[i]
-          break
+  run_in_tmp_win(task.buf_id, function()
+    task.job_id = vim.fn.jobstart(new_cmd, {
+      term = true,
+      on_stdout = function(_, out)
+        if task.status == 'CANCELED' then
+          return
         end
-      end
-      if not timer_running then
-        timer_running = true
-        render_timer:start(0, 0, render_fn)
-      end
-      vim.api.nvim_chan_send(task.term_id, table.concat(out, '\r\n'))
-    end,
-    on_exit = function(_, exit_code, _)
-      if vim.api.nvim_get_current_buf() == task.buf_id then
-        vim.cmd('stopinsert')
-      end
-      if task.timer and not task.timer:is_closing() then
-        task.timer:close()
-      end
-      if task.status == 'CANCELED' then
-        return
-      end
-      if exit_code == 0 then
-        task.status = 'SUCCESS'
-        partial_render_sidebar(task)
-        -- TODO: currently relies on Snacks.nvim's markdown support to change the
-        -- style, not a perfect solution
-        vim.notify(
-          task.escaped_cmd .. ' `SUCCESS`',
-          vim.log.levels.INFO,
-          { timeout = 2000 }
-        )
-        vim.api.nvim_chan_send(
-          task.term_id,
-          ('\n[ Process exited with \x1b[32m%d\x1b[m ]'):format(exit_code)
-        )
-      else
-        task.status = 'FAILED'
-        partial_render_sidebar(task)
-        -- TODO: currently relies on Snacks.nvim's markdown support to change the
-        -- style, not a perfect solution
-        vim.notify(
-          task.escaped_cmd .. ' **FAILED**',
-          vim.log.levels.ERROR,
-          { timeout = 2000 }
-        )
-        vim.api.nvim_chan_send(
-          task.term_id,
-          ('\n[ Process exited with \x1b[31m%d\x1b[m ]'):format(exit_code)
-        )
-      end
-    end,
-  })
+        for i = #out, 1, -1 do
+          if out[i]:len() > 0 and out[i] ~= '\r' then
+            task.output_tail = out[i]
+            break
+          end
+        end
+        if not timer_running then
+          timer_running = true
+          render_timer:start(0, 0, render_fn)
+        end
+      end,
+      on_exit = function(_, exit_code, _)
+        if vim.api.nvim_get_current_buf() == task.buf_id then
+          vim.cmd('stopinsert')
+        end
+        if task.timer and not task.timer:is_closing() then
+          task.timer:close()
+        end
+        if task.status == 'CANCELED' then
+          return
+        end
+        if exit_code == 0 then
+          task.status = 'SUCCESS'
+          partial_render_sidebar(task)
+          -- TODO: currently relies on Snacks.nvim's markdown support to change the
+          -- style, not a perfect solution
+          vim.notify(
+            task.escaped_cmd .. ' `SUCCESS`',
+            vim.log.levels.INFO,
+            { timeout = 2000 }
+          )
+        else
+          task.status = 'FAILED'
+          partial_render_sidebar(task)
+          -- TODO: currently relies on Snacks.nvim's markdown support to change the
+          -- style, not a perfect solution
+          vim.notify(
+            task.escaped_cmd .. ' **FAILED**',
+            vim.log.levels.ERROR,
+            { timeout = 2000 }
+          )
+        end
+      end,
+    })
+  end)
 
   if task.job_id <= 0 then
-    vim.fn.chanclose(task.term_id)
     error(string.format('Failed to start task "%s"', task.escaped_cmd))
     task.status = 'FAILED'
     return
@@ -642,7 +620,6 @@ end
 
 ---@param task shrun.Task
 local function restart_task(task)
-  vim.fn.chanclose(task.term_id)
   local old_buf = task.buf_id
   -- Delay buffer delete after new buffer is opened in task output window,
   -- otherwise the task output window will be instantly closed
@@ -748,7 +725,6 @@ local function new_sidebar_buffer()
       task.status = 'CANCELED'
       vim.fn.jobstop(task.job_id)
       vim.fn.chanclose(task.job_id)
-      vim.fn.chanclose(task.term_id)
     end
 
     all_tasks[task.id] = nil
