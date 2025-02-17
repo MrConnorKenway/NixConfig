@@ -505,7 +505,7 @@ return {
       desc = 'Picker search git hunks in opened buffers',
     },
   },
-  ---@type snacks.Config
+  ---@type snacks.Config | {}
   opts = {
     notifier = {
       enabled = true,
@@ -534,6 +534,7 @@ return {
           },
         },
       },
+      ---@type snacks.picker.icons | {}
       icons = {
         diagnostics = {
           Error = '',
