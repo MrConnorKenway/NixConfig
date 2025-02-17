@@ -420,7 +420,7 @@ local function get_terminal_size()
   local width
   local height
 
-  if task_panel and task_panel.task_output_winid then
+  if task_panel.task_output_winid then
     width = vim.api.nvim_win_get_width(task_panel.task_output_winid)
     height = vim.api.nvim_win_get_height(task_panel.task_output_winid)
   else
@@ -504,9 +504,7 @@ end
 ---@param task shrun.Task
 local function update_time_in_task_output(task)
   task.elapsed_time = task.elapsed_time + timer_repeat_interval
-  if task_panel then
-    partial_render_sidebar(task)
-  end
+  partial_render_sidebar(task)
 end
 
 ---@param task shrun.Task
@@ -542,7 +540,7 @@ local function start_task(task)
 
   local timer_running = false
   local render_fn = vim.schedule_wrap(function()
-    if task_panel and task.output_line_num then
+    if task.output_line_num then
       partial_render_sidebar(task)
     end
     timer_running = false
@@ -582,9 +580,7 @@ local function start_task(task)
       end
       if exit_code == 0 then
         task.status = 'SUCCESS'
-        if task_panel then
-          partial_render_sidebar(task)
-        end
+        partial_render_sidebar(task)
         -- TODO: currently relies on Snacks.nvim's markdown support to change the
         -- style, not a perfect solution
         vim.notify(
@@ -598,9 +594,7 @@ local function start_task(task)
         )
       else
         task.status = 'FAILED'
-        if task_panel then
-          partial_render_sidebar(task)
-        end
+        partial_render_sidebar(task)
         -- TODO: currently relies on Snacks.nvim's markdown support to change the
         -- style, not a perfect solution
         vim.notify(
@@ -857,14 +851,14 @@ local function new_sidebar_buffer()
 end
 
 M.display_panel = function()
-  if not task_panel then
-    task_panel = {
-      sidebar_bufnr = new_sidebar_buffer(),
-      task_ranges = {},
-    }
-    render_sidebar_from_scratch()
-  elseif not vim.api.nvim_buf_is_valid(task_panel.sidebar_bufnr) then
+  if not vim.api.nvim_buf_is_valid(task_panel.sidebar_bufnr) then
     task_panel.sidebar_bufnr = new_sidebar_buffer()
+  end
+
+  if
+    next(all_tasks)
+    and vim.api.nvim_buf_line_count(task_panel.sidebar_bufnr) == 0
+  then
     render_sidebar_from_scratch()
   end
 
@@ -925,13 +919,13 @@ M.display_panel = function()
 end
 
 M.hide_panel = function()
-  if task_panel and task_panel.sidebar_winid then
+  if task_panel.sidebar_winid then
     vim.api.nvim_win_hide(task_panel.sidebar_winid)
   end
 end
 
 M.toggle_panel = function()
-  if task_panel and task_panel.sidebar_winid then
+  if task_panel.sidebar_winid then
     vim.api.nvim_win_hide(task_panel.sidebar_winid)
     return
   end
@@ -974,58 +968,57 @@ local function init_task_from_cmd(cmd)
   }
   next_task_id = next_task_id + 1
 
-  if task_panel and not vim.api.nvim_buf_is_valid(task_panel.sidebar_bufnr) then
+  if not vim.api.nvim_buf_is_valid(task_panel.sidebar_bufnr) then
     task_panel.sidebar_bufnr = new_sidebar_buffer()
     render_sidebar_from_scratch()
   end
 
   start_task(task)
   all_tasks[task.id] = task
-  if task_panel then
-    local extmarks = {}
-    local lines, highlights = render_task(task, 0)
-    local task_range = { start_line = 1, end_line = #lines, task_id = task.id }
-    local empty = next(task_panel.task_ranges) == nil
 
-    if not empty then
-      local separator = string.rep(separator_stem, vim.o.columns)
-      table.insert(lines, separator)
-      table.insert(extmarks, { 'FloatBorder', #lines })
-      move_task_ranges(#lines, 0)
-    end
-    task_panel.task_ranges[task.id] = task_range
+  local extmarks = {}
+  local lines, highlights = render_task(task, 0)
+  local task_range = { start_line = 1, end_line = #lines, task_id = task.id }
+  local empty = next(task_panel.task_ranges) == nil
 
-    vim.bo[task_panel.sidebar_bufnr].modifiable = true
-    if empty then
-      vim.api.nvim_buf_set_lines(task_panel.sidebar_bufnr, 0, -1, true, lines)
-    else
-      vim.api.nvim_buf_set_lines(task_panel.sidebar_bufnr, 0, 0, true, lines)
-    end
-    vim.bo[task_panel.sidebar_bufnr].modifiable = false
-    vim.bo[task_panel.sidebar_bufnr].modified = false
+  if not empty then
+    local separator = string.rep(separator_stem, vim.o.columns)
+    table.insert(lines, separator)
+    table.insert(extmarks, { 'FloatBorder', #lines })
+    move_task_ranges(#lines, 0)
+  end
+  task_panel.task_ranges[task.id] = task_range
 
-    for _, hl in ipairs(highlights) do
-      local group, lnum, col_start, col_end = unpack(hl)
-      vim.hl.range(
-        task_panel.sidebar_bufnr,
-        sidebar_hl_ns,
-        group,
-        { lnum - 1, col_start },
-        { lnum - 1, col_end }
-      )
-    end
+  vim.bo[task_panel.sidebar_bufnr].modifiable = true
+  if empty then
+    vim.api.nvim_buf_set_lines(task_panel.sidebar_bufnr, 0, -1, true, lines)
+  else
+    vim.api.nvim_buf_set_lines(task_panel.sidebar_bufnr, 0, 0, true, lines)
+  end
+  vim.bo[task_panel.sidebar_bufnr].modifiable = false
+  vim.bo[task_panel.sidebar_bufnr].modified = false
 
-    apply_extmarks(extmarks)
+  for _, hl in ipairs(highlights) do
+    local group, lnum, col_start, col_end = unpack(hl)
+    vim.hl.range(
+      task_panel.sidebar_bufnr,
+      sidebar_hl_ns,
+      group,
+      { lnum - 1, col_start },
+      { lnum - 1, col_end }
+    )
+  end
 
-    if task_panel.sidebar_winid then
-      vim.api.nvim_win_set_cursor(task_panel.sidebar_winid, { 1, 0 })
-      task_panel.focused_task_range = task_range
-      highlight_focused()
-    else
-      -- task list panel is not opened, record the cursor here and defer the
-      -- cursor update after `ListTask`
-      task_panel.sidebar_cursor = { 1, 0 }
-    end
+  apply_extmarks(extmarks)
+
+  if task_panel.sidebar_winid then
+    vim.api.nvim_win_set_cursor(task_panel.sidebar_winid, { 1, 0 })
+    task_panel.focused_task_range = task_range
+    highlight_focused()
+  else
+    -- task list panel is not opened, record the cursor here and defer the
+    -- cursor update after `ListTask`
+    task_panel.sidebar_cursor = { 1, 0 }
   end
 end
 
@@ -1050,6 +1043,11 @@ local shell_job
 local shell_win
 
 M.setup = function()
+  task_panel = {
+    sidebar_bufnr = -1,
+    task_ranges = {},
+  }
+
   setup_highlights()
 
   vim.api.nvim_create_autocmd('ColorScheme', {
@@ -1111,7 +1109,7 @@ M.setup = function()
               -- Now we get the actual command by parsing OSC 633;E
               pcall(vim.api.nvim_win_hide, shell_win)
               vim.cmd('stopinsert')
-              if task_panel and task_panel.sidebar_winid then
+              if task_panel.sidebar_winid then
                 vim.api.nvim_set_current_win(task_panel.sidebar_winid)
               end
               -- Revert escape
@@ -1413,10 +1411,6 @@ M.test = function()
   }
 
   local function sanity_check()
-    if not task_panel then
-      return
-    end
-
     local nr_tasks = 0
     local nr_ranges = 0
     local prev_end_line
@@ -1442,7 +1436,8 @@ M.test = function()
       )
     else
       abort_tests_if_not(
-        vim.api.nvim_buf_line_count(task_panel.sidebar_bufnr) == 1
+        task_panel.sidebar_bufnr == -1
+          or vim.api.nvim_buf_line_count(task_panel.sidebar_bufnr) == 1
       )
     end
   end
