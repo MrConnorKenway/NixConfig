@@ -376,7 +376,7 @@ vim.api.nvim_create_user_command('LspRestart', function()
     100,
     vim.schedule_wrap(function()
       if retry_count == 3 then
-        timer:close()
+        pcall(timer.close, timer)
       end
 
       retry_count = retry_count + 1
