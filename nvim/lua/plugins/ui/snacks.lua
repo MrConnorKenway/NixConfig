@@ -297,6 +297,8 @@ return {
     {
       '<leader>z',
       function()
+        -- Zen mode only shows statusline when laststatus equals 3
+        vim.o.laststatus = 3
         Snacks.zen.zoom()
       end,
       desc = 'Toggle snacks zoom',
@@ -558,6 +560,8 @@ return {
               vim.cmd('q')
               -- In WinLeave we turn cursorline off, so now turn it on
               vim.wo.cursorline = true
+              -- Revert to default statusline layout
+              vim.o.laststatus = 2
             end,
           },
         },
