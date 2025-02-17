@@ -11,7 +11,7 @@ return {
       local colors = {
         heirline_color_purple = utils.get_highlight('Statement').fg,
         heirline_color_cyan = utils.get_highlight('Special').fg,
-        heirline_color_bright_bg = utils.get_highlight('Folded').bg,
+        heirline_color_bright_bg = theme_colors.surface1,
         heirline_color_bright_fg = utils.get_highlight('Folded').fg,
         heirline_color_diag_warn = utils.get_highlight('DiagnosticWarn').fg,
         heirline_color_diag_error = utils.get_highlight('DiagnosticError').fg,

@@ -9,6 +9,7 @@ return {
   end,
   config = function()
     require('catppuccin').setup {
+      transparent_background = true,
       custom_highlights = function()
         return {
           BlinkCmpLabelMatch = { italic = true, bold = true, fg = 'NONE' }
