@@ -938,6 +938,7 @@ local function setup_highlights()
 end
 
 local function init_task_from_cmd(cmd)
+  ---@type shrun.Task | {}
   local task = {
     id = next_task_id,
     cmd = cmd.args or cmd,
