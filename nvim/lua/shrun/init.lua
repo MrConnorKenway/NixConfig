@@ -1,6 +1,7 @@
 local M = {}
 
 ---@alias shrun.TaskStatus
+---| 'INIT'
 ---| 'RUNNING'
 ---| 'CANCELED'
 ---| 'SUCCESS'
@@ -152,6 +153,10 @@ end
 
 ---@param task shrun.Task
 local function switch_task_out_panel(task)
+  if task.buf_id == -1 then
+    return
+  end
+
   vim.wo[task_panel.task_output_winid].winfixbuf = false
   vim.api.nvim_win_set_buf(task_panel.task_output_winid, task.buf_id)
   vim.wo[task_panel.task_output_winid].winfixbuf = true
@@ -584,6 +589,7 @@ local function start_task(task)
             vim.log.levels.ERROR,
             { timeout = 2000 }
           )
+          vim.cmd('cgetbuffer ' .. task.buf_id)
         end
       end,
     })
@@ -623,9 +629,11 @@ local function restart_task(task)
   local old_buf = task.buf_id
   -- Delay buffer delete after new buffer is opened in task output window,
   -- otherwise the task output window will be instantly closed
-  vim.schedule(function()
-    vim.api.nvim_buf_delete(old_buf, {})
-  end)
+  if vim.api.nvim_buf_is_valid(old_buf) then
+    vim.schedule(function()
+      vim.api.nvim_buf_delete(old_buf, {})
+    end)
+  end
   start_task(task)
   partial_render_sidebar(task)
 end
@@ -833,22 +841,13 @@ M.display_panel = function()
 
   if
     next(all_tasks)
-    and vim.api.nvim_buf_line_count(task_panel.sidebar_bufnr) == 0
+    and vim.api.nvim_buf_line_count(task_panel.sidebar_bufnr) <= 1
   then
     render_sidebar_from_scratch()
   end
 
   if task_panel.sidebar_winid then
     return
-  end
-  if not vim.api.nvim_buf_is_valid(empty_task_output_buf) then
-    empty_task_output_buf = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_buf_set_name(empty_task_output_buf, 'Task Output')
-    vim.bo[empty_task_output_buf].buftype = 'nofile'
-    vim.bo[empty_task_output_buf].bufhidden = 'hide'
-    vim.bo[empty_task_output_buf].buflisted = false
-    vim.bo[empty_task_output_buf].swapfile = false
-    vim.bo[empty_task_output_buf].modifiable = false
   end
   vim.cmd([[botright split]])
   local sidebar_winid = vim.api.nvim_get_current_win()
@@ -919,6 +918,7 @@ end
 
 M.nr_tasks_by_status = function()
   local nr_tasks_by_status = {
+    ['INIT'] = 0,
     ['CANCELED'] = 0,
     ['FAILED'] = 0,
     ['SUCCESS'] = 0,
@@ -1029,6 +1029,66 @@ M.setup = function()
 
   vim.api.nvim_create_autocmd('ColorScheme', {
     callback = setup_highlights,
+  })
+
+  vim.api.nvim_create_autocmd('VimEnter', {
+    callback = function()
+      local cwd = vim.uv.cwd()
+      if not cwd then
+        return
+      end
+
+      cwd = cwd:gsub('/', '%%2F')
+      local path = vim.fn.stdpath('data') .. '/shrun/' .. cwd .. '.json'
+      local file, err = io.open(path, 'r')
+      if err or not file then
+        return
+      end
+      local cmds = vim.fn.json_decode(file:read())
+      for _, cmd in ipairs(cmds) do
+        ---@type shrun.Task | {}
+        local task = {
+          id = next_task_id,
+          cmd = cmd,
+          status = 'SUCCESS',
+          escaped_cmd = cmd:gsub('\n', ' 󰌑 '):gsub('\t', ''),
+          timer = vim.uv.new_timer(),
+          follow_term_output = true,
+          output_tail = '',
+          elapsed_time = 0,
+          buf_id = empty_task_output_buf,
+        }
+        next_task_id = next_task_id + 1
+        all_tasks[#all_tasks + 1] = task
+      end
+      task_panel.focused_task_range =
+        { start_line = 1, end_line = 2, task_id = #all_tasks }
+    end,
+  })
+
+  vim.api.nvim_create_autocmd('VimLeavePre', {
+    callback = function()
+      local cwd = vim.uv.cwd()
+      if not cwd then
+        return
+      end
+
+      cwd = cwd:gsub('/', '%%2F')
+      local dir = vim.fn.stdpath('data') .. '/shrun'
+      local path = dir .. '/' .. cwd .. '.json'
+      vim.fn.mkdir(dir, 'p')
+      local file, err = io.open(path, 'w')
+      if err or not file then
+        return
+      end
+      local per_cwd_cmds = vim.tbl_map(function(task)
+        if task then
+          return task.cmd
+        end
+      end, all_tasks)
+      file:write(vim.fn.json_encode(per_cwd_cmds))
+      file:close()
+    end,
   })
 
   vim.keymap.set('n', 'gu', function()
