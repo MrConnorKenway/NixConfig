@@ -770,14 +770,6 @@ local function new_sidebar_buffer()
     vim.bo[task_panel.sidebar_bufnr].modifiable = false
     vim.bo[task_panel.sidebar_bufnr].modified = false
 
-    vim.wo[task_panel.task_output_winid].winfixbuf = false
-    assert(empty_task_output_buf)
-    vim.api.nvim_win_set_buf(
-      task_panel.task_output_winid,
-      empty_task_output_buf
-    )
-    vim.wo[task_panel.task_output_winid].winfixbuf = true
-
     vim.schedule(function()
       vim.api.nvim_buf_delete(task.buf_id, { force = true })
     end)
