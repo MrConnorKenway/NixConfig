@@ -825,7 +825,7 @@ M.display_panel = function()
 
   if
     next(all_tasks)
-    and vim.api.nvim_buf_line_count(task_panel.sidebar_bufnr) == 0
+    and vim.api.nvim_buf_line_count(task_panel.sidebar_bufnr) <= 1
   then
     render_sidebar_from_scratch()
   end
