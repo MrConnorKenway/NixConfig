@@ -1,25 +1,5 @@
 local M = {}
 
----@alias shrun.TaskStatus
----| 'RUNNING'
----| 'CANCELED'
----| 'SUCCESS'
----| 'FAILED'
-
----@class shrun.Task
----@field id integer
----@field cmd string
----@field escaped_cmd string
----@field view vim.fn.winsaveview.ret
----@field status shrun.TaskStatus
----@field buf_id integer
----@field job_id integer
----@field output_tail string
----@field output_line_num integer?
----@field follow_term_output boolean
----@field elapsed_time integer
----@field timer uv.uv_timer_t?
-
 ---@class shrun.TaskRange
 ---@field start_line integer
 ---@field end_line integer
@@ -65,7 +45,6 @@ local original_winid = -1
 local sidebar_width = 48
 local sidebar_height = 16
 local separator_stem = '─'
-local out_prefix = 'out: '
 local default_highlights = {
   ShrunHighlightTaskRUNNING = 'Constant',
   ShrunHighlightTaskSUCCESS = 'DiagnosticOk',
@@ -75,72 +54,6 @@ local default_highlights = {
   ShrunHighlightTaskOutPrefix = 'Comment',
 }
 local timer_repeat_interval = 1000
-
---- Helper function that generate line content and highlight metadata of task
---- based on the row offset, which will be then used for sidebar rendering
----@param task shrun.Task
----@param row_offset integer zero-based indexing start row
-local function render_task(task, row_offset)
-  local lines = {} ---@type string[]
-  ---@type {[1]: string, [2]: integer, [3]: integer, [4]: integer}[]
-  ---       group name,  start row,    start col,    end col
-  local highlights = {}
-  local status_len = string.len(task.status)
-  local cmd_offset = status_len + 2 -- 2 == len(': ')
-
-  table.insert(lines, task.status .. ': ' .. task.escaped_cmd)
-  table.insert(highlights, {
-    'ShrunHighlightTask' .. task.status,
-    row_offset + #lines,
-    0,
-    status_len,
-  })
-  table.insert(highlights, {
-    'ShrunHighlightTaskName',
-    row_offset + #lines,
-    cmd_offset,
-    cmd_offset + string.len(task.escaped_cmd),
-  })
-
-  -- TODO: make minimum interval configurable
-  if task.elapsed_time > 3000 then
-    local seconds = task.elapsed_time / 1000
-    local minutes
-    local hours
-
-    if seconds < 60 then
-      table.insert(lines, tostring(seconds) .. 's')
-    elseif seconds < 3600 then
-      minutes = math.floor(seconds / 60)
-      seconds = seconds % 60
-      table.insert(lines, string.format('%dm %ds', minutes, seconds))
-    else
-      hours = math.floor(seconds / 3600)
-      minutes = math.floor(seconds / 60) % 60
-      seconds = seconds % 60
-      table.insert(lines, string.format('%dh %dm %ds', hours, minutes, seconds))
-    end
-  end
-
-  -- Remove control characters and ANSI escape sequences using regex
-  -- Reference: https://stackoverflow.com/questions/14693701
-  local striped_str = task
-    .output_tail
-    :gsub('[\r\x07]', '')
-    :gsub('\x1b[@-Z\\-_]', '') -- 7-bit C1 Fe (except CSI)
-    :gsub('\x1b%[[0-?]*[ -/]*[@-~]', '') -- second char is '[', i.e., CSI
-  table.insert(lines, out_prefix .. striped_str)
-
-  task.output_line_num = row_offset + #lines
-  table.insert(highlights, {
-    'ShrunHighlightTaskOutPrefix',
-    row_offset + #lines,
-    0,
-    string.len(out_prefix),
-  })
-
-  return lines, highlights
-end
 
 ---caller should ensure that task output panel is opened and the buffer shown in
 ---panel has buffer id of `bufnr`
@@ -265,7 +178,7 @@ local function partial_render_sidebar(task)
   local task_range = task_panel.task_ranges[task.id]
   local old_end_line = task_range.end_line
 
-  local lines, highlights = render_task(task, task_range.start_line - 1)
+  local lines, highlights = task:render(task_range.start_line - 1)
   task_range.end_line = task_range.start_line + #lines - 1
 
   local offset = task_range.end_line - old_end_line
@@ -308,7 +221,7 @@ local function render_sidebar_from_scratch()
   -- lua does not guarantee the order when iterating table, so we have to
   -- manually sort task id
   for task_id, task in desc_sorted_pairs(all_tasks) do
-    local task_lines, task_highlights = render_task(task, #lines)
+    local task_lines, task_highlights = task:render(#lines)
     task_panel.task_ranges[task_id] = {
       start_line = #lines + 1,
       end_line = #lines + #task_lines,
@@ -510,11 +423,6 @@ end
 local function start_task(task)
   new_task_output_buffer(task)
   task.status = 'RUNNING'
-  task.output_tail = ''
-  task.follow_term_output = true
-  task.escaped_cmd = task.cmd:gsub('\n', ' 󰌑 '):gsub('\t', '')
-  task.elapsed_time = 0
-  task.timer = vim.uv.new_timer()
 
   -- 'sleep': wait 100ms before finishing job, giving neovim enough time to sync output
   local new_cmd = {
@@ -911,6 +819,7 @@ end
 
 M.nr_tasks_by_status = function()
   local nr_tasks_by_status = {
+    ['IDLE'] = 0,
     ['CANCELED'] = 0,
     ['FAILED'] = 0,
     ['SUCCESS'] = 0,
@@ -930,11 +839,8 @@ local function setup_highlights()
 end
 
 local function init_task_from_cmd(cmd)
-  ---@type shrun.Task | {}
-  local task = {
-    id = next_task_id,
-    cmd = cmd.args or cmd,
-  }
+  ---@type shrun.Task
+  local task = require('shrun.task').new(next_task_id, cmd.args or cmd)
   next_task_id = next_task_id + 1
 
   if not vim.api.nvim_buf_is_valid(task_panel.sidebar_bufnr) then
@@ -946,7 +852,7 @@ local function init_task_from_cmd(cmd)
   all_tasks[task.id] = task
 
   local extmarks = {}
-  local lines, highlights = render_task(task, 0)
+  local lines, highlights = task:render(0)
   local task_range = { start_line = 1, end_line = #lines, task_id = task.id }
   local empty = next(task_panel.task_ranges) == nil
 
