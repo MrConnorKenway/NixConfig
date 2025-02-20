@@ -555,9 +555,11 @@ local function restart_task(task)
   local old_buf = task.buf_id
   -- Delay buffer delete after new buffer is opened in task output window,
   -- otherwise the task output window will be instantly closed
-  vim.schedule(function()
-    vim.api.nvim_buf_delete(old_buf, {})
-  end)
+  if vim.api.nvim_buf_is_valid(old_buf) then
+    vim.schedule(function()
+      pcall(vim.api.nvim_buf_delete, old_buf, {})
+    end)
+  end
   start_task(task)
   partial_render_sidebar(task)
 end
@@ -702,9 +704,11 @@ local function new_sidebar_buffer()
     vim.bo[task_panel.sidebar_bufnr].modifiable = false
     vim.bo[task_panel.sidebar_bufnr].modified = false
 
-    vim.schedule(function()
-      vim.api.nvim_buf_delete(task.buf_id, { force = true })
-    end)
+    if vim.api.nvim_buf_is_valid(task.buf_id) then
+      vim.schedule(function()
+        pcall(vim.api.nvim_buf_delete, task.buf_id, { force = true })
+      end)
+    end
   end, { buffer = sidebar_bufnr, desc = 'Delete task under cursor' })
 
   vim.api.nvim_create_autocmd('BufEnter', {
