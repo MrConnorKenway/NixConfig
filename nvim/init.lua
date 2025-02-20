@@ -22,7 +22,7 @@ if not vim.uv.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
-vim.o.sessionoptions = 'buffers,curdir,folds,help,tabpages,winsize'
+vim.o.sessionoptions = 'buffers,curdir,folds,tabpages,winsize'
 vim.o.equalalways = false
 vim.o.numberwidth = 2
 vim.o.statuscolumn = '%l%s'
