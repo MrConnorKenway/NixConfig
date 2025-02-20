@@ -46,6 +46,7 @@ local sidebar_width = 48
 local sidebar_height = 16
 local separator_stem = '─'
 local default_highlights = {
+  ShrunHighlightTaskIDLE = 'Normal',
   ShrunHighlightTaskRUNNING = 'Constant',
   ShrunHighlightTaskSUCCESS = 'DiagnosticOk',
   ShrunHighlightTaskFAILED = 'DiagnosticError',
@@ -938,6 +939,14 @@ local shell_buf
 local shell_job
 local shell_win
 
+---Convert path to URL-like encoding string
+---@param str string
+local function percent_encode(str)
+  return str:gsub('[/\\:*?"\'<>+ |%.%%]', function(char)
+    return string.format('%%%02X', string.byte(char))
+  end)
+end
+
 M.setup = function()
   task_panel = {
     sidebar_bufnr = -1,
@@ -948,6 +957,60 @@ M.setup = function()
 
   vim.api.nvim_create_autocmd('ColorScheme', {
     callback = setup_highlights,
+  })
+
+  vim.api.nvim_create_autocmd('VimEnter', {
+    callback = function()
+      local cwd = vim.uv.cwd()
+      if not cwd then
+        return
+      end
+
+      cwd = percent_encode(cwd)
+      local path = vim.fn.stdpath('data') .. '/shrun/' .. cwd .. '.json'
+      local file, err = io.open(path, 'r')
+      if err or not file then
+        return
+      end
+      local cmds = vim.fn.json_decode(file:read())
+      if not next(cmds) then
+        return
+      end
+      ---@type shrun.Task | {}
+      local task
+      for _, cmd in ipairs(cmds) do
+        task = require('shrun.task').new(next_task_id, cmd)
+        next_task_id = next_task_id + 1
+        all_tasks[#all_tasks + 1] = task
+      end
+      local lines, _ = task:render(0)
+      task_panel.focused_task_range =
+        { start_line = 1, end_line = #lines, task_id = task.id }
+    end,
+  })
+
+  vim.api.nvim_create_autocmd('VimLeavePre', {
+    callback = function()
+      local cwd = vim.uv.cwd()
+      if not cwd then
+        return
+      end
+
+      cwd = percent_encode(cwd)
+      local dir = vim.fn.stdpath('data') .. '/shrun'
+      local path = dir .. '/' .. cwd .. '.json'
+      vim.fn.mkdir(dir, 'p')
+      local file, err = io.open(path, 'w')
+      if err or not file then
+        return
+      end
+      local per_cwd_cmds = {}
+      for _, task in pairs(all_tasks) do
+        per_cwd_cmds[#per_cwd_cmds + 1] = task.cmd
+      end
+      file:write(vim.fn.json_encode(per_cwd_cmds))
+      file:close()
+    end,
   })
 
   vim.keymap.set('n', 'gu', function()
