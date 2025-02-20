@@ -63,8 +63,32 @@ local function scroll_terminal_to_tail(bufnr)
   vim.api.nvim_win_set_cursor(task_panel.task_output_winid, { line_cnt, 0 })
 end
 
+local function new_empty_buffer()
+  local buf = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_name(buf, 'Task Output')
+  vim.bo[buf].buftype = 'nofile'
+  vim.bo[buf].bufhidden = 'hide'
+  vim.bo[buf].buflisted = false
+  vim.bo[buf].swapfile = false
+  vim.bo[buf].modifiable = false
+  return buf
+end
+
 ---@param task shrun.Task
 local function switch_task_out_panel(task)
+  if not vim.api.nvim_buf_is_valid(task.buf_id) then
+    if not vim.api.nvim_buf_is_valid(empty_task_output_buf) then
+      empty_task_output_buf = new_empty_buffer()
+    end
+    vim.wo[task_panel.task_output_winid].winfixbuf = false
+    vim.api.nvim_win_set_buf(
+      task_panel.task_output_winid,
+      empty_task_output_buf
+    )
+    vim.wo[task_panel.task_output_winid].winfixbuf = true
+    return
+  end
+
   vim.wo[task_panel.task_output_winid].winfixbuf = false
   vim.api.nvim_win_set_buf(task_panel.task_output_winid, task.buf_id)
   vim.wo[task_panel.task_output_winid].winfixbuf = true
@@ -742,13 +766,7 @@ M.display_panel = function()
     return
   end
   if not vim.api.nvim_buf_is_valid(empty_task_output_buf) then
-    empty_task_output_buf = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_buf_set_name(empty_task_output_buf, 'Task Output')
-    vim.bo[empty_task_output_buf].buftype = 'nofile'
-    vim.bo[empty_task_output_buf].bufhidden = 'hide'
-    vim.bo[empty_task_output_buf].buflisted = false
-    vim.bo[empty_task_output_buf].swapfile = false
-    vim.bo[empty_task_output_buf].modifiable = false
+    empty_task_output_buf = new_empty_buffer()
   end
   vim.cmd([[botright split]])
   local sidebar_winid = vim.api.nvim_get_current_win()
