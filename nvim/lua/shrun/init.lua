@@ -765,9 +765,6 @@ M.display_panel = function()
   if task_panel.sidebar_winid then
     return
   end
-  if not vim.api.nvim_buf_is_valid(empty_task_output_buf) then
-    empty_task_output_buf = new_empty_buffer()
-  end
   vim.cmd([[botright split]])
   local sidebar_winid = vim.api.nvim_get_current_win()
   vim.api.nvim_win_set_height(sidebar_winid, sidebar_height)
@@ -808,6 +805,9 @@ M.display_panel = function()
       end)
     end
   else
+    if not vim.api.nvim_buf_is_valid(empty_task_output_buf) then
+      empty_task_output_buf = new_empty_buffer()
+    end
     task_panel.task_output_winid = new_task_output_window(empty_task_output_buf)
   end
 end
