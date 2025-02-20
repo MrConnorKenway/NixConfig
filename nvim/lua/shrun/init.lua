@@ -234,7 +234,6 @@ local function desc_sorted_pairs(tbl)
   end
 end
 
----caller should ensure that `task_panel` ~= nil
 local function render_sidebar_from_scratch()
   local lines = {}
   local highlights = {}
