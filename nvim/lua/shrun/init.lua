@@ -66,7 +66,7 @@ end
 
 local function new_empty_buffer()
   local buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_name(buf, 'Task Output')
+  vim.api.nvim_buf_set_name(buf, '[Task Output]')
   vim.bo[buf].buftype = 'nofile'
   vim.bo[buf].bufhidden = 'hide'
   vim.bo[buf].buflisted = false
