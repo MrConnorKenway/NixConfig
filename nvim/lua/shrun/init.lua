@@ -704,17 +704,18 @@ local function new_sidebar_buffer()
     vim.bo[task_panel.sidebar_bufnr].modifiable = false
     vim.bo[task_panel.sidebar_bufnr].modified = false
 
-    if not next(all_tasks) then
-      if not vim.api.nvim_buf_is_valid(empty_task_output_buf) then
-        empty_task_output_buf = new_empty_buffer()
-      end
-      vim.wo[task_panel.task_output_winid].winfixbuf = false
-      vim.api.nvim_win_set_buf(
-        task_panel.task_output_winid,
-        empty_task_output_buf
-      )
-      vim.wo[task_panel.task_output_winid].winfixbuf = true
+    if not vim.api.nvim_buf_is_valid(empty_task_output_buf) then
+      empty_task_output_buf = new_empty_buffer()
     end
+    vim.wo[task_panel.task_output_winid].winfixbuf = false
+    -- Currently when buffer displayed in some window is deleted, that window
+    -- will be closed. Thus we set output window buffer to empty buffer to
+    -- prevent window closure.
+    vim.api.nvim_win_set_buf(
+      task_panel.task_output_winid,
+      empty_task_output_buf
+    )
+    vim.wo[task_panel.task_output_winid].winfixbuf = true
 
     if vim.api.nvim_buf_is_valid(task.buf_id) then
       vim.schedule(function()
