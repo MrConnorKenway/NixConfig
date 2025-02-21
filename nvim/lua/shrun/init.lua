@@ -768,6 +768,14 @@ local function new_sidebar_buffer()
 end
 
 M.display_panel = function()
+  if package.loaded.snacks.terminal then
+    for _, term in ipairs(require('snacks.terminal').list()) do
+      if not term.closed then
+        term:hide()
+      end
+    end
+  end
+
   if not vim.api.nvim_buf_is_valid(task_panel.sidebar_bufnr) then
     task_panel.sidebar_bufnr = new_sidebar_buffer()
   end
@@ -839,14 +847,6 @@ M.toggle_panel = function()
   if task_panel.sidebar_winid then
     vim.api.nvim_win_hide(task_panel.sidebar_winid)
     return
-  end
-
-  if package.loaded.snacks.terminal then
-    for _, term in ipairs(require('snacks.terminal').list()) do
-      if not term.closed then
-        term:hide()
-      end
-    end
   end
 
   M.display_panel()
