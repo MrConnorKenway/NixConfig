@@ -767,7 +767,7 @@ local function new_sidebar_buffer()
   return sidebar_bufnr
 end
 
-M.display_panel = function()
+function M.display_panel()
   if package.loaded.snacks.terminal then
     for _, term in ipairs(require('snacks.terminal').list()) do
       if not term.closed then
@@ -837,13 +837,13 @@ M.display_panel = function()
   end
 end
 
-M.hide_panel = function()
+function M.hide_panel()
   if task_panel.sidebar_winid then
     vim.api.nvim_win_hide(task_panel.sidebar_winid)
   end
 end
 
-M.toggle_panel = function()
+function M.toggle_panel()
   if task_panel.sidebar_winid then
     vim.api.nvim_win_hide(task_panel.sidebar_winid)
     return
@@ -852,7 +852,7 @@ M.toggle_panel = function()
   M.display_panel()
 end
 
-M.nr_tasks_by_status = function()
+function M.nr_tasks_by_status()
   local nr_tasks_by_status = {
     ['IDLE'] = 0,
     ['CANCELED'] = 0,
@@ -934,7 +934,7 @@ end
 
 ---Find task by cmd and reuse it instead of creating new task to execute cmd
 ---@param cmd string
-M.restart_task_from_cmd = function(cmd)
+function M.restart_task_from_cmd(cmd)
   for _, task in pairs(all_tasks) do
     if task.cmd == cmd then
       if task.status ~= 'RUNNING' then
@@ -960,7 +960,7 @@ local function percent_encode(str)
   end)
 end
 
-M.setup = function()
+function M.setup()
   task_panel = {
     sidebar_bufnr = -1,
     task_ranges = {},
@@ -1163,7 +1163,7 @@ M.setup = function()
 end
 
 ---for development test purpose only
-M.test = function()
+function M.test()
   local timer = vim.uv.new_timer()
   local delay = 100
   local winid
