@@ -995,9 +995,11 @@ M.setup = function()
         next_task_id = next_task_id + 1
         all_tasks[#all_tasks + 1] = task
       end
-      local lines, _ = task:render(0)
-      task_panel.focused_task_range =
-        { start_line = 1, end_line = #lines, task_id = task.id }
+
+      if not vim.api.nvim_buf_is_valid(task_panel.sidebar_bufnr) then
+        task_panel.sidebar_bufnr = new_sidebar_buffer()
+        render_sidebar_from_scratch()
+      end
     end,
   })
 
