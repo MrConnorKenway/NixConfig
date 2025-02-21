@@ -532,7 +532,7 @@ local function start_task(task)
       timer_repeat_interval,
       timer_repeat_interval,
       vim.schedule_wrap(function()
-        if task.status ~= 'RUNNING' then
+        if task.status ~= 'RUNNING' and task.timer then
           pcall(task.timer.close, task.timer)
           task.timer = nil
           return
