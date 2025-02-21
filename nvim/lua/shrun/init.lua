@@ -1160,6 +1160,56 @@ function M.setup()
     M.toggle_panel,
     { desc = 'Toggle shrun task panel' }
   )
+
+  vim.keymap.set(
+    { 'n', 'i', 't' },
+    '<S-D-r>',
+    M.task_picker,
+    { desc = 'Toggle shrun task picker' }
+  )
+  vim.keymap.set(
+    { 'n', 'i', 't' },
+    '<S-M-r>',
+    M.task_picker,
+    { desc = 'Toggle shrun task picker' }
+  )
+end
+
+function M.task_picker()
+  Snacks.picker {
+    layout = {
+      preset = 'vscode',
+    },
+    win = {
+      input = {
+        title = 'Shrun Tasks',
+      },
+    },
+    format = 'text',
+    formatters = { text = { ft = 'bash' } },
+    preview = 'none',
+    confirm = function(picker, item)
+      picker:close()
+      vim.schedule(function()
+        M.display_panel()
+        local range = task_panel.task_ranges[item.item]
+        vim.api.nvim_win_set_cursor(
+          task_panel.sidebar_winid,
+          { range.start_line, 0 }
+        )
+      end)
+    end,
+    finder = function()
+      local items = {}
+      for _, task in desc_sorted_pairs(all_tasks) do
+        items[#items + 1] = {
+          text = task.cmd,
+          item = task.id,
+        }
+      end
+      return items
+    end,
+  }
 end
 
 ---for development test purpose only
