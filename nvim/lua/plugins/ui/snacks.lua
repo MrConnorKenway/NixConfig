@@ -388,7 +388,13 @@ return {
         ---@param opts snacks.picker.Config
         ---@type snacks.picker.finder
         local function git_diff_finder(opts, ctx)
-          local args = { '--no-pager', 'diff', '--no-color', '--no-ext-diff' }
+          local args = {
+            '--no-pager',
+            'diff',
+            '--no-color',
+            '--no-ext-diff',
+            '--submodule=diff',
+          }
           local finder = require('snacks.picker.source.proc').proc({
             opts,
             { cmd = 'git', args = args },
