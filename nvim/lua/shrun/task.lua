@@ -151,7 +151,6 @@ function M.new(id, cmd)
     output_tail = '',
     follow_term_output = true,
     elapsed_time = 0,
-    timer = vim.uv.new_timer(),
   }, M)
   return self
 end

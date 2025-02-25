@@ -447,6 +447,8 @@ end
 local function start_task(task)
   new_task_output_buffer(task)
   task.status = 'RUNNING'
+  task.elapsed_time = 0
+  task.timer = vim.uv.new_timer()
 
   -- 'sleep': wait 100ms before finishing job, giving neovim enough time to sync output
   local new_cmd = {
