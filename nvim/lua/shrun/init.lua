@@ -118,6 +118,14 @@ local function highlight_focused()
     return
   end
 
+  vim.hl.range(
+    task_panel.sidebar_bufnr,
+    sidebar_focus_hl_ns,
+    'Bold',
+    { task_range.start_line - 1, 0 },
+    { task_range.start_line - 1, vim.o.columns }
+  )
+
   vim.api.nvim_buf_set_extmark(
     task_panel.sidebar_bufnr,
     sidebar_focus_hl_ns,
