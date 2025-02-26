@@ -1193,14 +1193,23 @@ function M.task_picker()
     preview = 'none',
     confirm = function(picker, item)
       picker:close()
-      vim.schedule(function()
-        M.display_panel()
+      if task_panel.sidebar_winid then
+        vim.api.nvim_set_current_win(task_panel.sidebar_winid)
         local range = task_panel.task_ranges[item.item]
         vim.api.nvim_win_set_cursor(
           task_panel.sidebar_winid,
           { range.start_line, 0 }
         )
-      end)
+      else
+        vim.schedule(function()
+          M.display_panel()
+          local range = task_panel.task_ranges[item.item]
+          vim.api.nvim_win_set_cursor(
+            task_panel.sidebar_winid,
+            { range.start_line, 0 }
+          )
+        end)
+      end
     end,
     finder = function()
       local items = {}
