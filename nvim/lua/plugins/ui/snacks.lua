@@ -480,6 +480,7 @@ return {
           layout = {
             preset = 'vertical',
           },
+          title = 'Git Hunks',
           finder = { git_diff_finder, gitsigns_finder },
           formatters = {
             file = {
