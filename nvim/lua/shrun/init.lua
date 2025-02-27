@@ -983,6 +983,8 @@ function M.setup()
     callback = setup_highlights,
   })
 
+  local has_json = false
+
   vim.api.nvim_create_autocmd('VimEnter', {
     callback = function()
       local cwd = vim.uv.cwd()
@@ -996,6 +998,9 @@ function M.setup()
       if err or not file then
         return
       end
+
+      has_json = true
+
       local cmds = vim.fn.json_decode(file:read())
       if not next(cmds) then
         return
@@ -1019,6 +1024,10 @@ function M.setup()
     callback = function()
       local cwd = vim.uv.cwd()
       if not cwd then
+        return
+      end
+
+      if not has_json and not next(all_tasks) then
         return
       end
 
