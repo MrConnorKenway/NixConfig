@@ -166,6 +166,11 @@ vim.keymap.set('i', '<C-e>', '<End>')
 vim.keymap.set({ 'c', 'i' }, '<M-b>', '<S-Left>')
 vim.keymap.set({ 'c', 'i' }, '<M-f>', '<S-Right>')
 
+vim.keymap.del('n', 'grn')
+vim.keymap.del('n', 'grr')
+vim.keymap.del({ 'n', 'x' }, 'gra')
+vim.keymap.del('n', 'gri')
+
 vim.api.nvim_create_autocmd('BufRead', {
   callback = function(opts)
     vim.api.nvim_create_autocmd('BufWinEnter', {
