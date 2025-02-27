@@ -40,7 +40,14 @@ return {
         ghost_text = { enabled = false },
       },
     },
-    sources = { default = { 'lsp', 'path' } },
+    sources = {
+      default = { 'lsp', 'path' },
+      providers = {
+        cmdline = {
+          min_keyword_length = 2,
+        },
+      },
+    },
     completion = {
       accept = { auto_brackets = { enabled = false } },
       list = { selection = { auto_insert = false } },
