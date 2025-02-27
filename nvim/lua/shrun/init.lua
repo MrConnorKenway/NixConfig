@@ -1199,6 +1199,15 @@ function M.task_picker()
     format = 'text',
     formatters = { text = { ft = 'bash' } },
     preview = 'none',
+    on_change = function(_, item)
+      if not task_panel.sidebar_winid then
+        return
+      end
+
+      local range = task_panel.task_ranges[item.item]
+      task_panel.focused_task_range = range
+      highlight_focused()
+    end,
     confirm = function(picker, item)
       picker:close()
       if task_panel.sidebar_winid then
