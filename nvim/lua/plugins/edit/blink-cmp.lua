@@ -23,7 +23,22 @@ return {
       ['<C-b>'] = { 'scroll_documentation_up', 'fallback' },
       ['<C-f>'] = { 'scroll_documentation_down', 'fallback' },
     },
-    cmdline = { keymap = { preset = 'super-tab' } },
+    cmdline = {
+      keymap = {
+        ['<C-space>'] = {
+          'show',
+          'fallback',
+        },
+        ['<C-e>'] = { 'fallback' },
+        ['<Tab>'] = { 'select_and_accept', 'fallback' },
+        ['<C-p>'] = { 'select_prev', 'fallback' },
+        ['<C-n>'] = { 'select_next', 'fallback' },
+      },
+      completion = {
+        menu = { auto_show = true },
+        ghost_text = { enabled = false },
+      },
+    },
     sources = { default = { 'lsp', 'path' } },
     completion = {
       accept = { auto_brackets = { enabled = false } },
