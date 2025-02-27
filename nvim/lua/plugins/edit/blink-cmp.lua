@@ -42,11 +42,7 @@ return {
     },
     sources = {
       default = { 'lsp', 'path' },
-      providers = {
-        cmdline = {
-          min_keyword_length = 2,
-        },
-      },
+      providers = { cmdline = { min_keyword_length = 0 } },
     },
     completion = {
       accept = { auto_brackets = { enabled = false } },
