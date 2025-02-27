@@ -1204,6 +1204,16 @@ function M.task_picker()
         return
       end
 
+      if not item then
+        vim.wo[task_panel.task_output_winid].winfixbuf = false
+        vim.api.nvim_win_set_buf(
+          task_panel.task_output_winid,
+          empty_task_output_buf
+        )
+        vim.wo[task_panel.task_output_winid].winfixbuf = true
+        return
+      end
+
       local range = task_panel.task_ranges[item.item]
       task_panel.focused_task_range = range
       highlight_focused()
