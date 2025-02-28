@@ -41,6 +41,9 @@ local empty_task_output_buf = -1
 
 local original_winid = -1
 
+---@type snacks.Picker?
+local task_picker
+
 -- TODO: make configurable
 local sidebar_width = 48
 local sidebar_height = 16
@@ -306,6 +309,8 @@ local function save_original_winid()
   if
     prev_winid ~= task_panel.task_output_winid
     and prev_winid ~= task_panel.sidebar_winid
+    and prev_winid ~= (task_picker and task_picker.input.win.win or -1)
+    and prev_winid ~= (task_picker and task_picker.list.win.win or -1)
   then
     original_winid = prev_winid
   end
@@ -850,12 +855,18 @@ end
 
 function M.hide_panel()
   if task_panel.sidebar_winid then
+    if task_picker then
+      task_picker:close()
+    end
     vim.api.nvim_win_hide(task_panel.sidebar_winid)
   end
 end
 
 function M.toggle_panel()
   if task_panel.sidebar_winid then
+    if task_picker then
+      task_picker:close()
+    end
     vim.api.nvim_win_hide(task_panel.sidebar_winid)
     return
   end
@@ -1196,9 +1207,33 @@ function M.setup()
 end
 
 function M.task_picker()
-  Snacks.picker {
+  if not task_panel.sidebar_winid then
+    M.display_panel()
+  end
+
+  task_picker = Snacks.picker {
+    on_close = function()
+      vim.api.nvim_set_current_win(task_panel.sidebar_winid)
+    end,
     layout = {
-      preset = 'vscode',
+      layout = {
+        backdrop = false,
+        row = vim.o.lines - sidebar_height - 1,
+        col = 0,
+        height = sidebar_height,
+        width = sidebar_width - 1,
+        position = 'float',
+        border = 'none',
+        box = 'vertical',
+        {
+          win = 'input',
+          height = 1,
+          border = 'rounded',
+          title = '{title} {live} {flags}',
+          title_pos = 'center',
+        },
+        { win = 'list', border = 'none' },
+      },
     },
     win = {
       input = {
@@ -1245,6 +1280,11 @@ function M.task_picker()
             { range.start_line, 0 }
           )
         end)
+      end
+
+      local task = all_tasks[item.item]
+      if task.status ~= 'RUNNING' then
+        restart_task(task)
       end
     end,
     finder = function()
