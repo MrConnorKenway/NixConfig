@@ -509,6 +509,7 @@ local function start_task(task)
         if task.timer and not task.timer:is_closing() then
           task.timer:close()
         end
+        render_timer:close()
         if task.status == 'CANCELED' then
           return
         end
