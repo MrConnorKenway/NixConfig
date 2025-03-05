@@ -36,6 +36,7 @@ vim.opt.showmode = false
 vim.lsp.set_log_level('off')
 
 vim.g.mapleader = ' '
+vim.g.no_python_maps = true
 
 if os.getenv('SSH_TTY') ~= nil then
   local function paste()
