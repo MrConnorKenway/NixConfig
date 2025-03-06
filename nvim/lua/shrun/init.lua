@@ -1115,8 +1115,11 @@ function M.setup()
                 vim.api.nvim_set_current_win(task_panel.sidebar_winid)
               end
               -- Revert escape
-              cmd =
-                cmd:gsub('\\x3b', ';'):gsub('\\x0a', '\n'):gsub('\\\\', '\\')
+              cmd = cmd
+                :gsub('\\x3b', ';')
+                :gsub('\\x09', '\t')
+                :gsub('\\x0a', '\n')
+                :gsub('\\\\', '\\')
               vim.schedule(function()
                 M.display_panel()
                 init_task_from_cmd(cmd)

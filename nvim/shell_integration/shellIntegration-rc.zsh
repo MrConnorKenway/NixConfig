@@ -44,6 +44,8 @@ __vsc_escape_value() {
 			token="\\\\"
 		elif [ "$byte" = ";" ]; then
 			token="\\x3b"
+		elif [ "$byte" = $'\t' ]; then
+			token="\\x09"
 		elif [ "$byte" = $'\n' ]; then
 			token="\\x0a"
 		else
