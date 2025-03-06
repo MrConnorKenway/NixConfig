@@ -1260,6 +1260,10 @@ function M.task_picker()
 
       local range = task_panel.task_ranges[item.item]
       task_panel.focused_task_range = range
+      vim.api.nvim_win_set_cursor(
+        task_panel.sidebar_winid,
+        { range.start_line, 0 }
+      )
       highlight_focused()
     end,
     confirm = function(picker, item)
