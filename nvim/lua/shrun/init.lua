@@ -492,7 +492,7 @@ local function start_task(task)
           return
         end
         for i = #out, 1, -1 do
-          if out[i]:len() > 0 and out[i] ~= '\r' then
+          if out[i]:len() > 0 and out[i] ~= '\r' and out[i] ~= '^C' then
             task.output_tail = out[i]
             break
           end
