@@ -24,6 +24,32 @@ M.meta = {
   desc = 'Shrun task',
 }
 
+local out_prefix = 'out: '
+
+local function strip_escape_sequence(str)
+  -- Remove control characters and ANSI escape sequences using regex
+  -- Reference: https://stackoverflow.com/questions/14693701
+  local striped_str, _ = str
+    :gsub('[\r\x07]', '')
+    :gsub('\x1b[@-Z\\-_]', '') -- 7-bit C1 Fe (except CSI)
+    :gsub('\x1b%[[0-?]*[ -/]*[@-~]', '') -- second char is '[', i.e., CSI
+  return striped_str
+end
+
+function M:update_output_tail(sidebar_bufnr)
+  vim.bo[sidebar_bufnr].modifiable = true
+  vim.api.nvim_buf_set_text(
+    sidebar_bufnr,
+    self.output_line_num - 1,
+    out_prefix:len(),
+    self.output_line_num - 1,
+    -1,
+    { strip_escape_sequence(self.output_tail) }
+  )
+  vim.bo[sidebar_bufnr].modifiable = false
+  vim.bo[sidebar_bufnr].modified = false
+end
+
 --- Helper function that generate line content and highlight metadata of task
 --- based on the row offset, which will be then used for sidebar rendering
 ---@param row_offset integer zero-based indexing start row
@@ -34,7 +60,6 @@ function M:render(row_offset)
   local highlights = {}
   local status_len = string.len(self.status)
   local cmd_offset = status_len + 2 -- 2 == len(': ')
-  local out_prefix = 'out: '
 
   table.insert(lines, self.status .. ': ' .. self.escaped_cmd)
   table.insert(highlights, {
@@ -118,14 +143,7 @@ function M:render(row_offset)
     end
   end
 
-  -- Remove control characters and ANSI escape sequences using regex
-  -- Reference: https://stackoverflow.com/questions/14693701
-  local striped_str = self
-    .output_tail
-    :gsub('[\r\x07]', '')
-    :gsub('\x1b[@-Z\\-_]', '') -- 7-bit C1 Fe (except CSI)
-    :gsub('\x1b%[[0-?]*[ -/]*[@-~]', '') -- second char is '[', i.e., CSI
-  table.insert(lines, out_prefix .. striped_str)
+  table.insert(lines, out_prefix .. strip_escape_sequence(self.output_tail))
 
   self.output_line_num = row_offset + #lines
   table.insert(highlights, {

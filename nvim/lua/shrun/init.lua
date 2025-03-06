@@ -471,18 +471,7 @@ local function start_task(task)
     string.format('set -e; %s; sleep 0.1', task.cmd),
   }
 
-  local render_timer = vim.uv.new_timer()
-  if not render_timer then
-    error('Failed to create uv timer')
-  end
-
-  local timer_running = false
-  local render_fn = vim.schedule_wrap(function()
-    if task.output_line_num then
-      partial_render_sidebar(task)
-    end
-    timer_running = false
-  end)
+  local last_update_timestamp = vim.uv.now()
 
   run_in_tmp_win(task.buf_id, function()
     task.job_id = vim.fn.jobstart(new_cmd, {
@@ -497,9 +486,12 @@ local function start_task(task)
             break
           end
         end
-        if not timer_running then
-          timer_running = true
-          render_timer:start(0, 0, render_fn)
+        if task_panel.sidebar_winid and task.output_line_num then
+          local ts = vim.uv.now()
+          if ts - last_update_timestamp > 50 then
+            task:update_output_tail(task_panel.sidebar_bufnr)
+            last_update_timestamp = ts
+          end
         end
       end,
       on_exit = function(_, exit_code, _)
@@ -509,7 +501,6 @@ local function start_task(task)
         if task.timer and not task.timer:is_closing() then
           task.timer:close()
         end
-        render_timer:close()
         if task.status == 'CANCELED' then
           return
         end
