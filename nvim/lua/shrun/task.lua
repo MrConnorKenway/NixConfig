@@ -48,11 +48,11 @@ function M:render(row_offset)
     pcall(vim.treesitter.get_string_parser, self.escaped_cmd, 'bash')
   if ok and parser then
     parser:parse(true)
-    parser:for_each_tree(function(tstree, tree)
+    parser:for_each_tree(function(tstree, _)
       if not tstree then
         return
       end
-      local query = vim.treesitter.query.get(tree:lang(), 'highlights')
+      local query = vim.treesitter.query.get('bash', 'highlights')
       if not query then
         return
       end
@@ -62,31 +62,29 @@ function M:render(row_offset)
       do
         ---@type string
         local name = query.captures[capture]
-        if name ~= 'spell' then
-          local range = { node:range() } ---@type number[]
-          local multi = range[1] ~= range[3]
-          local text = multi
-              and vim.split(
-                vim.treesitter.get_node_text(
-                  node,
-                  self.escaped_cmd,
-                  metadata[capture]
-                ),
-                '\n',
-                { plain = true }
-              )
-            or {}
-          for row = range[1] + 1, range[3] + 1 do
-            local first, last = row == range[1] + 1, row == range[3] + 1
-            local end_col = last and range[4] or #(text[row - range[1]] or '')
-            end_col = multi and first and end_col + range[2] or end_col
-            table.insert(highlights, {
-              '@' .. name .. '.bash',
-              row_offset + #lines,
-              cmd_offset + (first and range[2] or 0),
-              cmd_offset + end_col,
-            })
-          end
+        local range = { node:range() } ---@type number[]
+        local multi = range[1] ~= range[3]
+        local text = multi
+            and vim.split(
+              vim.treesitter.get_node_text(
+                node,
+                self.escaped_cmd,
+                metadata[capture]
+              ),
+              '\n',
+              { plain = true }
+            )
+          or {}
+        for row = range[1] + 1, range[3] + 1 do
+          local first, last = row == range[1] + 1, row == range[3] + 1
+          local end_col = last and range[4] or #(text[row - range[1]] or '')
+          end_col = multi and first and end_col + range[2] or end_col
+          table.insert(highlights, {
+            '@' .. name .. '.bash',
+            row_offset + #lines,
+            cmd_offset + (first and range[2] or 0),
+            cmd_offset + end_col,
+          })
         end
       end
     end)
