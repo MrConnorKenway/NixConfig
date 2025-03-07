@@ -145,21 +145,7 @@ local function highlight_focused()
   end
 end
 
--- Currently only support one line extmark
-local function apply_extmarks(extmarks)
-  for _, extmark in ipairs(extmarks) do
-    local group, row_start = unpack(extmark)
-    vim.api.nvim_buf_set_extmark(
-      task_panel.sidebar_bufnr,
-      sidebar_hl_ns,
-      row_start - 1,
-      0,
-      { hl_eol = true, hl_group = group, end_row = row_start }
-    )
-  end
-end
-
-local function redraw_panel(lines, highlights, start_line, end_line, extmarks)
+local function redraw_panel(lines, highlights, start_line, end_line)
   vim.bo[task_panel.sidebar_bufnr].modifiable = true
   vim.api.nvim_buf_set_lines(
     task_panel.sidebar_bufnr,
@@ -180,10 +166,6 @@ local function redraw_panel(lines, highlights, start_line, end_line, extmarks)
       { row_start - 1, col_start },
       { row_start - 1, col_end }
     )
-  end
-
-  if extmarks then
-    apply_extmarks(extmarks)
   end
 
   -- Since extmark highlight is bound to buffer, we should highlight focused
@@ -249,7 +231,7 @@ end
 local function render_sidebar_from_scratch()
   local lines = {}
   local highlights = {}
-  local extmarks = {}
+  local separator_highlights = {}
   local separator = string.rep(separator_stem, vim.o.columns)
 
   task_panel.task_ranges = {}
@@ -266,11 +248,16 @@ local function render_sidebar_from_scratch()
     vim.list_extend(highlights, task_highlights)
     if task_id > 1 then
       table.insert(lines, separator)
-      table.insert(extmarks, { 'FloatBorder', #lines, 0, -1 })
+      table.insert(
+        separator_highlights,
+        -- Don't use `vim.o.columns` because separator contains unicode characters
+        { 'FloatBorder', #lines, 0, separator:len() }
+      )
     end
   end
+  vim.list_extend(highlights, separator_highlights)
 
-  redraw_panel(lines, highlights, 0, -1, extmarks)
+  redraw_panel(lines, highlights, 0, -1)
 end
 
 ---@param lnum integer
@@ -905,7 +892,7 @@ local function init_task_from_cmd(cmd)
   start_task(task)
   all_tasks[task.id] = task
 
-  local extmarks = {}
+  local separator_highlights = {}
   local lines, highlights = task:render(0)
   local task_range = { start_line = 1, end_line = #lines, task_id = task.id }
   local empty = next(task_panel.task_ranges) == nil
@@ -913,7 +900,11 @@ local function init_task_from_cmd(cmd)
   if not empty then
     local separator = string.rep(separator_stem, vim.o.columns)
     table.insert(lines, separator)
-    table.insert(extmarks, { 'FloatBorder', #lines })
+    table.insert(
+      separator_highlights,
+      -- Don't use `vim.o.columns` because separator contains unicode characters
+      { 'FloatBorder', #lines, 0, separator:len() }
+    )
     move_task_ranges(#lines, 0)
   end
   task_panel.task_ranges[task.id] = task_range
@@ -926,6 +917,7 @@ local function init_task_from_cmd(cmd)
   end
   vim.bo[task_panel.sidebar_bufnr].modifiable = false
   vim.bo[task_panel.sidebar_bufnr].modified = false
+  vim.list_extend(highlights, separator_highlights)
 
   for _, hl in ipairs(highlights) do
     local group, lnum, col_start, col_end = unpack(hl)
@@ -937,8 +929,6 @@ local function init_task_from_cmd(cmd)
       { lnum - 1, col_end }
     )
   end
-
-  apply_extmarks(extmarks)
 
   if task_panel.sidebar_winid then
     vim.api.nvim_win_set_cursor(task_panel.sidebar_winid, { 1, 0 })
