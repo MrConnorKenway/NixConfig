@@ -1,8 +1,8 @@
 local M = {}
 
 ---@class shrun.TaskRange
----@field start_line integer
----@field end_line integer
+---@field start_line integer 1-based row index, does not include separator
+---@field end_line integer 1-based row index, does not include separator
 ---@field task_id integer
 
 ---all registered tasks
