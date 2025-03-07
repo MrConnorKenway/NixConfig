@@ -1,5 +1,7 @@
 local M = {}
 
+local config = require('shrun.config')
+
 ---@class shrun.TaskRange
 ---@field start_line integer 1-based row index, does not include separator
 ---@field end_line integer 1-based row index, does not include separator
@@ -193,6 +195,9 @@ local function move_task_ranges(offset, start_line)
       local task = all_tasks[range.task_id]
       if task.output_line_num then
         task.output_line_num = task.output_line_num + offset
+      end
+      if task.elapsed_time_line_num then
+        task.elapsed_time_line_num = task.elapsed_time_line_num + offset
       end
       range.start_line = range.start_line + offset
       range.end_line = range.end_line + offset
@@ -449,12 +454,6 @@ local function new_task_output_buffer(task)
 end
 
 ---@param task shrun.Task
-local function update_time_in_task_output(task)
-  task.elapsed_time = task.elapsed_time + timer_repeat_interval
-  partial_render_sidebar(task)
-end
-
----@param task shrun.Task
 local function start_task(task)
   new_task_output_buffer(task)
   task.status = 'RUNNING'
@@ -548,7 +547,15 @@ local function start_task(task)
           task.timer = nil
           return
         end
-        update_time_in_task_output(task)
+
+        task.elapsed_time = task.elapsed_time + timer_repeat_interval
+        if task.elapsed_time > config.long_time_threshold then
+          if task.elapsed_time_line_num then
+            task:update_time(task_panel.sidebar_bufnr)
+          else
+            partial_render_sidebar(task)
+          end
+        end
       end)
     )
   else

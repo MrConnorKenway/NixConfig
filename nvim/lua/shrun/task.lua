@@ -17,12 +17,15 @@
 ---@field output_line_num integer?
 ---@field follow_term_output boolean
 ---@field elapsed_time integer
+---@field elapsed_time_line_num integer?
 ---@field timer uv.uv_timer_t?
 local M = setmetatable({}, nil)
 M.__index = M
 M.meta = {
   desc = 'Shrun task',
 }
+
+local config = require('shrun.config')
 
 local out_prefix = 'out: '
 
@@ -34,6 +37,39 @@ local function strip_escape_sequence(str)
     :gsub('\x1b[@-Z\\-_]', '') -- 7-bit C1 Fe (except CSI)
     :gsub('\x1b%[[0-?]*[ -/]*[@-~]', '') -- second char is '[', i.e., CSI
   return striped_str
+end
+
+function M:update_time(sidebar_bufnr)
+  local seconds = self.elapsed_time / 1000
+  local minutes
+  local hours
+  local time_string
+
+  vim.bo[sidebar_bufnr].modifiable = true
+
+  if seconds < 60 then
+    time_string = tostring(seconds) .. 's'
+  elseif seconds < 3600 then
+    minutes = math.floor(seconds / 60)
+    seconds = seconds % 60
+    time_string = string.format('%dm %ds', minutes, seconds)
+  else
+    hours = math.floor(seconds / 3600)
+    minutes = math.floor(seconds / 60) % 60
+    seconds = seconds % 60
+    time_string = string.format('%dh %dm %ds', hours, minutes, seconds)
+  end
+  vim.api.nvim_buf_set_text(
+    sidebar_bufnr,
+    self.elapsed_time_line_num - 1,
+    0,
+    self.elapsed_time_line_num - 1,
+    -1,
+    { time_string }
+  )
+
+  vim.bo[sidebar_bufnr].modifiable = false
+  vim.bo[sidebar_bufnr].modified = false
 end
 
 function M:update_output_tail(sidebar_bufnr)
@@ -123,8 +159,7 @@ function M:render(row_offset)
     })
   end
 
-  -- TODO: make minimum interval configurable
-  if self.elapsed_time > 3000 then
+  if self.elapsed_time > config.long_time_threshold then
     local seconds = self.elapsed_time / 1000
     local minutes
     local hours
@@ -141,6 +176,8 @@ function M:render(row_offset)
       seconds = seconds % 60
       table.insert(lines, string.format('%dh %dm %ds', hours, minutes, seconds))
     end
+
+    self.elapsed_time_line_num = row_offset + #lines
   end
 
   table.insert(lines, out_prefix .. strip_escape_sequence(self.output_tail))
