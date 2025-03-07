@@ -1531,13 +1531,26 @@ function M.test()
 
       -- focused task should be on the top
       abort_tests_if_not(task_panel.focused_task_range.start_line == 1)
-      abort_tests_if_not(#extmarks == 1)
-      abort_tests_if_not(
-        extmarks[1][2] == task_panel.focused_task_range.start_line - 1
-      )
-      abort_tests_if_not(
-        extmarks[1][4].end_row == task_panel.focused_task_range.end_line - 1
-      )
+      abort_tests_if_not(#extmarks == 2)
+      for _, extmark in ipairs(extmarks) do
+        if extmark[4].hl_group == 'Bold' then
+          abort_tests_if_not(
+            extmark[2] == task_panel.focused_task_range.start_line - 1
+          )
+          abort_tests_if_not(
+            extmark[4].end_row == task_panel.focused_task_range.start_line - 1
+          )
+        elseif extmark[4].line_hl_group == 'ShrunHighlightTaskFocus' then
+          abort_tests_if_not(
+            extmark[2] == task_panel.focused_task_range.start_line - 1
+          )
+          abort_tests_if_not(
+            extmark[4].end_row == task_panel.focused_task_range.end_line - 1
+          )
+        else
+          abort_tests_if_not(false)
+        end
+      end
     end,
     'normal x',
     ------------------ end test ------------------------------------------------
