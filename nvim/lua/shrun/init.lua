@@ -145,7 +145,18 @@ local function highlight_focused()
   end
 end
 
+---Redraw [`start_line`, `end_line`) of sidebar buffer, using `lines` as buffer
+---content and `highlights` to highlight.
+---@param start_line integer 0-indexed inclusive line number that redraw begins
+---@param end_line integer 0-indexed exclusive line number that redraw ends
 local function redraw_panel(lines, highlights, start_line, end_line)
+  vim.api.nvim_buf_clear_namespace(
+    task_panel.sidebar_bufnr,
+    sidebar_hl_ns,
+    start_line,
+    end_line
+  )
+
   vim.bo[task_panel.sidebar_bufnr].modifiable = true
   vim.api.nvim_buf_set_lines(
     task_panel.sidebar_bufnr,
@@ -671,6 +682,12 @@ local function new_sidebar_buffer()
 
     vim.bo[task_panel.sidebar_bufnr].modifiable = true
     if nr_tasks == 0 then
+      vim.api.nvim_buf_clear_namespace(
+        task_panel.sidebar_bufnr,
+        sidebar_hl_ns,
+        range.start_line - 1,
+        range.end_line
+      )
       vim.api.nvim_buf_set_lines(task_panel.sidebar_bufnr, 0, -1, true, {})
       vim.api.nvim_buf_clear_namespace(
         task_panel.sidebar_bufnr,
@@ -680,6 +697,12 @@ local function new_sidebar_buffer()
       )
     else
       if range.start_line == 1 then
+        vim.api.nvim_buf_clear_namespace(
+          task_panel.sidebar_bufnr,
+          sidebar_hl_ns,
+          0,
+          range.end_line + 1
+        )
         vim.api.nvim_buf_set_lines(
           task_panel.sidebar_bufnr,
           0,
@@ -688,6 +711,12 @@ local function new_sidebar_buffer()
           {}
         )
       else
+        vim.api.nvim_buf_clear_namespace(
+          task_panel.sidebar_bufnr,
+          sidebar_hl_ns,
+          range.start_line - 2,
+          range.end_line
+        )
         vim.api.nvim_buf_set_lines(
           task_panel.sidebar_bufnr,
           range.start_line - 2,
