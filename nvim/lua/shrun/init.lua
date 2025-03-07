@@ -1607,6 +1607,17 @@ function M.test()
           vim.uv.timer_stop(timer)
           vim.uv.close(timer)
 
+          -- Since all tasks have been deleted, sidebar buffer should be free
+          -- of highlights, extmarks, and virtual texts.
+          local extmarks = vim.api.nvim_buf_get_extmarks(
+            task_panel.sidebar_bufnr,
+            sidebar_hl_ns,
+            0,
+            -1,
+            {}
+          )
+          abort_tests_if_not(#extmarks == 0)
+
           next_task_id = 1
           vim.notify(
             'All tests passed',
