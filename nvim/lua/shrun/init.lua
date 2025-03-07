@@ -1,5 +1,6 @@
 local M = {}
 
+local utils = require('shrun.utils')
 local config = require('shrun.config')
 
 ---@class shrun.TaskRange
@@ -159,16 +160,13 @@ local function redraw_panel(lines, highlights, start_line, end_line)
     end_line
   )
 
-  vim.bo[task_panel.sidebar_bufnr].modifiable = true
-  vim.api.nvim_buf_set_lines(
+  utils.buf_set_lines(
     task_panel.sidebar_bufnr,
     start_line,
     end_line,
     true,
     lines
   )
-  vim.bo[task_panel.sidebar_bufnr].modifiable = false
-  vim.bo[task_panel.sidebar_bufnr].modified = false
 
   for _, hl in ipairs(highlights) do
     local group, row_start, col_start, col_end = unpack(hl)
@@ -687,7 +685,6 @@ local function new_sidebar_buffer()
       nr_tasks = nr_tasks + 1
     end
 
-    vim.bo[task_panel.sidebar_bufnr].modifiable = true
     if nr_tasks == 0 then
       vim.api.nvim_buf_clear_namespace(
         task_panel.sidebar_bufnr,
@@ -695,7 +692,7 @@ local function new_sidebar_buffer()
         range.start_line - 1,
         range.end_line
       )
-      vim.api.nvim_buf_set_lines(task_panel.sidebar_bufnr, 0, -1, true, {})
+      utils.buf_set_lines(task_panel.sidebar_bufnr, 0, -1, true, {})
       vim.api.nvim_buf_clear_namespace(
         task_panel.sidebar_bufnr,
         sidebar_focus_hl_ns,
@@ -710,7 +707,7 @@ local function new_sidebar_buffer()
           0,
           range.end_line + 1
         )
-        vim.api.nvim_buf_set_lines(
+        utils.buf_set_lines(
           task_panel.sidebar_bufnr,
           0,
           range.end_line + 1,
@@ -724,7 +721,7 @@ local function new_sidebar_buffer()
           range.start_line - 2,
           range.end_line
         )
-        vim.api.nvim_buf_set_lines(
+        utils.buf_set_lines(
           task_panel.sidebar_bufnr,
           range.start_line - 2,
           range.end_line,
@@ -737,8 +734,6 @@ local function new_sidebar_buffer()
       --        = range.start_line - 2 - range.end_line
       move_task_ranges(range.start_line - 2 - range.end_line, range.start_line)
     end
-    vim.bo[task_panel.sidebar_bufnr].modifiable = false
-    vim.bo[task_panel.sidebar_bufnr].modified = false
 
     if not vim.api.nvim_buf_is_valid(empty_task_output_buf) then
       empty_task_output_buf = new_empty_buffer()
@@ -945,14 +940,11 @@ local function init_task_from_cmd(cmd)
   end
   task_panel.task_ranges[task.id] = task_range
 
-  vim.bo[task_panel.sidebar_bufnr].modifiable = true
   if empty then
-    vim.api.nvim_buf_set_lines(task_panel.sidebar_bufnr, 0, -1, true, lines)
+    utils.buf_set_lines(task_panel.sidebar_bufnr, 0, -1, true, lines)
   else
-    vim.api.nvim_buf_set_lines(task_panel.sidebar_bufnr, 0, 0, true, lines)
+    utils.buf_set_lines(task_panel.sidebar_bufnr, 0, 0, true, lines)
   end
-  vim.bo[task_panel.sidebar_bufnr].modifiable = false
-  vim.bo[task_panel.sidebar_bufnr].modified = false
   vim.list_extend(highlights, separator_highlights)
 
   for _, hl in ipairs(highlights) do

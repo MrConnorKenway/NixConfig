@@ -25,6 +25,7 @@ M.meta = {
   desc = 'Shrun task',
 }
 
+local utils = require('shrun.utils')
 local config = require('shrun.config')
 
 local out_prefix = 'out: '
@@ -45,8 +46,6 @@ function M:update_time(sidebar_bufnr)
   local hours
   local time_string
 
-  vim.bo[sidebar_bufnr].modifiable = true
-
   if seconds < 60 then
     time_string = tostring(seconds) .. 's'
   elseif seconds < 3600 then
@@ -59,7 +58,8 @@ function M:update_time(sidebar_bufnr)
     seconds = seconds % 60
     time_string = string.format('%dh %dm %ds', hours, minutes, seconds)
   end
-  vim.api.nvim_buf_set_text(
+
+  utils.buf_set_text(
     sidebar_bufnr,
     self.elapsed_time_line_num - 1,
     0,
@@ -67,14 +67,10 @@ function M:update_time(sidebar_bufnr)
     -1,
     { time_string }
   )
-
-  vim.bo[sidebar_bufnr].modifiable = false
-  vim.bo[sidebar_bufnr].modified = false
 end
 
 function M:update_output_tail(sidebar_bufnr)
-  vim.bo[sidebar_bufnr].modifiable = true
-  vim.api.nvim_buf_set_text(
+  utils.buf_set_text(
     sidebar_bufnr,
     self.output_line_num - 1,
     out_prefix:len(),
@@ -82,8 +78,6 @@ function M:update_output_tail(sidebar_bufnr)
     -1,
     { strip_escape_sequence(self.output_tail) }
   )
-  vim.bo[sidebar_bufnr].modifiable = false
-  vim.bo[sidebar_bufnr].modified = false
 end
 
 --- Helper function that generate line content and highlight metadata of task
