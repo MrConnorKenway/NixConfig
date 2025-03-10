@@ -6,7 +6,6 @@
       tree
       procs
       git
-      pahole
       clang-tools
       nixd
       tree-sitter

@@ -13,17 +13,25 @@
 
   outputs = { nixpkgs, home-manager, nixpkgs-unstable, ... }:
     let
-      lib = nixpkgs.lib;
-      system = "x86_64-linux";
-      pkgs = import nixpkgs { inherit system; };
+      mkHomeConfiguration = system: args: home-manager.lib.homeManagerConfiguration ({
+        pkgs = import nixpkgs { inherit system; };
+        extraSpecialArgs = {
+          pkgs-unstable = import nixpkgs-unstable { inherit system; };
+        };
+      } // args);
     in {
       homeConfigurations = {
-        ck = home-manager.lib.homeManagerConfiguration {
-          inherit pkgs;
-          extraSpecialArgs = {
-            pkgs-unstable = import nixpkgs-unstable { inherit system; };
-          };
-          modules = [ ./home.nix ];
+        linux = mkHomeConfiguration "x86_64-linux" {
+          modules = [
+            ./linux.nix
+            ./shared.nix
+          ];
+        };
+        darwin = mkHomeConfiguration "aarch64-darwin" {
+          modules = [
+            ./darwin.nix
+            ./shared.nix
+          ];
         };
       };
     };
