@@ -15,6 +15,7 @@
       zoxide
       rustup
       stylua
+      home-manager
     ];
 
     username = builtins.getEnv "USER";
@@ -72,7 +73,6 @@
       enable = true;
       keyMode = "vi";
       prefix = "C-j";
-      terminal = "tmux-256color";
       escapeTime = 10;
 
       plugins = with pkgs.tmuxPlugins; [
@@ -84,7 +84,6 @@
     neovim = {
       package = pkgs-unstable.neovim-unwrapped;
       enable = true;
-      vimAlias = true;
     };
 
     zsh = {
@@ -126,14 +125,7 @@
         enable = true;
         plugins = [ "git" "fzf" ];
       };
-
-      shellAliases = {
-        cat = "bat";
-      };
     };
-
-    home-manager.enable = true;
-
   };
 }
 
