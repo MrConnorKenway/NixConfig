@@ -124,6 +124,7 @@
       oh-my-zsh = {
         enable = true;
         plugins = [ "git" "fzf" ];
+        custom = "$HOME/NixConfig/omz";
       };
     };
   };
