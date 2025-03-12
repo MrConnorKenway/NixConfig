@@ -185,7 +185,7 @@ vim.api.nvim_create_autocmd('BufRead', {
           and last_known_line > 1
           and last_known_line <= vim.api.nvim_buf_line_count(opts.buf)
         then
-          vim.api.nvim_feedkeys([[g`"]], 'nx', false)
+          vim.cmd('normal! g`"')
         end
       end,
     })
