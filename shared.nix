@@ -35,7 +35,6 @@
   };
 
   programs = {
-
     less = {
       enable = true;
       keys = ''
