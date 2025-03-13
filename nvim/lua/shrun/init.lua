@@ -468,7 +468,7 @@ local function start_task(task)
     string.format('set -e; %s; sleep 0.1', task.cmd),
   }
 
-  local last_update_timestamp = vim.uv.now()
+  local last_update_timestamp = 0
 
   run_in_tmp_win(task.buf_id, function()
     task.job_id = vim.fn.jobstart(new_cmd, {
@@ -498,6 +498,7 @@ local function start_task(task)
         if task.timer and not task.timer:is_closing() then
           task.timer:close()
         end
+        task:update_output_tail(task_panel.sidebar_bufnr)
         if task.status == 'CANCELED' then
           return
         end
