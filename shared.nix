@@ -70,10 +70,6 @@
       nix-direnv.enable = true;
     };
 
-    zoxide = {
-      enable = true;
-    };
-
     fd = {
       enable = true;
       extraOptions = [ "--no-ignore" "--hidden" ];
