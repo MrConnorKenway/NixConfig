@@ -9,7 +9,6 @@
       clang-tools
       nixd
       lua-language-server
-      just
       basedpyright
       zoxide
       rustup
