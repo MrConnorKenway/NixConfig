@@ -8,7 +8,6 @@
       git
       clang-tools
       nixd
-      tree-sitter
       lua-language-server
       just
       basedpyright
