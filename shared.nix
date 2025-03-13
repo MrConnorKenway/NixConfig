@@ -38,6 +38,23 @@
 
   programs = {
 
+    less = {
+      enable = true;
+      keys = ''
+        #line-edit
+        ^A home
+        ^E end
+        ^F right
+        ^B left
+        ^P up
+        ^N down
+        ^D delete
+        ^W word-backspace
+        \ed word-delete
+        \ef word-right
+      '';
+    };
+
     fzf = {
       package = pkgs-unstable.fzf;
       enable = true;
