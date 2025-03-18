@@ -569,7 +569,7 @@ end
 local function new_sidebar_buffer()
   local sidebar_bufnr = vim.api.nvim_create_buf(false, true)
 
-  vim.api.nvim_buf_set_name(sidebar_bufnr, 'Shrun Sidebar')
+  vim.api.nvim_buf_set_name(sidebar_bufnr, '[Shrun Sidebar]')
 
   vim.bo[sidebar_bufnr].filetype = 'shrun_sidebar'
   vim.bo[sidebar_bufnr].buftype = 'nofile'
