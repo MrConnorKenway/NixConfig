@@ -1064,8 +1064,7 @@ function M.setup()
     local home_dir = vim.uv.os_homedir()
     -- FIXME: hard coded config
     local width = 80
-    local height = 2
-    local max_height = 20
+    local height = 20
 
     if shell_win and vim.api.nvim_win_is_valid(shell_win) then
       vim.cmd('startinsert')
@@ -1119,21 +1118,12 @@ function M.setup()
                 M.display_panel()
                 init_task_from_cmd(cmd)
               end)
+              vim.api.nvim_chan_send(shell_job, '\x0c')
               return
             end
           end
-
-          found = request:find('\x1b]133;B')
-          if found and vim.api.nvim_win_is_valid(shell_win) then
-            -- Resize to original height if we meet prompt end, i.e., OSC 133;B
-            vim.cmd('resize ' .. height)
-          end
         end,
       })
-      vim.keymap.set('t', '<C-r>', function()
-        vim.cmd('resize ' .. max_height)
-        vim.api.nvim_chan_send(shell_job, '\x12')
-      end, { buffer = shell_buf })
 
       vim.keymap.set('t', '<C-d>', function()
         vim.api.nvim_win_hide(shell_win)
@@ -1144,7 +1134,7 @@ function M.setup()
       relative = 'editor',
       width = width,
       height = height,
-      row = math.floor((vim.o.lines - max_height) / 2),
+      row = math.floor((vim.o.lines - height) / 2),
       col = math.floor((vim.o.columns - width) / 2),
       style = 'minimal',
       border = 'rounded',

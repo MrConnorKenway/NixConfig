@@ -64,12 +64,7 @@ __shrun_preexec() {
 	USER_ZDOTDIR=$HOME ZDOTDIR=$HOME/.config/nvim/shell_integration exec zsh -i
 }
 
-__shrun_precmd() {
-	printf "\033]133;B\a"
-}
-
 add-zsh-hook preexec __shrun_preexec
-add-zsh-hook precmd __shrun_precmd
 
 if [[ $options[login] = off && $USER_ZDOTDIR != $VSCODE_ZDOTDIR ]]; then
 	ZDOTDIR=$USER_ZDOTDIR
