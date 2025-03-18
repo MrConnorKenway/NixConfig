@@ -450,6 +450,14 @@ end
 
 ---@param task shrun.Task
 local function start_task(task)
+  local old_buf = task.buf_id
+  -- Delay buffer delete after new buffer is opened in task output window,
+  -- otherwise the task output window will be instantly closed
+  if vim.api.nvim_buf_is_valid(old_buf) then
+    vim.schedule(function()
+      pcall(vim.api.nvim_buf_delete, old_buf, {})
+    end)
+  end
   new_task_output_buffer(task)
   task.status = 'RUNNING'
   task.elapsed_time = 0
@@ -545,14 +553,6 @@ end
 
 ---@param task shrun.Task
 local function restart_task(task)
-  local old_buf = task.buf_id
-  -- Delay buffer delete after new buffer is opened in task output window,
-  -- otherwise the task output window will be instantly closed
-  if vim.api.nvim_buf_is_valid(old_buf) then
-    vim.schedule(function()
-      pcall(vim.api.nvim_buf_delete, old_buf, {})
-    end)
-  end
   start_task(task)
   partial_render_sidebar(task)
 end
@@ -1012,6 +1012,7 @@ function M.setup()
       local task
       for _, cmd in ipairs(cmds) do
         task = require('shrun.task').new(next_task_id, cmd)
+        new_task_output_buffer(task)
         next_task_id = next_task_id + 1
         all_tasks[#all_tasks + 1] = task
       end
