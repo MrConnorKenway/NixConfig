@@ -59,8 +59,8 @@ __vsc_escape_value() {
 }
 
 __shrun_preexec() {
-	printf "\033]633;E;%s\033\\" "$(__vsc_escape_value $3)"
-	print -s $2
+	builtin printf "\033]633;E;%s\033\\" "$(__vsc_escape_value $3)"
+	builtin print -s $2
 	USER_ZDOTDIR=$HOME ZDOTDIR=$HOME/.config/nvim/shell_integration exec zsh -i
 }
 
