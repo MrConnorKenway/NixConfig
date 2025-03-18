@@ -1,6 +1,7 @@
 ---@type snacks.win?
 local term_win
 local prev_win = -1
+local term_height = 16
 
 local function create_snacks_terminal()
   term_win = Snacks.terminal.get(nil, {
@@ -8,7 +9,8 @@ local function create_snacks_terminal()
       on_win = function()
         prev_win = vim.fn.win_getid(vim.fn.winnr('#'))
       end,
-      on_close = function()
+      on_close = function(self)
+        term_height = vim.api.nvim_win_get_height(self.win)
         if vim.api.nvim_win_is_valid(prev_win) then
           vim.api.nvim_set_current_win(prev_win)
         end
@@ -557,7 +559,9 @@ return {
         wo = {
           winbar = '',
         },
-        height = 16,
+        height = function()
+          return term_height
+        end,
       },
     },
     zen = {
