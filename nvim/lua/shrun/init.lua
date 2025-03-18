@@ -1013,6 +1013,9 @@ function M.setup()
       for _, cmd in ipairs(cmds) do
         task = require('shrun.task').new(next_task_id, cmd)
         new_task_output_buffer(task)
+        vim.bo[task.buf_id].filetype = 'shrun_task_command'
+        utils.buf_set_lines(task.buf_id, 0, -1, true, vim.split(task.cmd, '\n'))
+        vim.treesitter.start(task.buf_id, 'bash')
         next_task_id = next_task_id + 1
         all_tasks[#all_tasks + 1] = task
       end
