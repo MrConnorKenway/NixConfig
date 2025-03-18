@@ -1234,6 +1234,9 @@ function M.task_picker()
       end
 
       if not item then
+        if not vim.api.nvim_buf_is_valid(empty_task_output_buf) then
+          empty_task_output_buf = new_empty_buffer()
+        end
         vim.wo[task_panel.task_output_winid].winfixbuf = false
         vim.api.nvim_win_set_buf(
           task_panel.task_output_winid,
