@@ -191,9 +191,6 @@ local function move_task_ranges(offset, start_line)
   for _, range in pairs(task_panel.task_ranges) do
     if range.start_line > start_line then
       local task = all_tasks[range.task_id]
-      if task.output_line_num then
-        task.output_line_num = task.output_line_num + offset
-      end
       if task.elapsed_time_line_num then
         task.elapsed_time_line_num = task.elapsed_time_line_num + offset
       end
@@ -458,8 +455,6 @@ local function start_task(task)
   task.elapsed_time = 0
   task.elapsed_time_line_num = nil
   task.timer = vim.uv.new_timer()
-  task.output_tail = ''
-  task.output_line_num = nil
 
   -- 'sleep': wait 100ms before finishing job, giving neovim enough time to sync output
   local new_cmd = {
@@ -468,29 +463,9 @@ local function start_task(task)
     string.format('set -e; %s; sleep 0.1', task.cmd),
   }
 
-  local last_update_timestamp = 0
-
   run_in_tmp_win(task.buf_id, function()
     task.job_id = vim.fn.jobstart(new_cmd, {
       term = true,
-      on_stdout = function(_, out)
-        if task.status == 'CANCELED' then
-          return
-        end
-        for i = #out, 1, -1 do
-          if out[i]:len() > 0 and out[i] ~= '\r' and out[i] ~= '^C' then
-            task.output_tail = out[i]
-            break
-          end
-        end
-        if task_panel.sidebar_winid and task.output_line_num then
-          local ts = vim.uv.now()
-          if ts - last_update_timestamp > 50 then
-            task:update_output_tail(task_panel.sidebar_bufnr)
-            last_update_timestamp = ts
-          end
-        end
-      end,
       on_exit = function(_, exit_code, _)
         if vim.api.nvim_get_current_buf() == task.buf_id then
           vim.cmd('stopinsert')
@@ -498,7 +473,6 @@ local function start_task(task)
         if task.timer and not task.timer:is_closing() then
           task.timer:close()
         end
-        task:update_output_tail(task_panel.sidebar_bufnr)
         if task.status == 'CANCELED' then
           return
         end

@@ -13,8 +13,6 @@
 ---@field status shrun.TaskStatus
 ---@field buf_id integer
 ---@field job_id integer
----@field output_tail string
----@field output_line_num integer?
 ---@field follow_term_output boolean
 ---@field elapsed_time integer
 ---@field elapsed_time_line_num integer?
@@ -27,8 +25,6 @@ M.meta = {
 
 local utils = require('shrun.utils')
 local config = require('shrun.config')
-
-local out_prefix = 'out: '
 
 local function strip_escape_sequence(str)
   -- Remove control characters and ANSI escape sequences using regex
@@ -66,17 +62,6 @@ function M:update_time(sidebar_bufnr)
     self.elapsed_time_line_num - 1,
     -1,
     { time_string }
-  )
-end
-
-function M:update_output_tail(sidebar_bufnr)
-  utils.buf_set_text(
-    sidebar_bufnr,
-    self.output_line_num - 1,
-    out_prefix:len(),
-    self.output_line_num - 1,
-    -1,
-    { strip_escape_sequence(self.output_tail) }
   )
 end
 
@@ -174,16 +159,6 @@ function M:render(row_offset)
     self.elapsed_time_line_num = row_offset + #lines
   end
 
-  table.insert(lines, out_prefix .. strip_escape_sequence(self.output_tail))
-
-  self.output_line_num = row_offset + #lines
-  table.insert(highlights, {
-    'ShrunHighlightTaskOutPrefix',
-    row_offset + #lines,
-    0,
-    string.len(out_prefix),
-  })
-
   return lines, highlights
 end
 
@@ -245,7 +220,6 @@ function M.new(id, cmd)
     status = 'IDLE',
     buf_id = -1,
     job_id = -1,
-    output_tail = '',
     follow_term_output = true,
     elapsed_time = 0,
   }, M)
