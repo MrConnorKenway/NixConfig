@@ -740,8 +740,14 @@ local function new_sidebar_buffer()
   vim.api.nvim_create_autocmd('BufHidden', {
     buffer = sidebar_bufnr,
     callback = function()
-      sidebar_width = vim.api.nvim_win_get_width(task_panel.sidebar_winid)
-      sidebar_height = vim.api.nvim_win_get_height(task_panel.sidebar_winid)
+      local width = vim.api.nvim_win_get_width(task_panel.sidebar_winid)
+      local height = vim.api.nvim_win_get_height(task_panel.sidebar_winid)
+      if width > 0 and width < vim.o.columns then
+        sidebar_width = width
+      end
+      if height > 0 and height < vim.o.lines then
+        sidebar_height = height
+      end
       task_panel.sidebar_cursor =
         vim.api.nvim_win_get_cursor(task_panel.sidebar_winid)
       task_panel.sidebar_winid = nil
