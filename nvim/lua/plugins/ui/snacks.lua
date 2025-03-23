@@ -141,7 +141,12 @@ return {
     {
       '<leader>f',
       function()
-        Snacks.picker.explorer()
+        Snacks.picker.explorer {
+          hidden = true,
+          ignored = true,
+          follow = true,
+          focus = 'input',
+        }
       end,
       desc = 'Open snacks explorer',
     },
