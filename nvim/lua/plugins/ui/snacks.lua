@@ -575,5 +575,8 @@ return {
         end,
       },
     },
+    explorer = {
+      replace_netrw = true,
+    },
   },
 }

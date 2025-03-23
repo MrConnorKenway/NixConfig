@@ -344,6 +344,7 @@ require('lazy').setup {
         'tohtml',
         'zipPlugin',
         'tutor',
+        'netrwPlugin',
       },
     },
   },
