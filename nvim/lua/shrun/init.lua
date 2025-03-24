@@ -21,6 +21,7 @@ local next_task_id = 1
 ---@field sidebar_winid integer? when winid == nil, the window is closed
 ---@field sidebar_cursor integer[]?
 ---@field task_output_winid integer? when winid == nil, the window is closed
+---@field exit_win 'sidebar' | 'output' | nil the name of window of last task panel exit
 ---
 ---  Task Panel:
 ---  ╭─────────────────────────────────────────────────────╮
@@ -344,6 +345,7 @@ local function new_task_output_window(buf_id)
       end
       if vim.api.nvim_get_current_win() == winid then
         save_original_winid()
+        task_panel.exit_win = 'output'
       end
     end,
   })
@@ -745,6 +747,7 @@ local function new_sidebar_buffer()
       -- We don't want to trigger BufEnter when task panel is closing
       if task_panel.task_output_winid then
         save_original_winid()
+        task_panel.exit_win = 'sidebar'
       end
     end,
   })
@@ -818,6 +821,11 @@ function M.display_panel()
   if task_panel.sidebar_winid then
     return
   end
+
+  -- Save exit window so that the following window creation won't overwrite `exit_win`
+  local exit_win = task_panel.exit_win
+
+  -- Create sidebar window
   vim.cmd([[botright split]])
   local sidebar_winid = vim.api.nvim_get_current_win()
   vim.api.nvim_win_set_height(sidebar_winid, sidebar_height)
@@ -844,6 +852,8 @@ function M.display_panel()
     )
   end
   task_panel.sidebar_winid = sidebar_winid
+
+  -- Create task output window
   if task_panel.focused_task_range then
     local task = all_tasks[task_panel.focused_task_range.task_id]
     if not vim.api.nvim_buf_is_valid(task.buf_id) then
@@ -862,6 +872,12 @@ function M.display_panel()
       empty_task_output_buf = new_empty_buffer()
     end
     task_panel.task_output_winid = new_task_output_window(empty_task_output_buf)
+  end
+
+  if exit_win == 'output' then
+    vim.api.nvim_set_current_win(task_panel.task_output_winid)
+  else
+    vim.api.nvim_set_current_win(task_panel.sidebar_winid)
   end
 end
 
