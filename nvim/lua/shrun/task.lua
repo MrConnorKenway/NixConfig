@@ -26,16 +26,6 @@ M.meta = {
 local utils = require('shrun.utils')
 local config = require('shrun.config')
 
-local function strip_escape_sequence(str)
-  -- Remove control characters and ANSI escape sequences using regex
-  -- Reference: https://stackoverflow.com/questions/14693701
-  local striped_str, _ = str
-    :gsub('[\r\x07]', '')
-    :gsub('\x1b[@-Z\\-_]', '') -- 7-bit C1 Fe (except CSI)
-    :gsub('\x1b%[[0-?]*[ -/]*[@-~]', '') -- second char is '[', i.e., CSI
-  return striped_str
-end
-
 function M:update_time(sidebar_bufnr)
   local seconds = self.elapsed_time / 1000
   local minutes
