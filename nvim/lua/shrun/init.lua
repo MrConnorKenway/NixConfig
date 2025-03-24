@@ -18,9 +18,9 @@ local next_task_id = 1
 ---map from task id to task range
 ---@field task_ranges table<integer, shrun.TaskRange> NOTE: do not use ipairs to iterate task_ranges
 ---@field focused_task_range shrun.TaskRange?
----@field sidebar_winid integer? -- when winid == nil, the window is closed
+---@field sidebar_winid integer? when winid == nil, the window is closed
 ---@field sidebar_cursor integer[]?
----@field task_output_winid integer? -- when winid == nil, the window is closed
+---@field task_output_winid integer? when winid == nil, the window is closed
 ---
 ---  Task Panel:
 ---  ╭─────────────────────────────────────────────────────╮
