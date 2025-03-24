@@ -337,8 +337,11 @@ local function new_task_output_window(buf_id)
   end
 
   local autocmd_id = vim.api.nvim_create_autocmd('WinEnter', {
-    pattern = tostring(winid),
-    callback = save_original_winid,
+    callback = function()
+      if vim.api.nvim_get_current_win() == winid then
+        save_original_winid()
+      end
+    end,
   })
 
   vim.api.nvim_create_autocmd('WinClosed', {
