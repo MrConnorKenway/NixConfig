@@ -338,6 +338,10 @@ local function new_task_output_window(buf_id)
 
   local autocmd_id = vim.api.nvim_create_autocmd('WinEnter', {
     callback = function()
+      -- We don't want to trigger WinEnter when task panel is closing
+      if not task_panel.sidebar_winid then
+        return
+      end
       if vim.api.nvim_get_current_win() == winid then
         save_original_winid()
       end
@@ -737,7 +741,12 @@ local function new_sidebar_buffer()
 
   vim.api.nvim_create_autocmd('BufEnter', {
     buffer = sidebar_bufnr,
-    callback = save_original_winid,
+    callback = function()
+      -- We don't want to trigger BufEnter when task panel is closing
+      if task_panel.task_output_winid then
+        save_original_winid()
+      end
+    end,
   })
 
   vim.api.nvim_create_autocmd('BufHidden', {
