@@ -825,6 +825,8 @@ function M.display_panel()
   -- Save exit window so that the following window creation won't overwrite `exit_win`
   local exit_win = task_panel.exit_win
 
+  original_winid = vim.api.nvim_get_current_win()
+
   -- Create sidebar window
   vim.cmd([[botright split]])
   local sidebar_winid = vim.api.nvim_get_current_win()
