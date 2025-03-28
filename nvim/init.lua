@@ -146,7 +146,7 @@ vim.api.nvim_create_autocmd('FileType', {
   callback = function()
     vim.keymap.set({ 'n', 'i' }, '<S-cr>', function()
       vim.cmd('x')
-    end)
+    end, { buffer = true })
   end,
 })
 
