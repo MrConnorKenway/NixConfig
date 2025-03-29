@@ -1139,7 +1139,7 @@ function M.setup()
       vim.api.nvim_create_autocmd('TermRequest', {
         buffer = shell_buf,
         callback = function(args)
-          local request = args.data
+          local request = args.data.sequence
           local found = request:find('\x1b]633')
           if found then
             local cmd = request:match('\x1b]633;E;(.*)', found)
