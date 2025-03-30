@@ -108,6 +108,10 @@
         share = true;
       };
 
+      shellAliases = {
+        vi = "nvim";
+      };
+
       plugins = [
         {
           name = "zsh-powerlevel10k";
