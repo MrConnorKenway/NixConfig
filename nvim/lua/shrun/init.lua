@@ -320,7 +320,7 @@ local function new_task_output_window(buf_id)
   local winid = vim.api.nvim_open_win(
     buf_id,
     false,
-    { split = 'right', width = vim.o.columns - sidebar_width }
+    { split = 'right', width = vim.o.columns - sidebar_width - 1 }
   )
   local default_opts = {
     winfixwidth = true,
