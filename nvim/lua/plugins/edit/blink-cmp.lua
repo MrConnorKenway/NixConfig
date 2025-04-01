@@ -4,7 +4,7 @@
 return {
   'saghen/blink.cmp',
   lazy = false, -- lazy loading handled internally
-  version = 'v0.*',
+  version = '*',
   ---@type blink.cmp.Config
   opts = {
     keymap = {
