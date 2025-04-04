@@ -10,7 +10,6 @@
       nixd
       lua-language-server
       basedpyright
-      zoxide
       rustup
       stylua
       home-manager
@@ -140,6 +139,12 @@
         plugins = [ "git" "fzf" ];
         custom = "$HOME/NixConfig/omz";
       };
+    };
+
+    zoxide = {
+      enable = true;
+      enableZshIntegration = true;
+      enableBashIntegration = true;
     };
   };
 }
