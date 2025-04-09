@@ -1248,7 +1248,7 @@ function M.task_picker()
         row = vim.o.lines - sidebar_height - 1,
         col = 0,
         height = sidebar_height,
-        width = sidebar_width - 1,
+        width = sidebar_width,
         position = 'float',
         border = 'none',
         box = 'vertical',
