@@ -10,5 +10,31 @@
       declarator: (field_identifier) @function)))
 
 (function_declarator
-  declarator: (qualified_identifier
-    name: (identifier) @function))
+  declarator: [
+    (qualified_identifier name: (identifier) @function)
+    (qualified_identifier
+      name: (qualified_identifier
+        name: (identifier) @function))
+    (qualified_identifier
+      name: (qualified_identifier
+        name: (qualified_identifier
+          name: (identifier) @function)))
+    (qualified_identifier
+      name: (qualified_identifier
+        name: (qualified_identifier
+          name: (qualified_identifier
+            name: (identifier) @function))))
+    (qualified_identifier
+      name: (qualified_identifier
+        name: (qualified_identifier
+          name: (qualified_identifier
+            name: (qualified_identifier
+              name: (identifier) @function)))))
+    (qualified_identifier
+      name: (qualified_identifier
+        name: (qualified_identifier
+          name: (qualified_identifier
+            name: (qualified_identifier
+              name: (qualified_identifier
+                name: (identifier) @function))))))
+  ])
