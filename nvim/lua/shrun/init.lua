@@ -242,6 +242,7 @@ end
 
 local function render_sidebar_from_scratch()
   local lines = {}
+  local first = true
   local highlights = {}
   local separator_highlights = {}
   local separator = string.rep(separator_stem, vim.o.columns)
@@ -250,6 +251,17 @@ local function render_sidebar_from_scratch()
   -- lua does not guarantee the order when iterating table, so we have to
   -- manually sort task id
   for task_id, task in desc_sorted_pairs(all_tasks) do
+    if not first then
+      table.insert(lines, separator)
+      table.insert(
+        separator_highlights,
+        -- Don't use `vim.o.columns` because separator contains unicode characters
+        { 'FloatBorder', #lines, 0, separator:len() }
+      )
+    else
+      first = false
+    end
+
     local task_lines, task_highlights = task:render(#lines)
     task_panel.task_ranges[task_id] = {
       start_line = #lines + 1,
@@ -258,14 +270,6 @@ local function render_sidebar_from_scratch()
     }
     vim.list_extend(lines, task_lines)
     vim.list_extend(highlights, task_highlights)
-    if task_id > 1 then
-      table.insert(lines, separator)
-      table.insert(
-        separator_highlights,
-        -- Don't use `vim.o.columns` because separator contains unicode characters
-        { 'FloatBorder', #lines, 0, separator:len() }
-      )
-    end
   end
   vim.list_extend(highlights, separator_highlights)
 
