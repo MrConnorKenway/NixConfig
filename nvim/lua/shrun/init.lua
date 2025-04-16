@@ -347,6 +347,10 @@ local function new_task_output_window(buf_id)
       if not task_panel.sidebar_winid then
         return
       end
+      if vim.fn.mode() ~= 'n' then
+        -- Prevent unexpected terminal closure
+        vim.cmd('stopinsert')
+      end
       if vim.api.nvim_get_current_win() == winid then
         save_original_winid()
         task_panel.exit_win = 'output'
