@@ -802,6 +802,11 @@ local function new_sidebar_buffer()
   return sidebar_bufnr
 end
 
+local function buf_is_empty(buf)
+  local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+  return #lines == 0 or (#lines == 1 and lines[1] == '')
+end
+
 function M.display_panel()
   if package.loaded.snacks.terminal then
     for _, term in ipairs(require('snacks.terminal').list()) do
@@ -815,10 +820,7 @@ function M.display_panel()
     task_panel.sidebar_bufnr = new_sidebar_buffer()
   end
 
-  if
-    next(all_tasks)
-    and vim.api.nvim_buf_line_count(task_panel.sidebar_bufnr) <= 1
-  then
+  if next(all_tasks) and buf_is_empty(task_panel.sidebar_bufnr) then
     render_sidebar_from_scratch()
   end
 
