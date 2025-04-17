@@ -1,7 +1,18 @@
+--- Returns true if (row1, col1) is closer to the top left on screen than (row2, col2)
+local function is_closer_to_the_top_left(r1, c1, r2, c2)
+  if r1 < r2 then
+    return true
+  elseif r1 > r2 then
+    return false
+  else
+    return c1 < c2
+  end
+end
+
 vim.keymap.set('n', '[m', function()
   local buf = vim.api.nvim_get_current_buf()
   local win = vim.api.nvim_get_current_win()
-  local cursor_row, _ = unpack(vim.api.nvim_win_get_cursor(win))
+  local cursor_row, cursor_col = unpack(vim.api.nvim_win_get_cursor(win))
   local ok, parser = pcall(vim.treesitter.get_parser, buf)
   if ok and parser then
     parser:parse(true)
@@ -32,9 +43,18 @@ vim.keymap.set('n', '[m', function()
           local func_start_row, func_start_col, _, _ = node:range()
           func_start_row = func_start_row + 1
           if
-            func_start_row < cursor_row
-            and cursor_row - func_start_row
-              < cursor_row - nearest_prev_func_start_row
+            is_closer_to_the_top_left(
+              nearest_prev_func_start_row,
+              nearest_prev_func_start_col,
+              func_start_row,
+              func_start_col
+            )
+            and is_closer_to_the_top_left(
+              func_start_row,
+              func_start_col,
+              cursor_row,
+              cursor_col
+            )
           then
             nearest_prev_func_start_row = func_start_row
             nearest_prev_func_start_col = func_start_col
