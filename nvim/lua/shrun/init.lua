@@ -796,7 +796,50 @@ local function buf_is_empty(buf)
   return #lines == 0 or (#lines == 1 and lines[1] == '')
 end
 
+local has_json = false
+
+local function try_load_json()
+  local cwd = vim.uv.cwd()
+  if not cwd then
+    return
+  end
+
+  cwd = utils.percent_encode(cwd)
+  local path = vim.fn.stdpath('data') .. '/shrun/' .. cwd .. '.json'
+  local file, err = io.open(path, 'r')
+  if err or not file then
+    return
+  end
+
+  has_json = true
+
+  local cmds = vim.fn.json_decode(file:read())
+  if not next(cmds) then
+    return
+  end
+  ---@type shrun.Task | {}
+  local task
+  for _, cmd in ipairs(cmds) do
+    task = require('shrun.task').new(next_task_id, cmd)
+    new_task_output_buffer(task)
+    vim.bo[task.buf_id].filetype = 'shrun_task_command'
+    utils.buf_set_lines(task.buf_id, 0, -1, true, vim.split(task.cmd, '\n'))
+    vim.treesitter.start(task.buf_id, 'bash')
+    next_task_id = next_task_id + 1
+    all_tasks[#all_tasks + 1] = task
+  end
+
+  if not vim.api.nvim_buf_is_valid(task_panel.sidebar_bufnr) then
+    task_panel.sidebar_bufnr = new_sidebar_buffer()
+    render_sidebar_from_scratch()
+  end
+end
+
 function M.display_panel()
+  if not has_json then
+    try_load_json()
+  end
+
   if package.loaded.snacks.terminal then
     for _, term in ipairs(require('snacks.terminal').list()) do
       if not term.closed then
@@ -999,12 +1042,101 @@ local shell_buf
 local shell_job
 local shell_win
 
----Convert path to URL-like encoding string
----@param str string
-local function percent_encode(str)
-  return str:gsub('[/\\:*?"\'<>+ |%.%%]', function(char)
-    return string.format('%%%02X', string.byte(char))
-  end)
+function M.launch_shell()
+  local shell = vim.o.shell:gsub('(.*)/', '')
+  local shell_args
+  local shell_envs = {
+    TERM_PROGRAM = 'neovim',
+  }
+  local home_dir = vim.uv.os_homedir()
+  local width = config.shell_width
+  local height = config.shell_height
+
+  if shell_win and vim.api.nvim_win_is_valid(shell_win) then
+    vim.cmd('startinsert')
+    return
+  end
+
+  -- Currently only support zsh with p10k prompt
+  if shell == 'zsh' and vim.fn.environ()['PATH']:find('powerlevel10k') then
+    shell_args = { 'zsh' }
+    shell_envs = vim.tbl_extend('force', shell_envs, {
+      ITERM_SHELL_INTEGRATION_INSTALLED = 'Yes', -- enable p10k OSC 133 support
+      USER_ZDOTDIR = home_dir,
+      ZDOTDIR = string.format(config.shell_integration_path, home_dir),
+      FZF_DEFAULT_OPTS = config.shell_fzf_default_opts,
+    })
+  else
+    error(string.format('Unsupported shell "%s"', shell))
+  end
+
+  if not shell_buf then
+    shell_buf = vim.api.nvim_create_buf(false, true)
+
+    vim.api.nvim_create_autocmd('BufEnter', {
+      buffer = shell_buf,
+      callback = function()
+        vim.cmd('startinsert')
+      end,
+    })
+
+    vim.api.nvim_create_autocmd('TermRequest', {
+      buffer = shell_buf,
+      callback = function(args)
+        local request = args.data.sequence
+        local found = request:find('\x1b]633')
+        if found then
+          local cmd = request:match('\x1b]633;E;(.*)', found)
+          if cmd then
+            -- Now we get the actual command by parsing OSC 633;E
+            pcall(vim.api.nvim_win_hide, shell_win)
+            vim.cmd('stopinsert')
+            if task_panel.sidebar_winid then
+              vim.api.nvim_set_current_win(task_panel.sidebar_winid)
+            end
+            -- Revert escape
+            cmd = cmd
+              :gsub('\\x3b', ';')
+              :gsub('\\x09', '\t')
+              :gsub('\\x0a', '\n')
+              :gsub('\\\\', '\\')
+            vim.schedule(function()
+              M.display_panel()
+              init_task_from_cmd(cmd)
+            end)
+            vim.api.nvim_chan_send(shell_job, '\x0c')
+            return
+          end
+        end
+      end,
+    })
+
+    vim.keymap.set('t', '<C-d>', function()
+      vim.api.nvim_win_hide(shell_win)
+    end, { buffer = shell_buf, desc = 'Hide shrun launcher' })
+  end
+
+  shell_win = vim.api.nvim_open_win(shell_buf, true, {
+    relative = 'editor',
+    width = width,
+    height = height,
+    row = math.floor((vim.o.lines - height) / 2),
+    col = math.floor((vim.o.columns - width) / 2),
+    style = 'minimal',
+    border = 'rounded',
+  })
+  vim.wo[shell_win].winhighlight = 'NormalFloat:Normal'
+
+  if not shell_job then
+    shell_job = vim.fn.jobstart(shell_args, {
+      term = true,
+      env = shell_envs,
+      on_exit = function()
+        shell_buf = nil
+        shell_job = nil
+      end,
+    })
+  end
 end
 
 function M.setup()
@@ -1019,47 +1151,6 @@ function M.setup()
     callback = setup_highlights,
   })
 
-  local has_json = false
-
-  vim.api.nvim_create_autocmd('VimEnter', {
-    callback = function()
-      local cwd = vim.uv.cwd()
-      if not cwd then
-        return
-      end
-
-      cwd = percent_encode(cwd)
-      local path = vim.fn.stdpath('data') .. '/shrun/' .. cwd .. '.json'
-      local file, err = io.open(path, 'r')
-      if err or not file then
-        return
-      end
-
-      has_json = true
-
-      local cmds = vim.fn.json_decode(file:read())
-      if not next(cmds) then
-        return
-      end
-      ---@type shrun.Task | {}
-      local task
-      for _, cmd in ipairs(cmds) do
-        task = require('shrun.task').new(next_task_id, cmd)
-        new_task_output_buffer(task)
-        vim.bo[task.buf_id].filetype = 'shrun_task_command'
-        utils.buf_set_lines(task.buf_id, 0, -1, true, vim.split(task.cmd, '\n'))
-        vim.treesitter.start(task.buf_id, 'bash')
-        next_task_id = next_task_id + 1
-        all_tasks[#all_tasks + 1] = task
-      end
-
-      if not vim.api.nvim_buf_is_valid(task_panel.sidebar_bufnr) then
-        task_panel.sidebar_bufnr = new_sidebar_buffer()
-        render_sidebar_from_scratch()
-      end
-    end,
-  })
-
   vim.api.nvim_create_autocmd('VimLeavePre', {
     callback = function()
       local cwd = vim.uv.cwd()
@@ -1071,7 +1162,7 @@ function M.setup()
         return
       end
 
-      cwd = percent_encode(cwd)
+      cwd = utils.percent_encode(cwd)
       local dir = vim.fn.stdpath('data') .. '/shrun'
       local path = dir .. '/' .. cwd .. '.json'
       vim.fn.mkdir(dir, 'p')
@@ -1088,107 +1179,6 @@ function M.setup()
     end,
   })
 
-  vim.keymap.set('n', 'gu', function()
-    M.restart_task_from_cmd('git push')
-  end, { desc = 'Git push' })
-
-  vim.keymap.set('n', '``', function()
-    local shell = vim.o.shell:gsub('(.*)/', '')
-    local shell_args
-    local shell_envs = {
-      TERM_PROGRAM = 'neovim',
-    }
-    local home_dir = vim.uv.os_homedir()
-    local width = config.shell_width
-    local height = config.shell_height
-
-    if shell_win and vim.api.nvim_win_is_valid(shell_win) then
-      vim.cmd('startinsert')
-      return
-    end
-
-    -- Currently only support zsh with p10k prompt
-    if shell == 'zsh' and vim.fn.environ()['PATH']:find('powerlevel10k') then
-      shell_args = { 'zsh' }
-      shell_envs = vim.tbl_extend('force', shell_envs, {
-        ITERM_SHELL_INTEGRATION_INSTALLED = 'Yes', -- enable p10k OSC 133 support
-        USER_ZDOTDIR = home_dir,
-        ZDOTDIR = string.format(config.shell_integration_path, home_dir),
-        FZF_DEFAULT_OPTS = config.shell_fzf_default_opts,
-      })
-    else
-      error(string.format('Unsupported shell "%s"', shell))
-    end
-
-    if not shell_buf then
-      shell_buf = vim.api.nvim_create_buf(false, true)
-
-      vim.api.nvim_create_autocmd('BufEnter', {
-        buffer = shell_buf,
-        callback = function()
-          vim.cmd('startinsert')
-        end,
-      })
-
-      vim.api.nvim_create_autocmd('TermRequest', {
-        buffer = shell_buf,
-        callback = function(args)
-          local request = args.data.sequence
-          local found = request:find('\x1b]633')
-          if found then
-            local cmd = request:match('\x1b]633;E;(.*)', found)
-            if cmd then
-              -- Now we get the actual command by parsing OSC 633;E
-              pcall(vim.api.nvim_win_hide, shell_win)
-              vim.cmd('stopinsert')
-              if task_panel.sidebar_winid then
-                vim.api.nvim_set_current_win(task_panel.sidebar_winid)
-              end
-              -- Revert escape
-              cmd = cmd
-                :gsub('\\x3b', ';')
-                :gsub('\\x09', '\t')
-                :gsub('\\x0a', '\n')
-                :gsub('\\\\', '\\')
-              vim.schedule(function()
-                M.display_panel()
-                init_task_from_cmd(cmd)
-              end)
-              vim.api.nvim_chan_send(shell_job, '\x0c')
-              return
-            end
-          end
-        end,
-      })
-
-      vim.keymap.set('t', '<C-d>', function()
-        vim.api.nvim_win_hide(shell_win)
-      end, { buffer = shell_buf, desc = 'Hide shrun launcher' })
-    end
-
-    shell_win = vim.api.nvim_open_win(shell_buf, true, {
-      relative = 'editor',
-      width = width,
-      height = height,
-      row = math.floor((vim.o.lines - height) / 2),
-      col = math.floor((vim.o.columns - width) / 2),
-      style = 'minimal',
-      border = 'rounded',
-    })
-    vim.wo[shell_win].winhighlight = 'NormalFloat:Normal'
-
-    if not shell_job then
-      shell_job = vim.fn.jobstart(shell_args, {
-        term = true,
-        env = shell_envs,
-        on_exit = function()
-          shell_buf = nil
-          shell_job = nil
-        end,
-      })
-    end
-  end, { desc = 'Open shrun launcher' })
-
   vim.api.nvim_create_user_command('Task', init_task_from_cmd, {
     complete = vim.fn.has('nvim-0.11') == 0 and 'shellcmd' or 'shellcmdline',
     nargs = '+',
@@ -1199,32 +1189,6 @@ function M.setup()
     nargs = 0,
     desc = 'Show sidebar',
   })
-
-  vim.keymap.set(
-    { 'n', 'i', 't' },
-    '<D-r>',
-    M.toggle_panel,
-    { desc = 'Toggle shrun task panel' }
-  )
-  vim.keymap.set(
-    { 'n', 'i', 't' },
-    '<M-r>',
-    M.toggle_panel,
-    { desc = 'Toggle shrun task panel' }
-  )
-
-  vim.keymap.set(
-    { 'n', 'i', 't' },
-    '<S-D-r>',
-    M.task_picker,
-    { desc = 'Toggle shrun task picker' }
-  )
-  vim.keymap.set(
-    { 'n', 'i', 't' },
-    '<S-M-r>',
-    M.task_picker,
-    { desc = 'Toggle shrun task picker' }
-  )
 end
 
 function M.task_picker()

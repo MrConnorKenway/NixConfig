@@ -26,4 +26,12 @@ function M.buf_set_text(bufnr, start_line, start_col, end_line, end_col, lines)
   vim.bo[bufnr].modified = false
 end
 
+---Convert path to URL-like encoding string
+---@param str string
+function M.percent_encode(str)
+  return str:gsub('[/\\:*?"\'<>+ |%.%%]', function(char)
+    return string.format('%%%02X', string.byte(char))
+  end)
+end
+
 return M

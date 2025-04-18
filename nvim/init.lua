@@ -341,6 +341,9 @@ require('lazy').setup {
     { import = 'plugins.edit' },
     { import = 'plugins.utils' },
   },
+  dev = {
+    path = '~/NixConfig/nvim/lua',
+  },
   ui = {
     border = 'rounded',
   },
@@ -361,8 +364,6 @@ require('lazy').setup {
 vim.keymap.set('n', '<leader>l', function()
   require('lazy.view').show('home')
 end, { desc = 'Display lazy' })
-
-require('shrun').setup()
 
 vim.api.nvim_create_autocmd('FileType', {
   callback = function()
