@@ -1,6 +1,7 @@
 (function_declarator
   declarator: [
     (identifier) @function
+    (operator_name) @function
     (destructor_name (identifier) @function)
   ])
 
@@ -17,12 +18,14 @@
     (qualified_identifier
       name: [
         (identifier) @function
+        (operator_name) @function
         (destructor_name (identifier) @function)
       ])
     (qualified_identifier
       name: (qualified_identifier
         name: [
           (identifier) @function
+          (operator_name) @function
           (destructor_name (identifier) @function)
         ]))
     (qualified_identifier
@@ -30,6 +33,7 @@
         name: (qualified_identifier
           name: [
              (identifier) @function
+             (operator_name) @function
              (destructor_name (identifier) @function)
           ])))
     (qualified_identifier
@@ -38,6 +42,7 @@
           name: (qualified_identifier
             name: [
                (identifier) @function
+               (operator_name) @function
                (destructor_name (identifier) @function)
             ]))))
     (qualified_identifier
@@ -47,6 +52,7 @@
             name: (qualified_identifier
               name: [
                  (identifier) @function
+                 (operator_name) @function
                  (destructor_name (identifier) @function)
               ])))))
     (qualified_identifier
@@ -57,6 +63,7 @@
               name: (qualified_identifier
                 name: [
                    (identifier) @function
+                   (operator_name) @function
                    (destructor_name (identifier) @function)
                 ]))))))
   ])
