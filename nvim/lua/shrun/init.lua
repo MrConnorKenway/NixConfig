@@ -627,8 +627,16 @@ local function new_sidebar_buffer()
   end, { buffer = sidebar_bufnr, desc = 'Goto previous task' })
 
   vim.keymap.set('n', '<cr>', function()
-    local task = get_task_under_cursor()
+    local range = task_panel.focused_task_range
+    if not range then
+      return
+    end
+    local task = all_tasks[range.task_id]
+    local win = vim.api.nvim_get_current_win()
+    local cursor_col = vim.api.nvim_win_get_cursor(win)[2]
+
     if task.status ~= 'RUNNING' then
+      vim.api.nvim_win_set_cursor(win, { range.start_line, cursor_col })
       restart_task(task)
     end
   end, { buffer = sidebar_bufnr, desc = 'Restart task under cursor' })
