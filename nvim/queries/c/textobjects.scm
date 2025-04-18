@@ -4,4 +4,7 @@
 (function_declarator
   declarator: (parenthesized_declarator
     (pointer_declarator
-      declarator: (field_identifier) @function)))
+      declarator: [
+        (identifier) @function
+        (field_identifier) @function
+      ])))
