@@ -40,8 +40,10 @@ vim.keymap.set('n', '[m', function()
 
       for capture_id, node, _ in query:iter_captures(tstree:root(), buf) do
         if capture_id == func_id then
-          local func_start_row, func_start_col, _, _ = node:range()
+          local func_start_row, func_start_col, func_end_row, func_end_col =
+            node:range()
           func_start_row = func_start_row + 1
+          func_end_row = func_end_row + 1
           if
             is_closer_to_the_top_left(
               nearest_prev_func_start_row,
@@ -50,8 +52,8 @@ vim.keymap.set('n', '[m', function()
               func_start_col
             )
             and is_closer_to_the_top_left(
-              func_start_row,
-              func_start_col,
+              func_end_row,
+              func_end_col,
               cursor_row,
               cursor_col
             )
