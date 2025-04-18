@@ -2,22 +2,14 @@
   declarator: [
     (identifier) @function
     (operator_name) @function
+    (field_identifier) @function
     (destructor_name (identifier) @function)
-  ])
-
-(function_declarator
-  declarator: (field_identifier) @function)
-
-(function_declarator
-  declarator: (parenthesized_declarator
-    (pointer_declarator
-      declarator: [
-        (identifier) @function
-        (field_identifier) @function
-      ])))
-
-(function_declarator
-  declarator: [
+    (parenthesized_declarator
+        (pointer_declarator
+          declarator: [
+            (identifier) @function
+            (field_identifier) @function
+          ]))
     (qualified_identifier
       name: [
         (identifier) @function
