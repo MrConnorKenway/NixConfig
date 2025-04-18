@@ -48,21 +48,6 @@ local original_winid = -1
 ---@type snacks.Picker?
 local task_picker
 
--- TODO: make configurable
-local sidebar_width = 48
-local sidebar_height = 16
-local separator_stem = '─'
-local default_highlights = {
-  ShrunHighlightTaskIDLE = 'Normal',
-  ShrunHighlightTaskRUNNING = 'Constant',
-  ShrunHighlightTaskSUCCESS = 'DiagnosticOk',
-  ShrunHighlightTaskFAILED = 'DiagnosticError',
-  ShrunHighlightTaskFocus = 'CursorLine',
-  ShrunHighlightTaskName = 'Title',
-  ShrunHighlightTaskOutPrefix = 'Comment',
-}
-local timer_repeat_interval = 1000
-
 ---caller should ensure that task output panel is opened and the buffer shown in
 ---panel has buffer id of `bufnr`
 ---@param bufnr integer
@@ -245,7 +230,7 @@ local function render_sidebar_from_scratch()
   local first = true
   local highlights = {}
   local separator_highlights = {}
-  local separator = string.rep(separator_stem, vim.o.columns)
+  local separator = string.rep(config.separator_stem, vim.o.columns)
 
   task_panel.task_ranges = {}
   -- lua does not guarantee the order when iterating table, so we have to
@@ -324,7 +309,7 @@ local function new_task_output_window(buf_id)
   local winid = vim.api.nvim_open_win(
     buf_id,
     false,
-    { split = 'right', width = vim.o.columns - sidebar_width - 1 }
+    { split = 'right', width = vim.o.columns - config.sidebar_width - 1 }
   )
   local default_opts = {
     winfixwidth = true,
@@ -388,8 +373,8 @@ local function get_terminal_size()
     width = vim.api.nvim_win_get_width(task_panel.task_output_winid)
     height = vim.api.nvim_win_get_height(task_panel.task_output_winid)
   else
-    width = vim.o.columns - sidebar_width
-    height = sidebar_height
+    width = vim.o.columns - config.sidebar_width
+    height = config.sidebar_height
   end
 
   return width, height
@@ -539,8 +524,8 @@ local function start_task(task)
 
   if task.timer then
     task.timer:start(
-      timer_repeat_interval,
-      timer_repeat_interval,
+      config.timer_repeat_interval,
+      config.timer_repeat_interval,
       vim.schedule_wrap(function()
         if task.status ~= 'RUNNING' and task.timer then
           pcall(task.timer.close, task.timer)
@@ -548,7 +533,7 @@ local function start_task(task)
           return
         end
 
-        task.elapsed_time = task.elapsed_time + timer_repeat_interval
+        task.elapsed_time = task.elapsed_time + config.timer_repeat_interval
         if task.elapsed_time > config.long_time_threshold then
           if task.elapsed_time_line_num then
             task:update_time(task_panel.sidebar_bufnr)
@@ -766,10 +751,10 @@ local function new_sidebar_buffer()
       local width = vim.api.nvim_win_get_width(task_panel.sidebar_winid)
       local height = vim.api.nvim_win_get_height(task_panel.sidebar_winid)
       if width > 0 and width < vim.o.columns then
-        sidebar_width = width
+        config.sidebar_width = width
       end
       if height > 0 and height < vim.o.lines then
-        sidebar_height = height
+        config.sidebar_height = height
       end
       task_panel.sidebar_cursor =
         vim.api.nvim_win_get_cursor(task_panel.sidebar_winid)
@@ -840,8 +825,8 @@ function M.display_panel()
   -- Create sidebar window
   vim.cmd([[botright split]])
   local sidebar_winid = vim.api.nvim_get_current_win()
-  vim.api.nvim_win_set_height(sidebar_winid, sidebar_height)
-  vim.api.nvim_win_set_width(sidebar_winid, sidebar_width)
+  vim.api.nvim_win_set_height(sidebar_winid, config.sidebar_height)
+  vim.api.nvim_win_set_width(sidebar_winid, config.sidebar_width)
   vim.api.nvim_win_set_buf(sidebar_winid, task_panel.sidebar_bufnr)
   if task_panel.sidebar_cursor then
     vim.api.nvim_win_set_cursor(sidebar_winid, task_panel.sidebar_cursor)
@@ -930,7 +915,7 @@ function M.nr_tasks_by_status()
 end
 
 local function setup_highlights()
-  for hl, link in pairs(default_highlights) do
+  for hl, link in pairs(config.default_highlights) do
     vim.api.nvim_set_hl(0, hl, { link = link })
   end
 end
@@ -954,7 +939,7 @@ local function init_task_from_cmd(cmd)
   local empty = next(task_panel.task_ranges) == nil
 
   if not empty then
-    local separator = string.rep(separator_stem, vim.o.columns)
+    local separator = string.rep(config.separator_stem, vim.o.columns)
     table.insert(lines, separator)
     table.insert(
       separator_highlights,
@@ -1114,9 +1099,8 @@ function M.setup()
       TERM_PROGRAM = 'neovim',
     }
     local home_dir = vim.uv.os_homedir()
-    -- FIXME: hard coded config
-    local width = 80
-    local height = 20
+    local width = config.shell_width
+    local height = config.shell_height
 
     if shell_win and vim.api.nvim_win_is_valid(shell_win) then
       vim.cmd('startinsert')
@@ -1129,8 +1113,8 @@ function M.setup()
       shell_envs = vim.tbl_extend('force', shell_envs, {
         ITERM_SHELL_INTEGRATION_INSTALLED = 'Yes', -- enable p10k OSC 133 support
         USER_ZDOTDIR = home_dir,
-        ZDOTDIR = string.format('%s/.config/nvim/shell_integration', home_dir),
-        FZF_DEFAULT_OPTS = '--layout=reverse --height=100%',
+        ZDOTDIR = string.format(config.shell_integration_path, home_dir),
+        FZF_DEFAULT_OPTS = config.shell_fzf_default_opts,
       })
     else
       error(string.format('Unsupported shell "%s"', shell))
@@ -1255,10 +1239,10 @@ function M.task_picker()
     layout = {
       layout = {
         backdrop = false,
-        row = vim.o.lines - sidebar_height - 1,
+        row = vim.o.lines - config.sidebar_height - 1,
         col = 0,
-        height = sidebar_height,
-        width = sidebar_width,
+        height = config.sidebar_height,
+        width = config.sidebar_width,
         position = 'float',
         border = 'none',
         box = 'vertical',
@@ -1382,7 +1366,7 @@ function M.test()
     ------------------ end test ------------------------------------------------
 
     ------------------ test scroll to bottom -----------------------------------
-    'Task seq 1 ' .. sidebar_height,
+    'Task seq 1 ' .. config.sidebar_height,
     function()
       -- since last command is newly executed, its output should scroll to bottom
       vim.api.nvim_set_current_win(task_panel.task_output_winid)
@@ -1390,7 +1374,7 @@ function M.test()
       -- go back to beginning window to prepare for the next test
       vim.api.nvim_set_current_win(winid)
     end,
-    'Task seq 1 ' .. sidebar_height,
+    'Task seq 1 ' .. config.sidebar_height,
     function()
       -- when running command outside of task panel, the output should also scroll
       -- to bottom
@@ -1399,7 +1383,7 @@ function M.test()
       vim.api.nvim_set_current_win(task_panel.sidebar_winid)
       vim.api.nvim_win_close(task_panel.sidebar_winid, false)
     end,
-    'Task seq 1 ' .. sidebar_height,
+    'Task seq 1 ' .. config.sidebar_height,
     'ListTask',
     function()
       -- when running command with task panel closed and then open it, the output
