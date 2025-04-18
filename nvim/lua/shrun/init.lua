@@ -1192,6 +1192,10 @@ function M.setup()
 end
 
 function M.task_picker()
+  if task_picker and not task_picker.closed then
+    return
+  end
+
   if not task_panel.sidebar_winid then
     M.display_panel()
   end
