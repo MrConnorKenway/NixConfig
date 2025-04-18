@@ -562,11 +562,11 @@ local function restart_task(task)
   partial_render_sidebar(task)
 end
 
----@return shrun.Task
+---@return shrun.Task|nil
 local function get_task_under_cursor()
   local range = task_panel.focused_task_range
   if not range then
-    error('No task under cursor')
+    return nil
   end
   return all_tasks[range.task_id]
 end
@@ -643,6 +643,10 @@ local function new_sidebar_buffer()
 
   vim.keymap.set('n', 'i', function()
     local task = get_task_under_cursor()
+    if not task then
+      return
+    end
+
     vim.api.nvim_set_current_win(task_panel.task_output_winid)
     if task.status == 'RUNNING' then
       vim.cmd('startinsert')
