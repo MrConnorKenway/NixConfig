@@ -35,7 +35,10 @@ local next_task_id = 1
 ---  ╰─────────────────────────────────────────────────────╯
 
 ---@type shrun.TaskPanel
-local task_panel
+local task_panel = {
+  sidebar_bufnr = -1,
+  task_ranges = {},
+}
 
 local sidebar_hl_ns = vim.api.nvim_create_namespace('shrun_sidebar')
 local sidebar_focus_hl_ns = vim.api.nvim_create_namespace('shrun_sidebar_focus')
@@ -826,7 +829,7 @@ local function try_load_json()
     utils.buf_set_lines(task.buf_id, 0, -1, true, vim.split(task.cmd, '\n'))
     vim.treesitter.start(task.buf_id, 'bash')
     next_task_id = next_task_id + 1
-    all_tasks[#all_tasks + 1] = task
+    all_tasks[task.id] = task
   end
 
   if not vim.api.nvim_buf_is_valid(task_panel.sidebar_bufnr) then
@@ -1140,18 +1143,25 @@ function M.launch_shell()
 end
 
 function M.setup()
-  task_panel = {
-    sidebar_bufnr = -1,
-    task_ranges = {},
-  }
-
   setup_highlights()
 
   vim.api.nvim_create_autocmd('ColorScheme', {
     callback = setup_highlights,
   })
 
-  vim.api.nvim_create_autocmd('VimLeavePre', {
+  vim.api.nvim_create_autocmd('DirChanged', {
+    callback = function()
+      all_tasks = {}
+      task_panel = {
+        sidebar_bufnr = -1,
+        task_ranges = {},
+      }
+
+      has_json = false
+    end,
+  })
+
+  vim.api.nvim_create_autocmd({ 'VimLeavePre', 'DirChangedPre' }, {
     callback = function()
       local cwd = vim.uv.cwd()
       if not cwd then
