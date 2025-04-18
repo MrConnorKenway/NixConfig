@@ -571,6 +571,16 @@ local function get_task_under_cursor()
   return all_tasks[range.task_id]
 end
 
+---Indicate if user is scrolling task output panel when focusing sidebar,
+---can be used by statusline plugins to decide whether task output panel
+---is active or inactive
+---@type boolean
+M.scrolling_task_output = false
+
+local scroll_down_key =
+  vim.api.nvim_replace_termcodes('<C-d>', true, true, true)
+local scroll_up_key = vim.api.nvim_replace_termcodes('<C-u>', true, true, true)
+
 local function new_sidebar_buffer()
   local sidebar_bufnr = vim.api.nvim_create_buf(false, true)
 
@@ -582,6 +592,36 @@ local function new_sidebar_buffer()
   vim.bo[sidebar_bufnr].buflisted = false
   vim.bo[sidebar_bufnr].swapfile = false
   vim.bo[sidebar_bufnr].modifiable = false
+
+  vim.keymap.set('n', '<C-d>', function()
+    local task = get_task_under_cursor()
+    if not task then
+      return
+    end
+    if
+      vim.fn.line('w$', task_panel.task_output_winid)
+      == vim.api.nvim_buf_line_count(task.buf_id)
+    then
+      return
+    end
+
+    M.scrolling_task_output = true
+    vim.api.nvim_win_call(task_panel.task_output_winid, function()
+      vim.api.nvim_feedkeys(scroll_down_key, 'nx', false)
+    end)
+    M.scrolling_task_output = false
+  end, { buffer = sidebar_bufnr, desc = 'Scroll task output buffer down' })
+
+  vim.keymap.set('n', '<C-u>', function()
+    if vim.fn.line('w0', task_panel.task_output_winid) == 1 then
+      return
+    end
+    M.scrolling_task_output = true
+    vim.api.nvim_win_call(task_panel.task_output_winid, function()
+      vim.api.nvim_feedkeys(scroll_up_key, 'nx', false)
+    end)
+    M.scrolling_task_output = false
+  end, { buffer = sidebar_bufnr, desc = 'Scroll task output buffer up' })
 
   vim.keymap.set('n', '<C-n>', function()
     local range = task_panel.focused_task_range

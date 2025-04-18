@@ -4,6 +4,8 @@ return {
   lazy = false,
   priority = 999,
   config = function()
+    local shrun_find_pattern = '^shrun://%d+//'
+    local shrun_match_pattern = shrun_find_pattern .. '(.*)'
     local conditions = require('heirline.conditions')
     local utils = require('heirline.utils')
     local function setup_colors()
@@ -375,7 +377,7 @@ return {
           return ' ' .. match
         end
 
-        match = buf_name:match('^shrun://%d+//(.*)')
+        match = buf_name:match(shrun_match_pattern)
         if match then
           return ' ' .. match
         end
@@ -414,7 +416,22 @@ return {
       end,
 
       -- Quickly add a condition to the ViMode to only show it when buffer is active!
-      { condition = conditions.is_active, ViMode, Space },
+      {
+        condition = function()
+          if conditions.is_not_active() then
+            return false
+          end
+
+          local buf_name = vim.api.nvim_buf_get_name(0)
+          if buf_name:find(shrun_find_pattern) then
+            return not require('shrun').scrolling_task_output
+          else
+            return true
+          end
+        end,
+        ViMode,
+        Space,
+      },
       TerminalName,
       Align,
     }
@@ -521,16 +538,26 @@ return {
     local StatusLines = {
       hl = function()
         local theme_colors = require('catppuccin.palettes').get_palette()
+        local inactive_hl = 'StatusLineNC'
+
         if conditions.is_active() then
-          return {
-            bg = require('catppuccin.utils.colors').vary_color(
-              { latte = theme_colors.crust },
-              theme_colors.surface0
-            ),
-            fg = theme_colors.overlay1
-          }
+          local buf_name = vim.api.nvim_buf_get_name(0)
+          if
+            buf_name:find(shrun_find_pattern)
+            and require('shrun').scrolling_task_output
+          then
+            return inactive_hl
+          else
+            return {
+              bg = require('catppuccin.utils.colors').vary_color(
+                { latte = theme_colors.crust },
+                theme_colors.surface0
+              ),
+              fg = theme_colors.overlay1,
+            }
+          end
         else
-          return 'StatusLineNC'
+          return inactive_hl
         end
       end,
 
