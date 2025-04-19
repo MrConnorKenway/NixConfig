@@ -13,6 +13,18 @@
       rustup
       stylua
       home-manager
+      termtheme
+      (writeShellScriptBin "vi" ''
+        theme=$(${pkgs.termtheme}/bin/termtheme --force)
+        case $theme in
+          light|dark)
+            nvim --cmd "set bg=$theme" "$@"
+            ;;
+          *)
+            nvim "$@"
+            ;;
+        esac
+      '')
     ];
 
     username = builtins.getEnv "USER";
@@ -105,10 +117,6 @@
         extended = true;
         size = 1000000;
         share = true;
-      };
-
-      shellAliases = {
-        vi = "nvim";
       };
 
       plugins = [
