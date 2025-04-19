@@ -839,7 +839,6 @@ local function new_sidebar_buffer()
 
   vim.api.nvim_create_autocmd('CursorMoved', {
     buffer = sidebar_bufnr,
-    nested = false, -- TODO: do we need nested?
     callback = sidebar_on_cursor_move,
   })
 
