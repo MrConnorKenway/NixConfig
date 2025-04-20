@@ -1170,6 +1170,7 @@ function M.launch_shell()
     })
 
     vim.keymap.set('t', '<C-d>', function()
+      vim.api.nvim_chan_send(shell_job, '\x15\x0c') --- NAK and FF in ASCII code
       vim.api.nvim_win_hide(shell_win)
     end, { buffer = shell_buf, desc = 'Hide shrun launcher' })
   end
