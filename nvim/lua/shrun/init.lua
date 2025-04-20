@@ -1100,6 +1100,11 @@ function M.get_shell_job()
   return shell_job
 end
 
+local function hide_shell()
+  vim.api.nvim_chan_send(shell_job, '\x15\x0c') --- NAK and FF in ASCII code
+  vim.api.nvim_win_hide(shell_win)
+end
+
 function M.launch_shell()
   local shell = vim.o.shell:gsub('(.*)/', '')
   local shell_args
@@ -1169,10 +1174,18 @@ function M.launch_shell()
       end,
     })
 
-    vim.keymap.set('t', '<C-d>', function()
-      vim.api.nvim_chan_send(shell_job, '\x15\x0c') --- NAK and FF in ASCII code
-      vim.api.nvim_win_hide(shell_win)
-    end, { buffer = shell_buf, desc = 'Hide shrun launcher' })
+    vim.keymap.set(
+      't',
+      '<C-d>',
+      hide_shell,
+      { buffer = shell_buf, desc = 'Hide shrun launcher' }
+    )
+    vim.keymap.set(
+      { 'n', 't' },
+      '<ESC>',
+      hide_shell,
+      { buffer = shell_buf, desc = 'Hide shrun launcher' }
+    )
   end
 
   shell_win = vim.api.nvim_open_win(shell_buf, true, {
