@@ -253,7 +253,7 @@ vim.keymap.set(
   { desc = 'Go to previous tab page' }
 )
 vim.api.nvim_create_autocmd('FileType', {
-  pattern = 'gitcommit',
+  pattern = { 'gitcommit', 'gitrebase' },
   callback = function()
     vim.keymap.set({ 'n', 'i' }, '<S-cr>', function()
       vim.cmd('x')
