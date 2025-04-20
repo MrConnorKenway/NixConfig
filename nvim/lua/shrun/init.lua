@@ -510,7 +510,7 @@ local function start_task(task)
             { timeout = 2000 }
           )
         end
-        if task.elapsed_time > 3000 then
+        if task.elapsed_time > config.long_time_threshold then
           io.stdout:write(
             string.format('\x1b]9;"%s" finished\a', task.escaped_cmd)
           )
