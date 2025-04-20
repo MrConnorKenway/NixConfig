@@ -313,6 +313,13 @@ local function restore_mouse()
   end
 end
 
+vim.cmd([[
+map <RightMouse> <nop>
+map <2-RightMouse> <nop>
+map <3-RightMouse> <nop>
+map <4-RightMouse> <nop>
+]])
+
 vim.api.nvim_create_autocmd('FocusLost', {
   desc = 'Save mouse setting and disable mouse on focus lost',
   callback = save_mouse,
