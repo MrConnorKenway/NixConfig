@@ -154,19 +154,26 @@ for _, ui in ipairs(vim.api.nvim_list_uis()) do
   end
 end
 
-local function is_last_window()
+local function is_current_window_last()
+  local current_win = vim.api.nvim_get_current_win()
   local wins = vim.api.nvim_list_wins()
+  local curr_is_normal = false
   local count = 0
 
   for _, win in ipairs(wins) do
     -- According to ':h nvim_win_get_config()', `relative` is empty for
     -- normal windows
     if vim.api.nvim_win_get_config(win).relative == '' then
+      if win == current_win then
+        curr_is_normal = true
+      end
       count = count + 1
     end
   end
 
-  return count == 1
+  --- If current window is not the only normal window (e.g., current window is
+  --- floating window), then it is safe to close current window.
+  return count == 1 and curr_is_normal and vim.fn.tabpagenr('$') == 1
 end
 
 local function confirm_to_exit()
@@ -197,10 +204,8 @@ local function confirm_to_exit()
 end
 
 vim.keymap.set('n', 'q', function()
-  if vim.fn.tabpagenr('$') == 1 and is_last_window() then
-    if not confirm_to_exit() then
-      return
-    end
+  if is_current_window_last() and not confirm_to_exit() then
+    return
   end
 
   vim.cmd('q')
