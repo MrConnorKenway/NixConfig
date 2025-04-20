@@ -298,6 +298,31 @@ vim.api.nvim_create_autocmd('BufRead', {
   end,
 })
 
+local old_mouse_setting
+
+vim.api.nvim_create_autocmd('FocusLost', {
+  desc = 'Save mouse setting and disable mouse on focus lost',
+  callback = function()
+    if old_mouse_setting == nil then
+      old_mouse_setting = vim.o.mouse
+    end
+    vim.o.mouse = ''
+  end,
+})
+
+vim.api.nvim_create_autocmd('FocusGained', {
+  desc = 'Restore mouse setting on focus gained',
+  callback = function()
+    -- Check if we have a saved mouse setting value
+    if old_mouse_setting ~= nil then
+      vim.defer_fn(function()
+        vim.o.mouse = old_mouse_setting
+        old_mouse_setting = nil
+      end, 10)
+    end
+  end,
+})
+
 local function set_wo_for_special_buf(filetype)
   if filetype == 'floggraph' then
     vim.wo.cursorline = true
