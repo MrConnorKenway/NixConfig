@@ -39,6 +39,18 @@ return {
       end
       return colors
     end
+    --- Heirline's `update` does not support mixing User event and normal event,
+    --- so we have to hack by notifying GitStatusUpdate event when normal event
+    --- is triggered
+    local git_status_update_event =
+      { 'BufEnter', 'ModeChanged', 'TermLeave', 'TermClose' }
+    vim.api.nvim_create_autocmd(git_status_update_event, {
+      callback = function()
+        if vim.b.gitsigns_status_dict then
+          vim.api.nvim_exec_autocmds('User', { pattern = 'GitStatusUpdate' })
+        end
+      end,
+    })
 
     require('heirline').load_colors(setup_colors())
 
@@ -315,12 +327,36 @@ return {
       hl = { fg = 'heirline_color_file_type', bold = true },
     }
 
+    --- Mappings from bufnr to its ahead/behind string
+    local ahead_behind_str = {}
+    --- Contains boolean of whether component of certain buffer is querying git.
+    --- The key has form of '<bufnr>:<component id joined by _>'.
+    local querying = {}
+
     local Git = {
       condition = conditions.is_git_repo,
 
       init = function(self)
         self.status_dict = vim.b.gitsigns_status_dict
+        self.bufnr = vim.api.nvim_get_current_buf()
       end,
+
+      update = {
+        'User',
+        pattern = {
+          'GitSigns*',
+          'Fugitive*',
+          'GitStatusUpdate',
+        },
+        callback = function(self)
+          vim.schedule(function()
+            if vim.api.nvim_buf_is_valid(self.bufnr) then
+              --- FIXME: this API may change in the future.
+              vim.api.nvim__redraw { buf = self.bufnr, statusline = true }
+            end
+          end)
+        end,
+      },
 
       hl = { fg = 'heirline_color_git_branch' },
 
@@ -350,6 +386,64 @@ return {
           return count > 0 and ('  ' .. count)
         end,
         hl = { fg = 'heirline_color_git_change' },
+      },
+      {
+        provider = function(self)
+          local bufnr = self.bufnr
+          local flatten_id = bufnr .. ':' .. vim.iter(self.id):join('_')
+          if not querying[flatten_id] then
+            querying[flatten_id] = true
+            vim.system({
+              'git',
+              '-C',
+              self.status_dict.root,
+              'rev-list',
+              '--count',
+              '--left-right',
+              '@...@{u}',
+            }, { text = true }, function(obj)
+              querying[flatten_id] = false
+              if (not obj.stdout) or (obj.stderr and obj.stderr:len() > 0) then
+                --- Redraw only if string has changed
+                if ahead_behind_str[bufnr] ~= '' then
+                  ahead_behind_str[bufnr] = ''
+                  vim.schedule(function()
+                    vim.api.nvim_exec_autocmds(
+                      'User',
+                      { pattern = 'GitStatusUpdate' }
+                    )
+                  end)
+                end
+                return
+              end
+
+              local ahead, behind = obj.stdout:match('(%d+)\t(%d+)')
+              if ahead and behind then
+                local str = ' '
+                if behind ~= '0' then
+                  str = str .. '⇣' .. behind
+                end
+                if ahead ~= '0' then
+                  str = str .. '⇡' .. ahead
+                end
+                --- Redraw only if string has changed
+                if str ~= ahead_behind_str[bufnr] then
+                  ahead_behind_str[bufnr] = str
+                  vim.schedule(function()
+                    vim.api.nvim_exec_autocmds(
+                      'User',
+                      { pattern = 'GitStatusUpdate' }
+                    )
+                  end)
+                end
+              else
+                error('Unexpected git output: ' .. obj.stdout)
+              end
+            end)
+          end
+
+          return ahead_behind_str[bufnr]
+        end,
       },
       {
         provider = ' %<',
