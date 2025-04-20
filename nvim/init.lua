@@ -170,14 +170,27 @@ local function is_last_window()
 end
 
 local function confirm_to_exit()
-  if require('shrun').nr_tasks_by_status()['RUNNING'] > 0 then
+  local jobs = vim.tbl_filter(function(chan)
+    return chan.stream == 'job'
+      and chan.id ~= require('shrun').get_shell_job()
+      and chan.pty ~= ''
+  end, vim.api.nvim_list_chans())
+
+  if #jobs > 0 then
     local choice = vim.fn.confirm(
-      'Are you asure to exit? There are running tasks.',
+      'Are you asure to exit? There are running jobs.',
       '&Yes\n&No',
       2,
       'Question'
     )
-    return choice == 1
+    if choice == 1 then
+      for _, job in ipairs(jobs) do
+        vim.fn.jobstop(job.id)
+      end
+      return true
+    else
+      return false
+    end
   end
 
   return true

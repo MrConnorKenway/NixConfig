@@ -1096,6 +1096,10 @@ local shell_buf
 local shell_job
 local shell_win
 
+function M.get_shell_job()
+  return shell_job
+end
+
 function M.launch_shell()
   local shell = vim.o.shell:gsub('(.*)/', '')
   local shell_args
