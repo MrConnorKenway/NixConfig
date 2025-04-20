@@ -299,26 +299,30 @@ vim.api.nvim_create_autocmd('BufRead', {
 })
 
 local old_mouse_setting
+local function save_mouse()
+  if old_mouse_setting == nil then
+    old_mouse_setting = vim.o.mouse
+  end
+  vim.o.mouse = ''
+end
+
+local function restore_mouse()
+  if old_mouse_setting ~= nil then
+    vim.o.mouse = old_mouse_setting
+    old_mouse_setting = nil
+  end
+end
 
 vim.api.nvim_create_autocmd('FocusLost', {
   desc = 'Save mouse setting and disable mouse on focus lost',
-  callback = function()
-    if old_mouse_setting == nil then
-      old_mouse_setting = vim.o.mouse
-    end
-    vim.o.mouse = ''
-  end,
+  callback = save_mouse,
 })
 
 vim.api.nvim_create_autocmd('FocusGained', {
   desc = 'Restore mouse setting on focus gained',
   callback = function()
-    -- Check if we have a saved mouse setting value
-    if old_mouse_setting ~= nil then
-      vim.defer_fn(function()
-        vim.o.mouse = old_mouse_setting
-        old_mouse_setting = nil
-      end, 10)
+    if vim.bo.buftype ~= 'terminal' then
+      vim.defer_fn(restore_mouse, 10)
     end
   end,
 })
@@ -341,10 +345,19 @@ vim.api.nvim_create_autocmd('FileType', {
   end,
 })
 
+vim.api.nvim_create_autocmd('TermOpen', {
+  callback = function()
+    save_mouse()
+  end,
+})
+
 vim.api.nvim_create_autocmd({ 'WinEnter', 'BufWinEnter' }, {
   callback = function()
     if vim.bo.buftype:len() > 0 then
       set_wo_for_special_buf(vim.bo.filetype)
+      if vim.bo.buftype == 'terminal' then
+        save_mouse()
+      end
       return
     end
 
@@ -358,6 +371,9 @@ vim.api.nvim_create_autocmd({ 'WinEnter', 'BufWinEnter' }, {
 vim.api.nvim_create_autocmd('WinLeave', {
   callback = function()
     vim.wo.cursorline = false
+    if vim.bo.buftype == 'terminal' then
+      restore_mouse()
+    end
   end,
 })
 
