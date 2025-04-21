@@ -371,9 +371,15 @@ vim.api.nvim_create_autocmd('FileType', {
   end,
 })
 
-vim.api.nvim_create_autocmd('TermOpen', {
+vim.api.nvim_create_autocmd('TermEnter', {
   callback = function()
     save_mouse()
+  end,
+})
+
+vim.api.nvim_create_autocmd('TermLeave', {
+  callback = function()
+    restore_mouse()
   end,
 })
 
@@ -381,9 +387,6 @@ vim.api.nvim_create_autocmd({ 'WinEnter', 'BufWinEnter' }, {
   callback = function()
     if vim.bo.buftype:len() > 0 then
       set_wo_for_special_buf(vim.bo.filetype)
-      if vim.bo.buftype == 'terminal' then
-        save_mouse()
-      end
       return
     end
 
@@ -397,9 +400,6 @@ vim.api.nvim_create_autocmd({ 'WinEnter', 'BufWinEnter' }, {
 vim.api.nvim_create_autocmd('WinLeave', {
   callback = function()
     vim.wo.cursorline = false
-    if vim.bo.buftype == 'terminal' then
-      restore_mouse()
-    end
   end,
 })
 
