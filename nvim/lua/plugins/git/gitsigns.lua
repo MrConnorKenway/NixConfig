@@ -14,6 +14,14 @@ return {
       preview_config = {
         border = 'rounded',
       },
+      on_attach = function(bufnr)
+        --- Redraw statusline to display Heirline git components as soon as
+        --- gitsigns attaches to buffer
+        vim.schedule(function()
+          --- FIXME: this API may change in the future.
+          vim.api.nvim__redraw { buf = bufnr, statusline = true }
+        end)
+      end,
     }
     vim.keymap.set('n', ']c', function()
       if vim.api.nvim_buf_get_name(0):match('fugitive://') then
