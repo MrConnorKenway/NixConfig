@@ -177,10 +177,9 @@ local function is_current_window_last()
 end
 
 local function confirm_to_exit()
+  local shrun_shell = require('shrun').get_shell_job()
   local jobs = vim.tbl_filter(function(chan)
-    return chan.stream == 'job'
-      and chan.id ~= require('shrun').get_shell_job()
-      and chan.pty ~= ''
+    return chan.stream == 'job' and chan.id ~= shrun_shell and chan.pty ~= ''
   end, vim.api.nvim_list_chans())
 
   if #jobs > 0 then
@@ -194,12 +193,14 @@ local function confirm_to_exit()
       for _, job in ipairs(jobs) do
         vim.fn.jobstop(job.id)
       end
-      return true
     else
       return false
     end
   end
 
+  if shrun_shell then
+    vim.fn.jobstop(shrun_shell)
+  end
   return true
 end
 
