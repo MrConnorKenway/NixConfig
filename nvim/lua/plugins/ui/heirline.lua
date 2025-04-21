@@ -68,6 +68,9 @@ return {
     })
 
     local ViMode = {
+      init = function(self)
+        self.bufnr = vim.api.nvim_get_current_buf()
+      end,
       -- Now we define some dictionaries to map the output of mode() to the
       -- corresponding string and color. We can put these into `static` to compute
       -- them at initialisation time.
@@ -147,10 +150,14 @@ return {
       update = {
         'ModeChanged',
         'BufWinEnter',
-        pattern = '*:*',
-        callback = function()
+        callback = function(self)
           if not leaving then
-            vim.cmd('redrawstatus')
+            vim.schedule(function()
+              if vim.api.nvim_buf_is_valid(self.bufnr) then
+                --- FIXME: this API may change in the future.
+                vim.api.nvim__redraw { buf = self.bufnr, statusline = true }
+              end
+            end)
           end
         end,
       },
