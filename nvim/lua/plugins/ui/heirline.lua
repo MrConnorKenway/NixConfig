@@ -339,6 +339,8 @@ return {
     --- Contains boolean of whether component of certain buffer is querying git.
     --- The key has form of '<bufnr>:<component id joined by _>'.
     local querying = {}
+    --- Contains boolean of whether target buffer is redrawing.
+    local redrawing = {}
 
     local Git = {
       condition = conditions.is_git_repo,
@@ -355,13 +357,19 @@ return {
           'Fugitive*',
           'GitStatusUpdate',
         },
-        callback = function(self)
-          vim.schedule(function()
-            if vim.api.nvim_buf_is_valid(self.bufnr) then
-              --- FIXME: this API may change in the future.
-              vim.api.nvim__redraw { buf = self.bufnr, statusline = true }
+        callback = function()
+          local cache = require('gitsigns.cache').cache
+          local wins = vim.api.nvim_tabpage_list_wins(0)
+          for _, win in ipairs(wins) do
+            local bufnr = vim.api.nvim_win_get_buf(win)
+            if cache[bufnr] and not redrawing[bufnr] then
+              redrawing[bufnr] = true
+              vim.schedule(function()
+                vim.api.nvim__redraw { buf = bufnr, statusline = true }
+                redrawing[bufnr] = false
+              end)
             end
-          end)
+          end
         end,
       },
 
