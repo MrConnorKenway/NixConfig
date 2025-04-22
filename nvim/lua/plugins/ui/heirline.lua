@@ -334,10 +334,9 @@ return {
       hl = { fg = 'heirline_color_file_type', bold = true },
     }
 
-    --- Mappings from bufnr to its ahead/behind string
+    --- Mappings from git root dir to its ahead/behind string
     local ahead_behind_str = {}
-    --- Contains boolean of whether component of certain buffer is querying git.
-    --- The key has form of '<bufnr>:<component id joined by _>'.
+    --- Contains boolean of whether component of certain root is querying git.
     local querying = {}
     --- Contains boolean of whether target buffer is redrawing.
     local redrawing = {}
@@ -408,24 +407,23 @@ return {
       },
       {
         provider = function(self)
-          local bufnr = self.bufnr
-          local flatten_id = bufnr .. ':' .. vim.iter(self.id):join('_')
-          if not querying[flatten_id] then
-            querying[flatten_id] = true
+          local root = self.status_dict.root
+          if not querying[root] then
+            querying[root] = true
             vim.system({
               'git',
               '-C',
-              self.status_dict.root,
+              root,
               'rev-list',
               '--count',
               '--left-right',
               '@...@{u}',
             }, { text = true }, function(obj)
-              querying[flatten_id] = false
+              querying[root] = false
               if (not obj.stdout) or (obj.stderr and obj.stderr:len() > 0) then
                 --- Redraw only if string has changed
-                if ahead_behind_str[bufnr] ~= '' then
-                  ahead_behind_str[bufnr] = ''
+                if ahead_behind_str[root] ~= '' then
+                  ahead_behind_str[root] = ''
                   vim.schedule(function()
                     vim.api.nvim_exec_autocmds(
                       'User',
@@ -446,8 +444,8 @@ return {
                   str = str .. '⇡' .. ahead
                 end
                 --- Redraw only if string has changed
-                if str ~= ahead_behind_str[bufnr] then
-                  ahead_behind_str[bufnr] = str
+                if str ~= ahead_behind_str[root] then
+                  ahead_behind_str[root] = str
                   vim.schedule(function()
                     vim.api.nvim_exec_autocmds(
                       'User',
@@ -461,7 +459,7 @@ return {
             end)
           end
 
-          return ahead_behind_str[bufnr]
+          return ahead_behind_str[root]
         end,
       },
       {
