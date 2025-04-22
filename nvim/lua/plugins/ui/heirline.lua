@@ -419,42 +419,36 @@ return {
               '--left-right',
               '@...@{u}',
             }, { text = true }, function(obj)
+              local str
+
               querying[root] = false
+
               if (not obj.stdout) or (obj.stderr and obj.stderr:len() > 0) then
-                --- Redraw only if string has changed
-                if ahead_behind_str[root] ~= '' then
-                  ahead_behind_str[root] = ''
-                  vim.schedule(function()
-                    vim.api.nvim_exec_autocmds(
-                      'User',
-                      { pattern = 'GitStatusUpdate' }
-                    )
-                  end)
+                str = ''
+              else
+                local ahead, behind = obj.stdout:match('(%d+)\t(%d+)')
+                if ahead and behind then
+                  str = ' '
+                  if behind ~= '0' then
+                    str = str .. '⇣' .. behind
+                  end
+                  if ahead ~= '0' then
+                    str = str .. '⇡' .. ahead
+                  end
+                else
+                  error('Unexpected git output: ' .. obj.stdout)
                 end
-                return
               end
 
-              local ahead, behind = obj.stdout:match('(%d+)\t(%d+)')
-              if ahead and behind then
-                local str = ' '
-                if behind ~= '0' then
-                  str = str .. '⇣' .. behind
-                end
-                if ahead ~= '0' then
-                  str = str .. '⇡' .. ahead
-                end
-                --- Redraw only if string has changed
-                if str ~= ahead_behind_str[root] then
-                  ahead_behind_str[root] = str
-                  vim.schedule(function()
-                    vim.api.nvim_exec_autocmds(
-                      'User',
-                      { pattern = 'GitStatusUpdate' }
-                    )
-                  end)
-                end
-              else
-                error('Unexpected git output: ' .. obj.stdout)
+              --- Redraw only if string has changed
+              if ahead_behind_str[root] ~= str then
+                ahead_behind_str[root] = str
+                vim.schedule(function()
+                  vim.api.nvim_exec_autocmds(
+                    'User',
+                    { pattern = 'GitStatusUpdate' }
+                  )
+                end)
               end
             end)
           end
