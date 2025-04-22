@@ -435,6 +435,9 @@ return {
                   if ahead ~= '0' then
                     str = str .. '⇡' .. ahead
                   end
+                  if str == ' ' then
+                    str = ''
+                  end
                 else
                   error('Unexpected git output: ' .. obj.stdout)
                 end
