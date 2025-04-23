@@ -1431,13 +1431,13 @@ function M.test()
       winid = vim.api.nvim_get_current_win()
     end,
 
-    ------------------ test running task before task panel is created ----------
+    'echo "test running task before task panel is created"',
     'Task sleep 1 && echo done',
     'ListTask',
     'Task ls',
     ------------------ end test ------------------------------------------------
 
-    ------------------ test scroll to bottom -----------------------------------
+    'echo "test scroll to bottom"',
     'Task seq 1 ' .. config.sidebar_height,
     function()
       -- since last command is newly executed, its output should scroll to bottom
@@ -1473,7 +1473,7 @@ function M.test()
     end,
     ------------------ end test ------------------------------------------------
 
-    ------------------ test restarting task ------------------------------------
+    'echo "test restarting task"',
     '+2',
     'Task python --version',
     'Task tree',
@@ -1496,7 +1496,7 @@ function M.test()
     end,
     ------------------ end test ------------------------------------------------
 
-    ------------------ test starting new task ----------------------------------
+    'echo "test starting new task"',
     '+5',
     'Task make',
     function()
@@ -1508,7 +1508,7 @@ function M.test()
     end,
     ------------------ end test ------------------------------------------------
 
-    ------------------ test running tasks when panel is closed -----------------
+    'echo "test running tasks when panel is closed"',
     'Task cat longline',
     'Task brew list',
     'wincmd c',
@@ -1519,7 +1519,7 @@ function M.test()
     '+5',
     ------------------ end test ------------------------------------------------
 
-    ------------------ test closing and reopen panel ---------------------------
+    'echo "test closing and reopen panel"',
     'normal! gg',
     'normal! 15G7|',
     'wincmd p',
@@ -1549,7 +1549,7 @@ function M.test()
     end,
     ------------------ end test ------------------------------------------------
 
-    ------------------ test window view save and restore -----------------------
+    'echo "test window view save and restore"',
     'Task seq 1 200',
     function()
       vim.api.nvim_set_current_win(task_panel.task_output_winid)
@@ -1573,7 +1573,7 @@ function M.test()
     end,
     ------------------ end test ------------------------------------------------
 
-    ------------------ test delete task ----------------------------------------
+    'echo "test delete task"',
     'wincmd c',
     'ListTask',
     'Task sleep 10 && echo done',
@@ -1594,7 +1594,7 @@ function M.test()
     [[ call feedkeys("\<cr>") ]],
     ------------------ end test ------------------------------------------------
 
-    ------------------ test highlight focus for background tasks ---------------
+    'echo "test highlight focus for background tasks"',
     'ListTask',
     'Task sleep 10',
     'wincmd c',
@@ -1688,7 +1688,7 @@ function M.test()
     end
     cleanup_commands[#cleanup_commands + 1] = 'wincmd q'
 
-    vim.notify(tostring(#cleanup_commands), vim.log.levels.TRACE)
+    vim.notify('test cleanup', vim.log.levels.INFO)
 
     timer:start(
       delay,
