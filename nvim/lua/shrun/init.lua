@@ -1412,11 +1412,11 @@ function M.test()
     return
   end
 
-  local abort_tests_if_not = function(assertion)
+  local abort_tests_if_not = function(assertion, error_msg)
     if not assertion then
       vim.uv.timer_stop(timer)
       vim.uv.close(timer)
-      error('assertion failed', 2)
+      error(error_msg or 'assertion failed', 2)
     end
   end
 
