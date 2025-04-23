@@ -1510,7 +1510,7 @@ function M.test()
 
     ------------------ test running tasks when panel is closed -----------------
     'Task cat longline',
-    'Task brew update',
+    'Task brew list',
     'wincmd c',
     'Task ls',
     'Task tree',
@@ -1521,7 +1521,7 @@ function M.test()
 
     ------------------ test closing and reopen panel ---------------------------
     'normal! gg',
-    'normal! 16G7|',
+    'normal! 15G7|',
     'wincmd p',
     function()
       abort_tests_if_not(task_panel.sidebar_winid ~= nil)
@@ -1538,11 +1538,14 @@ function M.test()
     'ListTask',
     function()
       abort_tests_if_not(
-        vim.api.nvim_get_current_win() == task_panel.sidebar_winid
+        vim.api.nvim_get_current_win() == task_panel.task_output_winid
       )
+      vim.api.nvim_set_current_win(task_panel.sidebar_winid)
+    end,
+    function()
       local row, col = unpack(vim.api.nvim_win_get_cursor(0))
       -- cursor should not move after reopen
-      abort_tests_if_not(row == 16 and col == 6)
+      abort_tests_if_not(row == 15 and col == 6)
     end,
     ------------------ end test ------------------------------------------------
 
@@ -1565,6 +1568,8 @@ function M.test()
       for k, v in pairs(saved_winview) do
         abort_tests_if_not(current_winview[k] == v)
       end
+      --- The next test assumes that we are focusing sidebar, so switch to it
+      vim.api.nvim_set_current_win(task_panel.sidebar_winid)
     end,
     ------------------ end test ------------------------------------------------
 
