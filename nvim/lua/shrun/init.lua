@@ -1655,6 +1655,28 @@ function M.test()
     local nr_ranges = 0
     local prev_end_line
 
+    if task_panel.sidebar_winid and task_panel.task_output_winid then
+      local sidebar_width = vim.api.nvim_win_get_width(task_panel.sidebar_winid)
+      local sidebar_height =
+        vim.api.nvim_win_get_height(task_panel.sidebar_winid)
+      abort_tests_if_not(
+        sidebar_width == config.sidebar_width,
+        string.format(
+          'sidebar width %d != %d',
+          sidebar_width,
+          config.sidebar_width
+        )
+      )
+      abort_tests_if_not(
+        sidebar_height == config.sidebar_height,
+        string.format(
+          'sidebar height %d != %d',
+          sidebar_height,
+          config.sidebar_height
+        )
+      )
+    end
+
     for _ in pairs(all_tasks) do
       nr_tasks = nr_tasks + 1
     end
