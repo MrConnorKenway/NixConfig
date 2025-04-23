@@ -8,6 +8,12 @@ local config = require('shrun.config')
 ---@field end_line integer 1-based row index, does not include separator
 ---@field task_id integer
 
+---@class shrun.ExtMark
+---@field ns_id integer
+---@field line integer
+---@field col integer
+---@field opts vim.api.keyset.set_extmark
+
 ---all registered tasks
 ---@type table<integer, shrun.Task>
 local all_tasks = {}
@@ -141,7 +147,8 @@ end
 ---content and `highlights` to highlight.
 ---@param start_line integer 0-indexed inclusive line number that redraw begins
 ---@param end_line integer 0-indexed exclusive line number that redraw ends
-local function redraw_panel(lines, highlights, start_line, end_line)
+---@param ext_marks shrun.ExtMark[]?
+local function redraw_panel(lines, highlights, start_line, end_line, ext_marks)
   vim.api.nvim_buf_clear_namespace(
     task_panel.sidebar_bufnr,
     sidebar_hl_ns,
@@ -166,6 +173,18 @@ local function redraw_panel(lines, highlights, start_line, end_line)
       { row_start - 1, col_start },
       { row_start - 1, col_end }
     )
+  end
+
+  if ext_marks then
+    for _, ext_mark in pairs(ext_marks) do
+      vim.api.nvim_buf_set_extmark(
+        task_panel.sidebar_bufnr,
+        ext_mark.ns_id,
+        ext_mark.line,
+        ext_mark.col,
+        ext_mark.opts
+      )
+    end
   end
 
   -- Since extmark highlight is bound to buffer, we should highlight focused
@@ -228,24 +247,35 @@ local function desc_sorted_pairs(tbl)
   end
 end
 
+local separator = {
+  virt_text_win_col = 0,
+  virt_text = {
+    {
+      string.rep(config.separator_stem, vim.o.columns),
+      'FloatBorder',
+    },
+  },
+}
+
 local function render_sidebar_from_scratch()
   local lines = {}
   local first = true
   local highlights = {}
-  local separator_highlights = {}
-  local separator = string.rep(config.separator_stem, vim.o.columns)
+  ---@type shrun.ExtMark[]
+  local ext_marks = {}
 
   task_panel.task_ranges = {}
   -- lua does not guarantee the order when iterating table, so we have to
   -- manually sort task id
   for task_id, task in desc_sorted_pairs(all_tasks) do
     if not first then
-      table.insert(lines, separator)
-      table.insert(
-        separator_highlights,
-        -- Don't use `vim.o.columns` because separator contains unicode characters
-        { 'FloatBorder', #lines, 0, separator:len() }
-      )
+      table.insert(ext_marks, {
+        ns_id = sidebar_hl_ns,
+        line = #lines,
+        col = 0,
+        opts = separator,
+      })
+      table.insert(lines, '')
     else
       first = false
     end
@@ -259,9 +289,8 @@ local function render_sidebar_from_scratch()
     vim.list_extend(lines, task_lines)
     vim.list_extend(highlights, task_highlights)
   end
-  vim.list_extend(highlights, separator_highlights)
 
-  redraw_panel(lines, highlights, 0, -1)
+  redraw_panel(lines, highlights, 0, -1, ext_marks)
 end
 
 ---@param lnum integer
@@ -935,7 +964,7 @@ function M.display_panel()
     signcolumn = 'no',
     foldcolumn = '0',
     relativenumber = false,
-    wrap = false,
+    wrap = true,
     spell = false,
   }
   for k, v in pairs(default_opts) do
@@ -1030,19 +1059,12 @@ local function init_task_from_cmd(cmd)
   start_task(task)
   all_tasks[task.id] = task
 
-  local separator_highlights = {}
   local lines, highlights = task:render(0)
   local task_range = { start_line = 1, end_line = #lines, task_id = task.id }
   local empty = next(task_panel.task_ranges) == nil
 
   if not empty then
-    local separator = string.rep(config.separator_stem, vim.o.columns)
-    table.insert(lines, separator)
-    table.insert(
-      separator_highlights,
-      -- Don't use `vim.o.columns` because separator contains unicode characters
-      { 'FloatBorder', #lines, 0, separator:len() }
-    )
+    table.insert(lines, '')
     move_task_ranges(#lines, 0)
   end
   task_panel.task_ranges[task.id] = task_range
@@ -1051,8 +1073,14 @@ local function init_task_from_cmd(cmd)
     utils.buf_set_lines(task_panel.sidebar_bufnr, 0, -1, true, lines)
   else
     utils.buf_set_lines(task_panel.sidebar_bufnr, 0, 0, true, lines)
+    vim.api.nvim_buf_set_extmark(
+      task_panel.sidebar_bufnr,
+      sidebar_hl_ns,
+      #lines - 1,
+      0,
+      separator
+    )
   end
-  vim.list_extend(highlights, separator_highlights)
 
   for _, hl in ipairs(highlights) do
     local group, lnum, col_start, col_end = unpack(hl)
