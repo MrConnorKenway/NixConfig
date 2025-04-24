@@ -380,6 +380,14 @@ return {
 
       {
         provider = function(self)
+          local repo = vim.fs.basename(self.status_dict.root)
+          local cwd = vim.fs.basename(vim.uv.cwd())
+          return repo ~= cwd and ' ' .. repo .. ' '
+        end,
+        hl = { bold = true },
+      },
+      {
+        provider = function(self)
           local head = self.status_dict.head
           return (head:match('^[0-9a-f]+$') and ' ' or ' ') .. head
         end,
