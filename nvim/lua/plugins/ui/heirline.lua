@@ -361,14 +361,12 @@ return {
           local wins = vim.api.nvim_tabpage_list_wins(0)
           for _, win in ipairs(wins) do
             local bufnr = vim.api.nvim_win_get_buf(win)
-            if
-              cache[bufnr]
-              and vim.api.nvim_buf_is_valid(bufnr)
-              and not redrawing[bufnr]
-            then
+            if cache[bufnr] and not redrawing[bufnr] then
               redrawing[bufnr] = true
               vim.schedule(function()
-                vim.api.nvim__redraw { buf = bufnr, statusline = true }
+                if vim.api.nvim_buf_is_valid(bufnr) then
+                  vim.api.nvim__redraw { buf = bufnr, statusline = true }
+                end
                 redrawing[bufnr] = false
               end)
             end
