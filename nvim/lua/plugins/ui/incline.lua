@@ -62,7 +62,7 @@ return {
           local len = 0
           for i, item in ipairs(navic.get_data(props.buf) or {}) do
             len = len + #item.icon + #item.name
-            if len / vim.api.nvim_win_get_width(0) > 0.45 and i > 1 then
+            if len / vim.api.nvim_win_get_width(props.win) > 0.45 and i > 1 then
               table.insert(res, { { '  ..' } })
               break
             end
