@@ -380,7 +380,8 @@ return {
 
       {
         provider = function(self)
-          return ' ' .. self.status_dict.head
+          local head = self.status_dict.head
+          return (head:match('^[0-9a-f]+$') and ' ' or ' ') .. head
         end,
         hl = { bold = true },
       },
