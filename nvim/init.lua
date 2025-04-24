@@ -384,22 +384,22 @@ vim.api.nvim_create_autocmd('TermLeave', {
 })
 
 vim.api.nvim_create_autocmd({ 'WinEnter', 'BufWinEnter' }, {
-  callback = function()
+  callback = function(args)
     if vim.bo.buftype:len() > 0 then
       set_wo_for_special_buf(vim.bo.filetype)
       return
+    end
+
+    if args.event == 'WinEnter' then
+      for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+        vim.wo[win].cursorline = false
+      end
     end
 
     vim.wo.number = true
     vim.wo.list = true
     vim.wo.cursorline = true
     vim.wo.signcolumn = 'yes:1'
-  end,
-})
-
-vim.api.nvim_create_autocmd('WinLeave', {
-  callback = function()
-    vim.wo.cursorline = false
   end,
 })
 
