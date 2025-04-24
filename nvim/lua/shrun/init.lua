@@ -75,7 +75,7 @@ end
 
 local function new_empty_buffer()
   local buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_name(buf, '[Task Output]')
+  vim.api.nvim_buf_set_name(buf, 'shrun:///empty')
   vim.bo[buf].buftype = 'nofile'
   vim.bo[buf].bufhidden = 'hide'
   vim.bo[buf].buflisted = false
@@ -621,7 +621,7 @@ local scroll_up_key = vim.api.nvim_replace_termcodes('<C-u>', true, true, true)
 local function new_sidebar_buffer()
   local sidebar_bufnr = vim.api.nvim_create_buf(false, true)
 
-  vim.api.nvim_buf_set_name(sidebar_bufnr, '[Shrun Sidebar]')
+  vim.api.nvim_buf_set_name(sidebar_bufnr, 'shrun:///sidebar')
 
   vim.bo[sidebar_bufnr].filetype = 'shrun_sidebar'
   vim.bo[sidebar_bufnr].buftype = 'nofile'
