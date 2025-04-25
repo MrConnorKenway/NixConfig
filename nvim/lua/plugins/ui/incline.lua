@@ -4,9 +4,9 @@ return {
   dependencies = { 'SmiteshP/nvim-navic', 'nvim-tree/nvim-web-devicons' },
   event = 'VeryLazy',
   config = function()
-    local helpers = require 'incline.helpers'
-    local navic = require 'nvim-navic'
-    local devicons = require 'nvim-web-devicons'
+    local helpers = require('incline.helpers')
+    local navic = require('nvim-navic')
+    local devicons = require('nvim-web-devicons')
     local type_hl = {
       File = 'Directory',
       Module = '@include',
@@ -46,18 +46,26 @@ return {
       },
       render = function(props)
         if props.focused then
-          local filename = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(props.buf), ':t')
+          local filename =
+            vim.fn.fnamemodify(vim.api.nvim_buf_get_name(props.buf), ':t')
           if filename == '' then
             filename = '[No Name]'
           end
           local extension = vim.fn.fnamemodify(filename, ':e')
-          local ft_icon, ft_color = devicons.get_icon_color(filename, extension, { default = true })
+          local ft_icon, ft_color =
+            devicons.get_icon_color(filename, extension, { default = true })
           local modified = vim.bo[props.buf].modified
           local res = {
-            ft_icon and { ' ', ft_icon, ' ', guibg = ft_color, guifg = helpers.contrast_color(ft_color) } or '',
+            ft_icon and {
+              ' ',
+              ft_icon,
+              ' ',
+              guibg = ft_color,
+              guifg = helpers.contrast_color(ft_color),
+            } or '',
             ' ',
             { filename, gui = modified and 'bold,italic' or 'bold' },
-            guibg = require('catppuccin.palettes').get_palette().surface0
+            guibg = require('catppuccin.palettes').get_palette().surface0,
           }
           local len = 0
           for i, item in ipairs(navic.get_data(props.buf) or {}) do
@@ -69,7 +77,7 @@ return {
             table.insert(res, {
               { '  ', group = 'NavicSeparator' },
               { item.icon, group = type_hl[item.type] },
-              { item.name, group = type_hl[item.type] }
+              { item.name, group = type_hl[item.type] },
             })
           end
           return res
@@ -82,7 +90,7 @@ return {
       callback = function()
         -- clear incline's highlight cache
         require('incline.highlight').clear()
-      end
+      end,
     })
-  end
+  end,
 }
