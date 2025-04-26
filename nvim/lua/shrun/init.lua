@@ -60,8 +60,6 @@ local sidebar_focus_hl_ns = vim.api.nvim_create_namespace('shrun_sidebar_focus')
 ---@type integer
 local empty_task_output_buf = -1
 
-local original_winid = -1
-
 ---@type snacks.Picker?
 local task_picker
 
@@ -331,19 +329,6 @@ local function sidebar_on_cursor_move()
   highlight_focused()
 end
 
-local function save_original_winid()
-  local prev_winnr = vim.fn.winnr('#')
-  local prev_winid = vim.fn.win_getid(prev_winnr)
-  if
-    prev_winid ~= task_panel.task_output_winid
-    and prev_winid ~= task_panel.sidebar_winid
-    and prev_winid ~= (task_picker and task_picker.input.win.win or -1)
-    and prev_winid ~= (task_picker and task_picker.list.win.win or -1)
-  then
-    original_winid = prev_winid
-  end
-end
-
 ---@param buf_id integer the bufnr of task output buffer, i.e., Task.buf_id
 local function new_task_output_window(buf_id)
   local winid = vim.api.nvim_open_win(
@@ -377,7 +362,6 @@ local function new_task_output_window(buf_id)
         vim.cmd('stopinsert')
       end
       if vim.api.nvim_get_current_win() == winid then
-        save_original_winid()
         task_panel.exit_win = 'output'
       end
     end,
@@ -393,8 +377,6 @@ local function new_task_output_window(buf_id)
         if task_panel.sidebar_winid then
           if vim.api.nvim_get_current_win() == task_panel.sidebar_winid then
             vim.cmd('q')
-            pcall(vim.api.nvim_set_current_win, original_winid)
-            original_winid = -1
           else
             vim.api.nvim_win_hide(task_panel.sidebar_winid)
           end
@@ -456,8 +438,8 @@ local function new_task_output_buffer(task)
     if f == '' then
       Snacks.notify.warn('No file under cursor')
     else
-      if vim.api.nvim_win_is_valid(original_winid) then
-        vim.api.nvim_set_current_win(original_winid)
+      if vim.api.nvim_win_is_valid(vim.g.normal_winid_rec.prev) then
+        vim.api.nvim_set_current_win(vim.g.normal_winid_rec.prev)
       else
         vim.api.nvim_win_hide(task_panel.task_output_winid)
       end
@@ -831,7 +813,6 @@ local function new_sidebar_buffer()
     callback = function()
       -- We don't want to trigger BufEnter when task panel is closing
       if task_panel.task_output_winid then
-        save_original_winid()
         task_panel.exit_win = 'sidebar'
       end
     end,
@@ -855,8 +836,6 @@ local function new_sidebar_buffer()
         if task_panel.task_output_winid then
           if vim.api.nvim_get_current_win() == task_panel.task_output_winid then
             vim.cmd('q')
-            pcall(vim.api.nvim_set_current_win, original_winid)
-            original_winid = -1
           else
             vim.api.nvim_win_hide(task_panel.task_output_winid)
           end
@@ -953,8 +932,6 @@ function M.display_panel()
 
   -- Save exit window so that the following window creation won't overwrite `exit_win`
   local exit_win = task_panel.exit_win
-
-  original_winid = vim.api.nvim_get_current_win()
 
   -- Create sidebar window
   vim.cmd([[botright split]])

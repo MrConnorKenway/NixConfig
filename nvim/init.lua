@@ -383,6 +383,14 @@ vim.api.nvim_create_autocmd('TermLeave', {
   end,
 })
 
+--- Record of id of window that is normal, focusable and contains regular
+--- buffer, i.e., buffer with empty `buftype`. Note that a window that
+--- contains non-empty `buftype` might also be recorded if such window is
+--- created when the special buffer's type has not been set yet, e.g.,
+--- some plugin may create a window by splitting current regular window,
+--- and set the buffer to special buffer later.
+vim.g.normal_winid_rec = nil
+
 vim.api.nvim_create_autocmd({ 'WinEnter', 'BufWinEnter' }, {
   callback = function(args)
     if vim.bo.buftype:len() > 0 then
@@ -394,12 +402,38 @@ vim.api.nvim_create_autocmd({ 'WinEnter', 'BufWinEnter' }, {
       for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
         vim.wo[win].cursorline = false
       end
+      local win = vim.api.nvim_get_current_win()
+      if vim.api.nvim_win_get_config(win).relative == '' then
+        if vim.g.normal_winid_rec == nil then
+          vim.g.normal_winid_rec = { prev = win, current = win }
+        else
+          vim.g.normal_winid_rec =
+            { prev = vim.g.normal_winid_rec.current, current = win }
+        end
+      end
     end
 
     vim.wo.number = true
     vim.wo.list = true
     vim.wo.cursorline = true
     vim.wo.signcolumn = 'yes:1'
+  end,
+})
+
+vim.api.nvim_create_autocmd('WinClosed', {
+  callback = function(args)
+    local closed_win = assert(tonumber(args.match))
+    if vim.api.nvim_win_get_config(closed_win).relative ~= '' then
+      return
+    end
+    local prev_win = vim.g.normal_winid_rec.prev
+    if vim.api.nvim_win_is_valid(prev_win) then
+      vim.schedule(function()
+        if vim.api.nvim_win_is_valid(prev_win) then
+          vim.api.nvim_set_current_win(prev_win)
+        end
+      end)
+    end
   end,
 })
 
