@@ -428,10 +428,14 @@ vim.api.nvim_create_autocmd('WinClosed', {
       return
     end
     local prev_win = vim.g.normal_winid_rec.prev
+    local is_snack_win = vim.bo.filetype:find('^snacks')
     if vim.api.nvim_win_is_valid(prev_win) then
       vim.schedule(function()
         if vim.api.nvim_win_is_valid(prev_win) then
           vim.api.nvim_set_current_win(prev_win)
+          if is_snack_win then
+            vim.api.nvim_exec_autocmds('WinEnter', {})
+          end
         end
       end)
     end
