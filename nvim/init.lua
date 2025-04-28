@@ -177,7 +177,8 @@ local function is_current_window_last()
 end
 
 local function confirm_to_exit()
-  local shrun_shell = require('shrun').get_shell_job()
+  local shrun_shell = package.loaded.shrun and require('shrun').get_shell_job()
+    or nil
   local jobs = vim.tbl_filter(function(chan)
     return chan.stream == 'job' and chan.id ~= shrun_shell and chan.pty ~= ''
   end, vim.api.nvim_list_chans())
