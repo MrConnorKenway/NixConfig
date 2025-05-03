@@ -511,22 +511,18 @@ local function start_task(task)
         if exit_code == 0 then
           task.status = 'SUCCESS'
           partial_render_sidebar(task)
-          -- TODO: currently relies on Snacks.nvim's markdown support to change the
-          -- style, not a perfect solution
-          vim.notify(
-            task.escaped_cmd .. ' `SUCCESS`',
-            vim.log.levels.INFO,
-            { timeout = 2000 }
+          vim.api.nvim_echo(
+            { { task.escaped_cmd }, { ' SUCCESS', 'healthSuccess' } },
+            true,
+            {}
           )
         else
           task.status = 'FAILED'
           partial_render_sidebar(task)
-          -- TODO: currently relies on Snacks.nvim's markdown support to change the
-          -- style, not a perfect solution
-          vim.notify(
-            task.escaped_cmd .. ' **FAILED**',
-            vim.log.levels.ERROR,
-            { timeout = 2000 }
+          vim.api.nvim_echo(
+            { { task.escaped_cmd }, { ' FAILED', 'ERROR' } },
+            true,
+            {}
           )
         end
         if task.elapsed_time > config.long_time_threshold then
