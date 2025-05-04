@@ -548,6 +548,9 @@ return {
         Space,
       },
       TerminalName,
+      {
+        provider = ' %<',
+      },
       Align,
     }
 
