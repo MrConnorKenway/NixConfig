@@ -438,11 +438,7 @@ local function new_task_output_buffer(task)
     if f == '' then
       Snacks.notify.warn('No file under cursor')
     else
-      if vim.api.nvim_win_is_valid(vim.g.normal_winid_rec.prev) then
-        vim.api.nvim_set_current_win(vim.g.normal_winid_rec.prev)
-      else
-        vim.api.nvim_win_hide(task_panel.task_output_winid)
-      end
+      vim.api.nvim_win_hide(task_panel.task_output_winid)
 
       vim.schedule(function()
         vim.cmd('e ' .. f)

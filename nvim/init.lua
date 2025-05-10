@@ -384,16 +384,60 @@ vim.api.nvim_create_autocmd('TermLeave', {
   end,
 })
 
---- Record of id of window that is normal, focusable and contains regular
---- buffer, i.e., buffer with empty `buftype`. Note that a window that
---- contains non-empty `buftype` might also be recorded if such window is
---- created when the special buffer's type has not been set yet, e.g.,
---- some plugin may create a window by splitting current regular window,
---- and set the buffer to special buffer later.
-vim.g.normal_winid_rec = nil
+---Tab local window navigation history
+---@class TabNavigationHistory
+---
+---`idx` points to the last updated position in history ring buffer, and has a
+---range of [1, `max_size`]. When recording new window history, we need to
+---first update `idx` and then perform the insertion. Since the value range is
+---not [0, `max_size` - 1], we have to use `idx = idx % max_size + 1` instead
+---of `idx = (idx + 1) % max_size` to increase it. Likewise, the for loop
+---condition is slightly different when iterating in reverse.
+---@field idx integer
+---
+---History ring buffer that contains neovim window id
+---@field [integer] integer
+
+---@type TabNavigationHistory[]
+local win_history = { max_size = 64 }
 
 vim.api.nvim_create_autocmd({ 'WinEnter', 'BufWinEnter' }, {
   callback = function(args)
+    if args.event == 'WinEnter' then
+      local win = vim.api.nvim_get_current_win()
+      ---Only record normal window, ignore floating window
+      if vim.api.nvim_win_get_config(win).relative == '' then
+        local tab = vim.api.nvim_get_current_tabpage()
+        if not win_history[tab] then
+          win_history[tab] = { win, idx = 1 }
+        else
+          local history = win_history[tab]
+          local prev = history[history.idx]
+          if prev and vim.api.nvim_win_is_valid(prev) then
+            if prev ~= win then
+              history.idx = history.idx % win_history.max_size + 1
+              history[history.idx] = win
+            end
+          else
+            --- Last window is closed, we need to go back to the most recent
+            --- valid window
+            for i = 2, win_history.max_size, 1 do
+              local idx = (history.idx - i) % win_history.max_size + 1
+              prev = history[idx]
+              if prev and vim.api.nvim_win_is_valid(prev) then
+                vim.api.nvim_set_current_win(prev)
+                vim.schedule(function()
+                  vim.api.nvim_exec_autocmds('WinEnter', {})
+                end)
+                history.idx = idx
+                break
+              end
+            end
+          end
+        end
+      end
+    end
+
     if vim.bo.buftype:len() > 0 then
       set_wo_for_special_buf(vim.bo.filetype)
       return
@@ -403,42 +447,12 @@ vim.api.nvim_create_autocmd({ 'WinEnter', 'BufWinEnter' }, {
       for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
         vim.wo[win].cursorline = false
       end
-      local win = vim.api.nvim_get_current_win()
-      if vim.api.nvim_win_get_config(win).relative == '' then
-        if vim.g.normal_winid_rec == nil then
-          vim.g.normal_winid_rec = { prev = win, current = win }
-        else
-          vim.g.normal_winid_rec =
-            { prev = vim.g.normal_winid_rec.current, current = win }
-        end
-      end
     end
 
     vim.wo.number = true
     vim.wo.list = true
     vim.wo.cursorline = true
     vim.wo.signcolumn = 'yes:1'
-  end,
-})
-
-vim.api.nvim_create_autocmd('WinClosed', {
-  callback = function(args)
-    local closed_win = assert(tonumber(args.match))
-    if vim.api.nvim_win_get_config(closed_win).relative ~= '' then
-      return
-    end
-    local prev_win = vim.g.normal_winid_rec.prev
-    local is_snack_win = vim.bo.filetype:find('^snacks')
-    if vim.api.nvim_win_is_valid(prev_win) then
-      vim.schedule(function()
-        if vim.api.nvim_win_is_valid(prev_win) then
-          vim.api.nvim_set_current_win(prev_win)
-          if is_snack_win then
-            vim.api.nvim_exec_autocmds('WinEnter', {})
-          end
-        end
-      end)
-    end
   end,
 })
 

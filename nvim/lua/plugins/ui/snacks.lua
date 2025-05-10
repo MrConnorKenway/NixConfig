@@ -7,6 +7,12 @@ local function create_snacks_terminal()
     win = {
       on_close = function(self)
         term_height = vim.api.nvim_win_get_height(self.win)
+        --- Due to https://github.com/folke/snacks.nvim/commit/51996dfeac5f09,
+        --- snacks will execute `wincmd p` on terminal closure, which does not
+        --- trigger 'WinEnter'. So refire 'WinEnter' here.
+        vim.schedule(function()
+          vim.api.nvim_exec_autocmds('WinEnter', {})
+        end)
       end,
     },
   })
