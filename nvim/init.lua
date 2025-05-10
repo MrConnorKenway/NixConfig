@@ -177,13 +177,40 @@ local function is_current_window_last()
 end
 
 local function confirm_to_exit()
-  local shrun_shell = package.loaded.shrun and require('shrun').get_shell_job()
-    or nil
+  local idle_shells = {}
   local jobs = vim.tbl_filter(function(chan)
-    return chan.stream == 'job' and chan.id ~= shrun_shell and chan.pty ~= ''
+    if chan.stream == 'job' and chan.pty ~= '' then
+      if
+        vim.fn.has('unix')
+        and chan.argv
+        and type(chan.argv[1]) == 'string'
+      then
+        ---@type string
+        local comm = vim.fs.basename(chan.argv[1])
+        local supported_shells = { 'bash', 'zsh' }
+        if vim.tbl_contains(supported_shells, comm) then
+          local pid = vim.fn.jobpid(chan.id)
+          local cmd
+          if vim.fn.has('linux') == 1 then
+            cmd = {
+              'cat',
+              string.format('/proc/%d/task/%d/children', pid, pid),
+            }
+          else
+            cmd = { 'pgrep', '-P', tostring(pid) }
+          end
+          if vim.system(cmd, { text = true }):wait().stdout == '' then
+            idle_shells[#idle_shells + 1] = chan.id
+          end
+        end
+      end
+      return true
+    else
+      return false
+    end
   end, vim.api.nvim_list_chans())
 
-  if #jobs > 0 then
+  if #jobs - #idle_shells > 0 then
     local choice = vim.fn.confirm(
       'Are you asure to exit? There are running jobs.',
       '&Yes\n&No',
@@ -199,8 +226,8 @@ local function confirm_to_exit()
     end
   end
 
-  if shrun_shell then
-    vim.fn.jobstop(shrun_shell)
+  for _, shell in ipairs(idle_shells) do
+    vim.fn.jobstop(shell)
   end
   return true
 end
