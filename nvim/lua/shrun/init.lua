@@ -1146,6 +1146,7 @@ function M.launch_shell()
     vim.api.nvim_create_autocmd('TermRequest', {
       buffer = shell_buf,
       callback = function(args)
+        ---@type string
         local request = args.data.sequence
         local found = request:find('\x1b]633')
         if found then
@@ -1169,14 +1170,22 @@ function M.launch_shell()
             end)
             vim.api.nvim_chan_send(shell_job, '\x0c')
             return
+          else
+            --- According to documentation (https://code.visualstudio.com/docs/terminal/shell-integration#_vs-code-custom-sequences-osc-633-st):
+            --- > `OSC 633 ; P ; <Property>=<Value> ST` - Set a property on the
+            --- > terminal, only known properties will be handled.
+            --- We use an unknown property to represent the `zshexit` event to
+            --- not interfere with VSCode shell integration.
+            local is_exit = request:find('\x1b]633;P;ShrunExit', found)
+            if is_exit then
+              vim.api.nvim_win_hide(shell_win)
+              vim.api.nvim_chan_send(shell_job, '\x0c')
+            end
           end
         end
       end,
     })
 
-    vim.keymap.set('t', '<C-d>', function()
-      vim.api.nvim_win_hide(shell_win)
-    end, { buffer = shell_buf, desc = 'Hide shrun launcher' })
     vim.keymap.set({ 'n', 't' }, '<ESC>', function()
       vim.api.nvim_win_hide(shell_win)
     end, { buffer = shell_buf, desc = 'Hide shrun launcher' })
