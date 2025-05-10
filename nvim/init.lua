@@ -268,6 +268,15 @@ vim.api.nvim_create_autocmd('FileType', {
   end,
 })
 
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'sh',
+  callback = function(args)
+    if vim.b.is_bash then
+      vim.treesitter.start(args.buf, 'bash')
+    end
+  end,
+})
+
 -- copy from https://github.com/neovim/neovim/pull/28176/files#diff-49225a49c226c2f1b36f966d0178c556e204cdc0b660c80db9e4568e03f6ef99R126
 -- WARN: may change as neovim updates
 vim.keymap.set('n', '<C-/>', function()
