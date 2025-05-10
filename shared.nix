@@ -25,6 +25,9 @@
             ;;
         esac
       '')
+    ] ++ [
+      pkgs-unstable.zig
+      pkgs-unstable.zls
     ];
 
     username = builtins.getEnv "USER";
