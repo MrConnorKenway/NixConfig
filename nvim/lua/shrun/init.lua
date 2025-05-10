@@ -1169,7 +1169,6 @@ function M.launch_shell()
               init_task_from_cmd(cmd)
             end)
             vim.api.nvim_chan_send(shell_job, '\x0c')
-            return
           else
             --- According to documentation (https://code.visualstudio.com/docs/terminal/shell-integration#_vs-code-custom-sequences-osc-633-st):
             --- > `OSC 633 ; P ; <Property>=<Value> ST` - Set a property on the
