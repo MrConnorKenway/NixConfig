@@ -520,6 +520,9 @@ return {
   },
   ---@type snacks.Config | {}
   opts = {
+    win = {
+      backdrop = false,
+    },
     notifier = {
       enabled = true,
       top_down = false,
