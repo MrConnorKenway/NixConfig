@@ -405,6 +405,15 @@ vim.api.nvim_create_autocmd({ 'WinEnter', 'BufWinEnter' }, {
   callback = function(args)
     if args.event == 'WinEnter' then
       local win = vim.api.nvim_get_current_win()
+
+      ---Reset winhighlight to ensure that snacks picker does not mess it up
+      vim.schedule(function()
+        if vim.api.nvim_win_is_valid(win) then
+          vim.wo[win].winhighlight =
+            vim.api.nvim_get_option_value('winhighlight', { scope = 'global' })
+        end
+      end)
+
       ---Only record normal window, ignore floating window
       if vim.api.nvim_win_get_config(win).relative == '' then
         local tab = vim.api.nvim_get_current_tabpage()
