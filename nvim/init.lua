@@ -555,10 +555,7 @@ vim.diagnostic.config {
   },
 }
 
-vim.lsp.enable('lua_ls')
-vim.lsp.enable('clangd')
-vim.lsp.enable('nixd')
-vim.lsp.enable('basedpyright')
+vim.lsp.enable { 'lua_ls', 'clangd', 'nixd', 'basedpyright' }
 
 require('lazy').setup {
   spec = {
