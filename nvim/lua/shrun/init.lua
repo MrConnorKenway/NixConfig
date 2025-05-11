@@ -1120,11 +1120,10 @@ function M.launch_shell()
     return
   end
 
-  -- Currently only support zsh with p10k prompt
-  if shell == 'zsh' and vim.fn.environ()['PATH']:find('powerlevel10k') then
+  -- Currently only support zsh
+  if shell == 'zsh' then
     shell_args = { 'zsh' }
     shell_envs = vim.tbl_extend('force', shell_envs, {
-      ITERM_SHELL_INTEGRATION_INSTALLED = 'Yes', -- enable p10k OSC 133 support
       USER_ZDOTDIR = home_dir,
       ZDOTDIR = string.format(config.shell_integration_path, home_dir),
       FZF_DEFAULT_OPTS = config.shell_fzf_default_opts,
