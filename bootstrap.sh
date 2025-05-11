@@ -1,6 +1,9 @@
 #!/bin/bash
 
-nix-channel --add https://github.com/nix-community/home-manager/archive/release-24.11.tar.gz home-manager # change 24.05 to match latest nixpkgs version
+VERSION=24.11
+
+nix-channel --add https://mirrors.tuna.tsinghua.edu.cn/nix-channels/nixos-$VERSION nixpkgs
+nix-channel --add https://github.com/nix-community/home-manager/archive/release-$VERSION.tar.gz home-manager
 nix-channel --update
 nix-shell '<home-manager>' -A install
 
