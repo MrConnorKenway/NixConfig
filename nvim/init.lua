@@ -483,6 +483,25 @@ vim.api.nvim_create_autocmd({ 'WinEnter', 'BufWinEnter' }, {
       end
     end
 
+    local curr_win = vim.api.nvim_get_current_win()
+
+    if
+      package.loaded.shrun
+      and require('shrun').get_task_panel().sidebar_winid
+    then
+      vim.o.laststatus = 2
+    elseif args.event == 'WinEnter' then
+      if
+        vim.bo.filetype:find('^snacks')
+        or vim.bo.buftype == 'terminal'
+        or vim.api.nvim_win_get_config(curr_win).relative ~= ''
+      then
+        vim.o.laststatus = 2
+      else
+        vim.o.laststatus = 3
+      end
+    end
+
     if vim.bo.buftype:len() > 0 then
       set_wo_for_special_buf(vim.bo.filetype)
       return

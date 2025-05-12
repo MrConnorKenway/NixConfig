@@ -45,17 +45,24 @@ return {
         cursorline = 'focused_win',
       },
       render = function(props)
+        local filename =
+          vim.fn.fnamemodify(vim.api.nvim_buf_get_name(props.buf), ':t')
+        if filename == '' then
+          filename = '[No Name]'
+        end
+        local extension = vim.fn.fnamemodify(filename, ':e')
+        local ft_icon, ft_color =
+          devicons.get_icon_color(filename, extension, { default = true })
+        local modified = vim.bo[props.buf].modified
+        local res
+        local theme_colors = require('catppuccin.palettes').get_palette()
+        local inactive_hl_fg = theme_colors.surface1
         if props.focused then
-          local filename =
-            vim.fn.fnamemodify(vim.api.nvim_buf_get_name(props.buf), ':t')
-          if filename == '' then
-            filename = '[No Name]'
-          end
-          local extension = vim.fn.fnamemodify(filename, ':e')
-          local ft_icon, ft_color =
-            devicons.get_icon_color(filename, extension, { default = true })
-          local modified = vim.bo[props.buf].modified
-          local res = {
+          local bg_hl = require('catppuccin.utils.colors').vary_color(
+            { latte = theme_colors.crust },
+            theme_colors.surface0
+          )
+          res = {
             ft_icon and {
               ' ',
               ft_icon,
@@ -65,24 +72,47 @@ return {
             } or '',
             ' ',
             { filename, gui = modified and 'bold,italic' or 'bold' },
-            guibg = require('catppuccin.palettes').get_palette().surface0,
+            guibg = bg_hl,
           }
-          local len = 0
-          for i, item in ipairs(navic.get_data(props.buf) or {}) do
-            len = len + #item.icon + #item.name
-            if len / vim.api.nvim_win_get_width(props.win) > 0.45 and i > 1 then
-              table.insert(res, { { '  ..' } })
-              break
-            end
+        else
+          local inactive_hl_bg = 'StatusLineNC'
+          res = {
+            ft_icon and {
+              ' ',
+              ft_icon,
+              guibg = inactive_hl_bg,
+            } or '',
+            ' ',
+            {
+              filename,
+              gui = modified and 'italic' or '',
+            },
+            guifg = inactive_hl_fg,
+            guibg = inactive_hl_bg,
+          }
+        end
+        local len = 0
+        for i, item in ipairs(navic.get_data(props.buf) or {}) do
+          len = len + #item.icon + #item.name
+          if len / vim.api.nvim_win_get_width(props.win) > 0.45 and i > 1 then
+            table.insert(res, { { '  ..' } })
+            break
+          end
+          if props.focused then
             table.insert(res, {
               { '  ', group = 'NavicSeparator' },
               { item.icon, group = type_hl[item.type] },
               { item.name, group = type_hl[item.type] },
             })
+          else
+            table.insert(res, {
+              { '  ', group = 'NavicSeparator' },
+              { item.icon, guifg = inactive_hl_fg },
+              { item.name, guifg = inactive_hl_fg },
+            })
           end
-          return res
         end
-        return {}
+        return res
       end,
     }
 

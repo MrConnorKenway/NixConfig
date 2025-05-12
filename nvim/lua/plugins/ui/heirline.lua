@@ -276,7 +276,7 @@ return {
         -- now, if the filename would occupy more than 35% of the available
         -- space, we trim the file path to its initials
         -- See Flexible Components section below for dynamic truncation
-        if not conditions.width_percent_below(#filename, 0.35) then
+        if not conditions.width_percent_below(#filename, 0.65) then
           filename = vim.fn.pathshorten(filename)
         end
         return filename

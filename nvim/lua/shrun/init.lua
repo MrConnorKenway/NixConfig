@@ -1382,6 +1382,10 @@ function M.task_picker()
   }
 end
 
+function M.get_task_panel()
+  return task_panel
+end
+
 ---for development test purpose only
 function M.test()
   local timer = vim.uv.new_timer()
