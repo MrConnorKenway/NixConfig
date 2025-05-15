@@ -5,10 +5,7 @@ return {
   config = function()
     require('illuminate').configure {
       modes_allowlist = { 'n' },
-      providers = { 'lsp', 'regex' },
-      should_enable = function(bufnr)
-        return vim.bo[bufnr].buftype == ''
-      end,
+      providers = { 'lsp' },
     }
     require('illuminate.config').get_raw().large_file_cutoff = nil
   end,
