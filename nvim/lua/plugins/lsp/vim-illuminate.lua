@@ -7,5 +7,6 @@ return {
       modes_allowlist = { 'n' },
       providers = { 'lsp', 'regex' },
     }
+    require('illuminate.config').get_raw().large_file_cutoff = nil
   end,
 }
