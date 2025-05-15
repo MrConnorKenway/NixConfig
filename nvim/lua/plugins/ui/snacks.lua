@@ -352,9 +352,11 @@ return {
         local attached_bufnr = {}
         local cwd = vim.fs.normalize(vim.uv.cwd() or '.')
 
-        for bufnr, cache in pairs(require('gitsigns.cache').cache) do
-          local filename = cache.file:gsub(cwd .. '/', '')
-          attached_bufnr[filename] = bufnr
+        if package.loaded.gitsigns then
+          for bufnr, cache in pairs(require('gitsigns.cache').cache) do
+            local filename = cache.file:gsub(cwd .. '/', '')
+            attached_bufnr[filename] = bufnr
+          end
         end
 
         ---@type snacks.picker.finder
