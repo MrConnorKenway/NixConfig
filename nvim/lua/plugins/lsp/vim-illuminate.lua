@@ -5,7 +5,7 @@ return {
   config = function()
     require('illuminate').configure {
       modes_allowlist = { 'n' },
-      providers = { 'lsp' },
+      providers = { 'lsp', 'regex' },
     }
   end,
 }
