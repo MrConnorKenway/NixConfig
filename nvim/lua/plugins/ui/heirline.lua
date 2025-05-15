@@ -9,12 +9,10 @@ return {
     local conditions = require('heirline.conditions')
     local utils = require('heirline.utils')
     local function setup_colors()
-      local theme_colors = require('catppuccin.palettes').get_palette()
+      local theme_colors = require('color_abstract_layer').get_colors()
       local colors = {
-        heirline_color_purple = utils.get_highlight('Statement').fg,
-        heirline_color_cyan = utils.get_highlight('Special').fg,
-        heirline_color_bright_bg = utils.get_highlight('Folded').bg,
-        heirline_color_bright_fg = utils.get_highlight('Folded').fg,
+        heirline_color_special = utils.get_highlight('Special').fg,
+        heirline_color_cursor = utils.get_highlight('Cursor').fg,
         heirline_color_diag_warn = utils.get_highlight('DiagnosticWarn').fg,
         heirline_color_diag_error = utils.get_highlight('DiagnosticError').fg,
         heirline_color_diag_hint = utils.get_highlight('DiagnosticHint').fg,
@@ -25,14 +23,6 @@ return {
         heirline_color_git_branch = utils.get_highlight('Constant').fg,
         heirline_color_file_name = utils.get_highlight('Directory').fg,
         heirline_color_file_type = utils.get_highlight('Type').fg,
-        heirline_color_normal = theme_colors.lavender,
-        heirline_color_insert = theme_colors.green,
-        heirline_color_visual = theme_colors.flamingo,
-        heirline_color_command = theme_colors.peach,
-        heirline_color_select = utils.get_highlight('Statement').fg,
-        heirline_color_replace = theme_colors.maroon,
-        heirline_color_terminal = theme_colors.green,
-        heirline_color_lsp = theme_colors.green,
       }
       for k, v in pairs(theme_colors) do
         colors['heirline_color_' .. k] = v
@@ -142,7 +132,7 @@ return {
       hl = function(self)
         local mode = vim.fn.mode(1):sub(1, 1) -- get only the first mode character
         return {
-          fg = 'heirline_color_base',
+          fg = 'heirline_color_cursor',
           bg = self.mode_bgs[mode],
           bold = true,
         }
@@ -191,7 +181,7 @@ return {
         local mode = vim.fn.mode(1):sub(1, 1) -- get only the first mode character
         return {
           fg = ViMode.static.mode_bgs[mode],
-          bg = 'heirline_color_bright_bg',
+          bg = 'heirline_color_scrollbar_bg',
         }
       end,
     }
@@ -309,7 +299,7 @@ return {
       hl = function()
         if vim.bo.modified then
           -- use `force` because we need to override the child's hl foreground
-          return { fg = 'heirline_color_cyan', bold = true, force = true }
+          return { fg = 'heirline_color_special', bold = true, force = true }
         end
       end,
     }
@@ -606,7 +596,7 @@ return {
         end
         return ' ' .. table.concat(names, ' ')
       end,
-      hl = { fg = 'heirline_color_lsp', bold = true },
+      hl = { fg = 'heirline_color_green', bold = true },
     }
 
     local DefaultStatusline = {
@@ -630,7 +620,7 @@ return {
       provider = function()
         return '  '
       end,
-      hl = { bg = 'heirline_color_bright_bg' },
+      hl = { bg = 'heirline_color_scrollbar_bg' },
     }
 
     local InactiveStatusline = {
@@ -638,7 +628,7 @@ return {
       StatusBorder,
       Space,
       {
-        hl = { fg = 'heirline_color_bright_bg', force = true },
+        hl = { fg = 'heirline_color_inactive_fg', force = true },
         FileNameBlock,
         Space,
         Git,
@@ -655,7 +645,6 @@ return {
 
     local StatusLines = {
       hl = function()
-        local theme_colors = require('catppuccin.palettes').get_palette()
         local inactive_hl = 'StatusLineNC'
 
         if conditions.is_active() then
@@ -667,11 +656,8 @@ return {
             return inactive_hl
           else
             return {
-              bg = require('catppuccin.utils.colors').vary_color(
-                { latte = theme_colors.crust },
-                theme_colors.surface0
-              ),
-              fg = theme_colors.overlay1,
+              bg = 'heirline_color_active_bg',
+              fg = 'heirline_color_default_active_fg',
             }
           end
         else

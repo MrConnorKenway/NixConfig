@@ -65,7 +65,7 @@ return {
             } or '',
             ' ',
             { filename, gui = modified and 'bold,italic' or 'bold' },
-            guibg = require('catppuccin.palettes').get_palette().surface0,
+            guibg = require('color_abstract_layer').get_colors().incline_bg,
           }
           local len = 0
           for i, item in ipairs(navic.get_data(props.buf) or {}) do
