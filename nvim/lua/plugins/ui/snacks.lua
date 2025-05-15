@@ -420,8 +420,8 @@ return {
             finder(function(proc_item)
               local diff_text = proc_item.text
 
-              if diff_text:sub(1, 4) == 'diff' then
-                file_name = diff_text:match('^diff .* a/.* b/(.*)$')
+              if diff_text:sub(1, 6) == '+++ b/' then
+                file_name = diff_text:sub(7)
                 bufnr = attached_bufnr[file_name]
                 if bufnr then
                   use_gitsigns = true
