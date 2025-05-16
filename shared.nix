@@ -33,6 +33,9 @@
           esac
         '')
         nixfmt-rfc-style
+        fishPlugins.tide
+        fishPlugins.sponge
+        fishPlugins.autopair
       ]
       ++ [
         pkgs-unstable.zig
@@ -124,6 +127,16 @@
       enable = true;
     };
 
+    fish = {
+      enable = true;
+      plugins = [
+        {
+          name = "plugin-git";
+          src = pkgs.fishPlugins.plugin-git.src;
+        }
+      ];
+    };
+
     zsh = {
       enable = true;
       enableCompletion = true;
@@ -173,6 +186,7 @@
       enable = true;
       enableZshIntegration = true;
       enableBashIntegration = true;
+      enableFishIntegration = true;
     };
   };
 }
