@@ -25,6 +25,8 @@
             ;;
         esac
       '')
+      fishPlugins.tide
+      fishPlugins.sponge
     ] ++ [
       pkgs-unstable.zig
       pkgs-unstable.zls
@@ -110,6 +112,10 @@
       enable = true;
     };
 
+    fish = {
+      enable = true;
+    };
+
     zsh = {
       enable = true;
       enableCompletion = true;
@@ -156,6 +162,7 @@
       enable = true;
       enableZshIntegration = true;
       enableBashIntegration = true;
+      enableFishIntegration = true;
     };
   };
 }
