@@ -408,6 +408,12 @@ vim.api.nvim_create_autocmd('FileType', {
   end,
 })
 
+vim.api.nvim_create_autocmd('TermOpen', {
+  callback = function(args)
+    vim.bo[args.buf].matchpairs = ''
+  end,
+})
+
 vim.api.nvim_create_autocmd('TermEnter', {
   callback = function()
     save_mouse()
