@@ -421,17 +421,27 @@ return {
             finder(function(proc_item)
               local diff_text = proc_item.text
 
-              if diff_text:sub(1, 6) == '+++ b/' then
-                file_name = diff_text:sub(7)
-                bufnr = attached_bufnr[file_name]
-                if bufnr then
-                  use_gitsigns = true
-                else
-                  use_gitsigns = false
-                  in_hunk = false
+              if diff_text:sub(1, 4) == 'diff' then
+                in_hunk = false
+                return
+              end
+
+              if not in_hunk then
+                if diff_text:sub(1, 6) == '--- a/' then
+                  return
                 end
 
-                return
+                if diff_text:sub(1, 6) == '+++ b/' then
+                  file_name = diff_text:sub(7)
+                  bufnr = attached_bufnr[file_name]
+                  if bufnr then
+                    use_gitsigns = true
+                  else
+                    use_gitsigns = false
+                  end
+
+                  return
+                end
               end
 
               if use_gitsigns then
