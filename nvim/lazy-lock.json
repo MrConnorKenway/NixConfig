@@ -32,5 +32,5 @@
   "vim-cool": { "branch": "master", "commit": "9ea940c0d537e55de0de4c0298c04b976960fb12" },
   "vim-flog": { "branch": "master", "commit": "665b16ac8915f746bc43c9572b4581a5e9047216" },
   "vim-fugitive": { "branch": "master", "commit": "4a745ea72fa93bb15dd077109afbb3d1809383f2" },
-  "vim-illuminate": { "branch": "master", "commit": "805803ae622e6c775cb3b7030d1d11ae892764b6" }
+  "vim-illuminate": { "branch": "master", "commit": "7b61ac2dc4fe17d0ee952aca81b9be3215cdeabf" }
 }
