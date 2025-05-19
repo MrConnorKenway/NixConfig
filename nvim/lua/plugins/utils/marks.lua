@@ -12,5 +12,15 @@ return {
       desc = 'Show all marks in all buffers',
     },
   },
-  opts = {},
+  opts = {
+    excluded_buftypes = {
+      'nofile',
+      'git',
+      'gitcommit',
+      'gitrebase',
+      'terminal',
+      'fugitive',
+      'floggraph',
+    },
+  },
 }
