@@ -53,7 +53,9 @@ local function set_shadafile(args)
   local dir = vim.fn.stdpath('state') .. '/shada'
   local path = dir .. '/' .. vim.uri_encode(cwd, 'rfc2732') .. '.shada'
   vim.o.shadafile = path
-  vim.cmd('rshada!')
+  if args then
+    pcall(vim.cmd, 'rshada!')
+  end
 end
 
 vim.api.nvim_create_autocmd('DirChangedPre', {
