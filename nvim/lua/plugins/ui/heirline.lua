@@ -269,7 +269,7 @@ return {
         if not conditions.width_percent_below(#filename, 0.35) then
           filename = vim.fn.pathshorten(filename)
         end
-        return filename
+        return filename:gsub('%%', '%%%%') --- Escape '%' if filename has one
       end,
       hl = { fg = 'heirline_color_file_name' },
     }
