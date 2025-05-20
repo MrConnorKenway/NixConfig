@@ -866,7 +866,7 @@ local function try_load_json()
     return
   end
 
-  cwd = utils.percent_encode(cwd)
+  cwd = vim.uri_encode(cwd, 'rfc2732')
   local path = vim.fn.stdpath('data') .. '/shrun/' .. cwd .. '.json'
   local file, err = io.open(path, 'r')
   if err or not file then
@@ -1248,7 +1248,7 @@ function M.setup()
         return
       end
 
-      cwd = utils.percent_encode(cwd)
+      cwd = vim.uri_encode(cwd, 'rfc2732')
       local dir = vim.fn.stdpath('data') .. '/shrun'
       local path = dir .. '/' .. cwd .. '.json'
       vim.fn.mkdir(dir, 'p')
