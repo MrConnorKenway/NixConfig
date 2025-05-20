@@ -38,6 +38,30 @@ vim.lsp.set_log_level('off')
 vim.g.mapleader = ' '
 vim.g.no_python_maps = true
 
+---@param args vim.api.keyset.create_autocmd.callback_args?
+local function set_shadafile(args)
+  local cwd
+  if args then
+    cwd = args.file
+  else
+    cwd = vim.uv.cwd()
+    if not cwd then
+      return
+    end
+  end
+
+  local dir = vim.fn.stdpath('state') .. '/shada'
+  local path = dir .. '/' .. vim.uri_encode(cwd, 'rfc2732') .. '.shada'
+  vim.o.shadafile = path
+  vim.cmd('rshada!')
+end
+
+vim.api.nvim_create_autocmd('DirChangedPre', {
+  callback = set_shadafile,
+})
+
+set_shadafile()
+
 if os.getenv('SSH_TTY') ~= nil then
   local function paste()
     return { vim.fn.split(vim.fn.getreg(''), '\n'), vim.fn.getregtype('') }
