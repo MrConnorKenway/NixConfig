@@ -62,6 +62,15 @@ vim.api.nvim_create_autocmd('DirChangedPre', {
   callback = set_shadafile,
 })
 
+--- Save shada after session file is saved due to workspace switching. The
+--- reason why we don't save shada when DirChanged is that neovim cannot
+--- get marks during `source session`.
+vim.api.nvim_create_autocmd('SessionWritePost', {
+  callback = function()
+    vim.cmd('wshada!')
+  end,
+})
+
 set_shadafile()
 
 if os.getenv('SSH_TTY') ~= nil then
