@@ -10,6 +10,13 @@ return {
       end,
       desc = 'Show all bookmarks',
     },
+    {
+      '<D-k>',
+      function()
+        require('recall').toggle()
+      end,
+      desc = 'Toggle bookmark',
+    },
   },
   opts = {},
 }
