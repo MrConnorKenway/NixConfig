@@ -1,34 +1,43 @@
-{ config, pkgs, pkgs-unstable, ... }:
+{
+  config,
+  pkgs,
+  pkgs-unstable,
+  ...
+}:
 
 {
   home = {
-    packages = with pkgs; [
-      tree
-      procs
-      git
-      clang-tools
-      nixd
-      lua-language-server
-      basedpyright
-      rustup
-      stylua
-      home-manager
-      termtheme
-      (writeShellScriptBin "vi" ''
-        theme=$(${pkgs.termtheme}/bin/termtheme --force)
-        case $theme in
-          light|dark)
-            nvim --cmd "set bg=$theme" "$@"
-            ;;
-          *)
-            nvim "$@"
-            ;;
-        esac
-      '')
-    ] ++ [
-      pkgs-unstable.zig
-      pkgs-unstable.zls
-    ];
+    packages =
+      with pkgs;
+      [
+        tree
+        procs
+        git
+        clang-tools
+        nixd
+        lua-language-server
+        basedpyright
+        rustup
+        stylua
+        home-manager
+        termtheme
+        (writeShellScriptBin "vi" ''
+          theme=$(${pkgs.termtheme}/bin/termtheme --force)
+          case $theme in
+            light|dark)
+              nvim --cmd "set bg=$theme" "$@"
+              ;;
+            *)
+              nvim "$@"
+              ;;
+          esac
+        '')
+        nixfmt-rfc-style
+      ]
+      ++ [
+        pkgs-unstable.zig
+        pkgs-unstable.zls
+      ];
 
     username = builtins.getEnv "USER";
     homeDirectory = builtins.getEnv "HOME";
@@ -36,11 +45,12 @@
     stateVersion = "24.11";
 
     file = {
-      ".clangd" = { text = ''
-        CompileFlags:
-          Add: [-Wno-unknown-warning-option, -Wno-address-of-packed-member]
-          Remove: [-m*, -f*]
-      '';
+      ".clangd" = {
+        text = ''
+          CompileFlags:
+            Add: [-Wno-unknown-warning-option, -Wno-address-of-packed-member]
+            Remove: [-m*, -f*]
+        '';
       };
       ".config/nvim" = {
         source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/NixConfig/nvim";
@@ -85,12 +95,18 @@
 
     fd = {
       enable = true;
-      extraOptions = [ "--no-ignore" "--hidden" ];
+      extraOptions = [
+        "--no-ignore"
+        "--hidden"
+      ];
     };
 
     ripgrep = {
       enable = true;
-      arguments = [ "--no-ignore" "--no-heading" ];
+      arguments = [
+        "--no-ignore"
+        "--no-heading"
+      ];
     };
 
     tmux = {
@@ -147,7 +163,10 @@
 
       oh-my-zsh = {
         enable = true;
-        plugins = [ "git" "fzf" ];
+        plugins = [
+          "git"
+          "fzf"
+        ];
         custom = "$HOME/NixConfig/omz";
       };
     };
@@ -159,4 +178,3 @@
     };
   };
 }
-

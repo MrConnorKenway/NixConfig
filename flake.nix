@@ -11,7 +11,13 @@
     };
   };
 
-  outputs = { nixpkgs, home-manager, nixpkgs-unstable, ... }:
+  outputs =
+    {
+      nixpkgs,
+      home-manager,
+      nixpkgs-unstable,
+      ...
+    }:
     let
       overlay = final: prev: {
         termtheme =
@@ -29,13 +35,22 @@
             buildAndTestSubdir = "crates/termtheme";
           };
       };
-      mkHomeConfiguration = system: args: home-manager.lib.homeManagerConfiguration ({
-        pkgs = import nixpkgs { inherit system; overlays = [overlay]; };
-        extraSpecialArgs = {
-          pkgs-unstable = import nixpkgs-unstable { inherit system; };
-        };
-      } // args);
-    in {
+      mkHomeConfiguration =
+        system: args:
+        home-manager.lib.homeManagerConfiguration (
+          {
+            pkgs = import nixpkgs {
+              inherit system;
+              overlays = [ overlay ];
+            };
+            extraSpecialArgs = {
+              pkgs-unstable = import nixpkgs-unstable { inherit system; };
+            };
+          }
+          // args
+        );
+    in
+    {
       homeConfigurations = {
         linux = mkHomeConfiguration "x86_64-linux" {
           modules = [
@@ -52,4 +67,3 @@
       };
     };
 }
-
