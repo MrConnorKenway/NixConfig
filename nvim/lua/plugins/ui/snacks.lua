@@ -472,7 +472,10 @@ return {
         end
 
         ---@type snacks.picker.finder
-        local function gitsigns_finder(_, ctx)
+        local function gitsigns_finder(opts, ctx)
+          if opts['staged'] then
+            return {}
+          end
           ---@type snacks.picker.finder.Item[]
           local items = {}
 
@@ -515,6 +518,13 @@ return {
             '--no-ext-diff',
             '--submodule=diff',
           }
+          if opts['staged'] then
+            --- TODO: Currently we have to mix both staged hunks and unstaged
+            --- hunks, because the line number output of `git diff --staged` is
+            --- with respect to file that does not contain unstaged changes, not
+            --- the working tree file.
+            table.insert(args, 'HEAD')
+          end
           local finder = require('snacks.picker.source.proc').proc({
             opts,
             { cmd = 'git', args = args },
@@ -555,7 +565,7 @@ return {
                 end
               end
 
-              if use_gitsigns then
+              if use_gitsigns and not opts['staged'] then
                 return
               end
 
@@ -583,6 +593,7 @@ return {
                   hunk_line = diff_text,
                   file = file_name,
                   pos = { line_number, 0 },
+                  buf = attached_bufnr[file_name],
                 }
                 return
               end
@@ -593,6 +604,7 @@ return {
                   hunk_line = diff_text,
                   file = file_name,
                   pos = { line_number, 0 },
+                  buf = attached_bufnr[file_name],
                 }
                 line_number = line_number + 1
                 return
@@ -607,11 +619,25 @@ return {
         end
 
         Snacks.picker {
+          toggles = {
+            staged = 's',
+            follow = false,
+            hidden = false,
+            ignored = false,
+          },
+          win = {
+            input = {
+              keys = {
+                ['<M-s>'] = { 'toggle_staged', mode = { 'n', 'i' } },
+              },
+            },
+          },
           layout = {
             preset = 'vertical',
           },
           title = 'Git Hunks',
           finder = { git_diff_finder, gitsigns_finder },
+          show_empty = true, --- So that we can toggle staged
           formatters = {
             file = {
               truncate = 20,
