@@ -378,7 +378,7 @@ return {
                 for _, line in ipairs(hunk.lines) do
                   items[#items + 1] = {
                     text = file .. line,
-                    item = { hunk_line = line },
+                    hunk_line = line,
                     buf = bufnr,
                     file = file,
                     pos = { line_number, 0 },
@@ -469,7 +469,7 @@ return {
               if char == '-' then
                 cb {
                   text = file_name .. diff_text,
-                  item = { hunk_line = diff_text },
+                  hunk_line = diff_text,
                   file = file_name,
                   pos = { line_number, 0 },
                 }
@@ -479,7 +479,7 @@ return {
               if char == '+' then
                 cb {
                   text = file_name .. diff_text,
-                  item = { hunk_line = diff_text },
+                  hunk_line = diff_text,
                   file = file_name,
                   pos = { line_number, 0 },
                 }
@@ -508,7 +508,7 @@ return {
           },
           format = function(item, picker)
             local ret = {}
-            local line = item.item.hunk_line ---@type string
+            local line = item.hunk_line ---@type string
 
             vim.list_extend(ret, Snacks.picker.format.filename(item, picker))
             local offset =
