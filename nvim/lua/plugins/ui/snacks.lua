@@ -345,6 +345,117 @@ return {
       desc = 'Close buffer',
     },
     {
+      'gH',
+      function()
+        local git_root
+        if vim.b.gitsigns_status_dict then
+          git_root = vim.b.gitsigns_status_dict.root
+        else
+          git_root = vim.fs.root(vim.env.PWD, '.git')
+        end
+        if not git_root then
+          return
+        end
+        ---@param opts snacks.picker.Config
+        ---@type snacks.picker.finder
+        local function git_commit_finder(opts, ctx)
+          if ctx.filter.search == '' then
+            return function() end
+          end
+          local args = {
+            '--no-pager',
+            '-C',
+            git_root,
+            'log',
+            '-G',
+            ctx.filter.search,
+            '--reverse',
+            '--pretty=format:%h %s (%ch)',
+          }
+          if opts['all_branch'] then
+            table.insert(args, '--all')
+          end
+          local finder = require('snacks.picker.source.proc').proc({
+            opts,
+            {
+              cmd = 'git',
+              args = args,
+              transform = function(item)
+                local commit, msg, date =
+                  item.text:match('^(%S+) (.*) %((.*)%)$')
+                item.msg = msg
+                item.cwd = git_root
+                item.date = date
+                item.commit = commit
+                item.pattern = ctx.filter.search
+              end,
+              notify = false, --- Silently fail
+            },
+          }, ctx)
+
+          return finder
+        end
+
+        Snacks.picker {
+          supports_live = true,
+          toggles = {
+            all_branch = 'a',
+            follow = false,
+            hidden = false,
+            ignored = false,
+          },
+          actions = {
+            git_show = function(picker)
+              local item = picker:current()
+              if item then
+                picker:close()
+                vim.cmd('G show ' .. item.commit)
+              end
+            end,
+          },
+          win = {
+            input = {
+              keys = {
+                ['<cr>'] = { 'git_show', mode = { 'n', 'i' } },
+                ['<M-a>'] = { 'toggle_all_branch', mode = { 'n', 'i' } },
+              },
+            },
+          },
+          finder = git_commit_finder,
+          title = 'Git Grep Commit',
+          live = true,
+          preview = function(ctx)
+            local builtin = ctx.picker.opts.previewers.git.builtin
+            local cmd = {
+              'git',
+              '-c',
+              'delta.' .. vim.o.background .. '=true',
+              'show',
+              ctx.item.commit,
+              '-G',
+              ctx.item.pattern,
+            }
+            local pathspec = ctx.item.files or ctx.item.file
+            pathspec = type(pathspec) == 'table' and pathspec or { pathspec }
+            if #pathspec > 0 then
+              cmd[#cmd + 1] = '--'
+              vim.list_extend(cmd, pathspec)
+            end
+            if builtin then
+              table.insert(cmd, 2, '--no-pager')
+            end
+            Snacks.picker.preview.cmd(
+              cmd,
+              ctx,
+              { ft = builtin and 'git' or nil }
+            )
+          end,
+          format = 'git_log',
+        }
+      end,
+      desc = 'Perform regex search in all commits',
+    },
+    {
       'gh',
       function()
         ---@type table<string, integer>
