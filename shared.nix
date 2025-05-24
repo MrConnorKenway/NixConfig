@@ -42,7 +42,7 @@
     username = builtins.getEnv "USER";
     homeDirectory = builtins.getEnv "HOME";
 
-    stateVersion = "24.11";
+    stateVersion = "25.05";
 
     file = {
       ".clangd" = {
@@ -77,7 +77,6 @@
     };
 
     fzf = {
-      package = pkgs-unstable.fzf;
       enable = true;
     };
 
@@ -122,7 +121,6 @@
     };
 
     neovim = {
-      package = pkgs-unstable.neovim-unwrapped;
       enable = true;
     };
 
