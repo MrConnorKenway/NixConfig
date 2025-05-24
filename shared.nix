@@ -33,6 +33,7 @@
           esac
         '')
         nixfmt-rfc-style
+        inetutils
       ]
       ++ [
         pkgs-unstable.zig
