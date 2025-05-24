@@ -58,6 +58,9 @@
       ".config/nvim" = {
         source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/NixConfig/nvim";
       };
+      ".config/fish/conf.d/nix-env.fish" = {
+        source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/NixConfig/nix-env.fish";
+      };
     };
   };
 
@@ -148,6 +151,10 @@
         size = 1000000;
         share = true;
       };
+
+      profileExtra = ''
+        exec ${pkgs.fish}/bin/fish
+      '';
 
       plugins = [
         {
