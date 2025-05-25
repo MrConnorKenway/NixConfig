@@ -83,7 +83,9 @@ return {
     require('nvim-treesitter.install').ensure_installed {
       'python',
       'bash',
+      'rust',
       'cpp',
+      'zig',
     }
   end,
 }
