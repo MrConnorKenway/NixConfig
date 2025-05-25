@@ -149,6 +149,11 @@
           file = "p10k.zsh";
         }
         {
+          name = "zsh-autopair";
+          src = "${pkgs.zsh-autopair}/share/zsh/zsh-autopair";
+          file = "autopair.zsh";
+        }
+        {
           name = "per-directory-history";
           src = pkgs.fetchFromGitHub {
             owner = "jimhester";
