@@ -78,7 +78,7 @@ end)
 ---@type LazyPluginSpec
 return {
   'nvim-treesitter/nvim-treesitter',
-  cmd = { 'TSInstall' },
+  cmd = { 'TSInstall', 'TSUpdate', 'TSUninstall' },
   config = function()
     require('nvim-treesitter.install').ensure_installed {
       'python',
