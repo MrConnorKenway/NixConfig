@@ -1,14 +1,18 @@
 #!/bin/bash
 
-VERSION=25.05
+os=$(uname)
 
-nix-channel --add https://mirrors.tuna.tsinghua.edu.cn/nix-channels/nixos-$VERSION nixpkgs
-nix-channel --add https://github.com/nix-community/home-manager/archive/release-$VERSION.tar.gz home-manager
-nix-channel --update
-nix-shell '<home-manager>' -A install
-
-if [ "$(uname)" = "Darwin" ]; then
-	home-manager switch --flake .#darwin --impure
+if [ "$os" = "Darwin" ]; then
+	curl -fsSL https://install.determinate.systems/nix | sh -s -- install
 else
-	home-manager switch --flake .#linux --impure
+	sh <(curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/install) --no-daemon
+fi
+
+echo substituters = https://mirrors.ustc.edu.cn/nix-channels/store https://cache.nixos.org/ >> $HOME/.config/nix/nix.conf
+echo experimental-features = nix-command flakes >> $HOME/.config/nix/nix.conf
+
+if [ "$os" = "Darwin" ]; then
+	nix run home-manager/master -- switch --flake .#darwin --impure
+else
+	nix run home-manager/master -- switch --flake .#linux --impure
 fi
