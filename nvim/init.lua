@@ -409,6 +409,7 @@ map <RightMouse> <nop>
 map <2-RightMouse> <nop>
 map <3-RightMouse> <nop>
 map <4-RightMouse> <nop>
+map <F1> <nop>
 ]])
 
 vim.api.nvim_create_autocmd('FocusLost', {
