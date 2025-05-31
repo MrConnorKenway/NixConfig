@@ -462,6 +462,21 @@ vim.api.nvim_create_autocmd('TermLeave', {
   end,
 })
 
+local tab_history = {}
+
+vim.api.nvim_create_autocmd('TabEnter', {
+  callback = function()
+    tab_history.prev = tab_history.curr
+    tab_history.curr = vim.api.nvim_get_current_tabpage()
+  end,
+})
+
+vim.api.nvim_create_autocmd('TabClosed', {
+  callback = function()
+    pcall(vim.api.nvim_set_current_tabpage, tab_history.prev)
+  end,
+})
+
 ---Tab local window navigation history
 ---@class TabNavigationHistory
 ---
