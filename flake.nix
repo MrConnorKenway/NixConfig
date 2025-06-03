@@ -34,6 +34,11 @@
             cargoHash = "sha256-dzIjYAizPDe5//YHV7DyxVNHrF7xfLMJdK6x+YI2hQA=";
             buildAndTestSubdir = "crates/termtheme";
           };
+        gptme = import ./gptme.nix {
+          lib = prev.lib;
+          fetchPypi = prev.fetchPypi;
+          python3Packages = prev.python311Packages;
+        };
       };
       mkHomeConfiguration =
         system: args:

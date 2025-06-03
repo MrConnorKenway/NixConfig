@@ -35,6 +35,7 @@
         nixfmt-rfc-style
         inetutils
         ollama
+        gptme
       ]
       ++ [
         pkgs-unstable.zig
