@@ -8,6 +8,15 @@
 {
   home = {
     packages =
+      let
+        llmWithPlugins = pkgs.python3.withPackages (
+          ps: with ps; [
+            llm
+            llm-cmd
+            llm-ollama
+          ]
+        );
+      in
       with pkgs;
       [
         tree
@@ -39,6 +48,7 @@
       ++ [
         pkgs-unstable.zig
         pkgs-unstable.zls
+        llmWithPlugins
       ];
 
     username = builtins.getEnv "USER";
