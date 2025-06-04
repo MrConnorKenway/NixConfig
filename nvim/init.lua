@@ -420,7 +420,7 @@ vim.api.nvim_create_autocmd('FocusLost', {
 vim.api.nvim_create_autocmd('FocusGained', {
   desc = 'Restore mouse setting on focus gained',
   callback = function()
-    if vim.bo.buftype ~= 'terminal' then
+    if vim.bo.buftype ~= 'terminal' or vim.fn.mode() == 'n' then
       vim.defer_fn(restore_mouse, 10)
     end
   end,
