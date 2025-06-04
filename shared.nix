@@ -35,6 +35,7 @@
         nixfmt-rfc-style
         inetutils
         ollama
+        aichat
       ]
       ++ [
         pkgs-unstable.zig
