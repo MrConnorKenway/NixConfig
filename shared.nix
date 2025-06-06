@@ -10,7 +10,6 @@
     packages =
       with pkgs;
       [
-        tree
         procs
         git
         clang-tools
@@ -36,6 +35,7 @@
         inetutils
         ollama
         aichat
+        eza
       ]
       ++ [
         pkgs-unstable.zig
@@ -133,6 +133,40 @@
       autosuggestion.enable = true;
       syntaxHighlighting.enable = true;
 
+      completionInit = ''
+        autoload -U compinit && compinit
+        zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
+      '';
+
+      initContent = ''
+        autoload -U select-word-style
+        select-word-style bash
+      '';
+
+      shellAliases = {
+        l = "eza -l --icons=auto";
+        ls = "eza";
+        ll = "eza -l --icons=auto";
+        la = "eza -la --icons=auto";
+        ld = "eza --only-dirs";
+        lt = "eza --tree --icons=auto";
+        ga = "git add";
+        gd = "git diff";
+        gl = "git log";
+        gu = "git push";
+        gp = "git pull";
+        gf = "git fetch";
+        gst = "git status";
+        glg = "git log --stat";
+        grh = "git reset --hard";
+        grba = "git rebase --abort";
+        grbc = "git rebase --continue";
+        gsta = "git stash push";
+        gstp = "git stash pop";
+        gstd = "git stash drop";
+        gloga = "git log --oneline --decorate --graph --all";
+      };
+
       history = {
         extended = true;
         size = 1000000;
@@ -165,16 +199,12 @@
           };
           file = "per-directory-history.zsh";
         }
+        {
+          name = "termsupport";
+          src = ./.;
+          file = "termsupport.zsh";
+        }
       ];
-
-      oh-my-zsh = {
-        enable = true;
-        plugins = [
-          "git"
-          "fzf"
-        ];
-        custom = "$HOME/NixConfig/omz";
-      };
     };
 
     zoxide = {
