@@ -141,6 +141,7 @@
       initContent = ''
         autoload -U select-word-style
         select-word-style bash
+        zshaddhistory() { whence ''\${''\${(z)1}[1]} >| /dev/null || return 1 }
       '';
 
       shellAliases = {
