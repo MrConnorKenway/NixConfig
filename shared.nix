@@ -36,6 +36,19 @@
         ollama
         aichat
         eza
+        delta
+        lazygit
+        (writeShellScriptBin "lg" ''
+          theme=$(${pkgs.termtheme}/bin/termtheme --force)
+          case $theme in
+            light|dark)
+              ${pkgs.lazygit}/bin/lazygit -ucf "$HOME/.config/lazygit/$theme.yml,$HOME/.config/lazygit/config.yml" "$@"
+              ;;
+            *)
+              ${pkgs.lazygit}/bin/lazygit -ucf "$HOME/.config/lazygit/light.yml,$HOME/.config/lazygit/config.yml" "$@"
+              ;;
+          esac
+        '')
       ]
       ++ [
         pkgs-unstable.zig
@@ -58,6 +71,7 @@
       ".config/nvim" = {
         source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/NixConfig/nvim";
       };
+      ".config/lazygit".source = ./lazygit;
     };
   };
 

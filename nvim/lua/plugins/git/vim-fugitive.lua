@@ -3,9 +3,7 @@ return {
   'tpope/vim-fugitive',
   cmd = { 'G', 'Gread', 'Gclog' },
   keys = {
-    { 'gs',        '<cmd>G<cr>',                              desc = 'Git status' },
     { 'gv',        '<cmd>vertical G<cr>',                     desc = 'Git status vertical' },
-    { 'gl',        '<cmd>G log --stat<cr>',                   desc = 'Git log' },
     { 'gcc',       '<cmd>tab G commit --verbose<cr>',         desc = 'Git commit' },
     { 'gca',       '<cmd>tab G commit --verbose --amend<cr>', desc = 'Git commit' },
     { '<leader>d', '<cmd>Gdiffsplit<cr>',                     desc = 'Git diff' },
