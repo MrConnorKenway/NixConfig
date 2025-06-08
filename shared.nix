@@ -165,9 +165,10 @@
         la = "eza -la --icons=auto";
         ld = "eza --only-dirs";
         lt = "eza --tree --icons=auto";
+        gl = "lg log";
+        gs = "lg status";
         ga = "git add";
         gd = "git diff";
-        gl = "git log";
         gu = "git push";
         gp = "git pull";
         gf = "git fetch";
