@@ -20,6 +20,28 @@
     }:
     let
       overlay = final: prev: {
+        aichat = prev.rustPlatform.buildRustPackage {
+          name = "aichat";
+
+          src = prev.fetchFromGitHub {
+            owner = "sigoden";
+            repo = "aichat";
+            rev = "master";
+            hash = "sha256-swPbgS9KRzTnWVZ0+0QV/RPwqKh8uQ7dtCC5hcxtAnE=";
+          };
+
+          useFetchCargoVendor = true;
+          cargoHash = "sha256-YK2mps9DUs4HNFmYHtZHTJREuImlQ24y64ykGr8ovTs=";
+
+          nativeBuildInputs = [
+            prev.pkg-config
+            prev.installShellFiles
+          ];
+
+          postInstall = ''
+            installShellCompletion ./scripts/completions/aichat.{bash,fish,zsh}
+          '';
+        };
         termtheme =
           assert !(prev ? termtheme); # make sure nixpkgs does not contain termtheme
           prev.rustPlatform.buildRustPackage {
