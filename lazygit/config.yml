@@ -1,0 +1,8 @@
+gui:
+  showBottomLine: false
+  scrollHeight: 10
+git:
+  autoFetch: false
+os:
+  editPreset: 'nvim-remote'
+quitOnTopLevelReturn: true

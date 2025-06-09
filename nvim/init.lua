@@ -744,3 +744,5 @@ vim.api.nvim_create_user_command('LspRestart', function()
     end)
   )
 end, { desc = 'Restart the LSP server attached to current buffer' })
+
+require('lazygit')
