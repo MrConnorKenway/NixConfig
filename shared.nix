@@ -172,6 +172,9 @@
         gu = "git push";
         gp = "git pull";
         gf = "git fetch";
+        gds = "git diff --staged";
+        gcb = "git checkout -b";
+        gco = "git checkout";
         gst = "git status";
         glg = "git log --stat";
         grh = "git reset --hard";
