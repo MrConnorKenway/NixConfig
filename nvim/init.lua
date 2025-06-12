@@ -58,8 +58,28 @@ local function set_shadafile(args)
   end
 end
 
+local hostname = vim.uv.os_gethostname()
+local is_remote = os.getenv('SSH_TTY') ~= nil
+
+local function set_terminal_title(dir)
+  dir = vim.fs.basename(dir)
+  local title
+  if is_remote then
+    title = string.format('\x1b]2;%s ❯ 📓 %s\a', hostname, dir)
+  else
+    title = string.format('\x1b]2;📓 %s\a', dir)
+  end
+  io.stdout:write(title)
+end
+
+set_terminal_title(vim.uv.cwd())
+
 vim.api.nvim_create_autocmd('DirChangedPre', {
-  callback = set_shadafile,
+  callback = function(args)
+    local dir = args.file
+    set_terminal_title(dir)
+    set_shadafile(args)
+  end,
 })
 
 --- Save shada after session file is saved due to workspace switching. The
@@ -73,7 +93,7 @@ vim.api.nvim_create_autocmd('SessionWritePost', {
 
 set_shadafile()
 
-if os.getenv('SSH_TTY') ~= nil then
+if is_remote then
   local function paste()
     return { vim.fn.split(vim.fn.getreg(''), '\n'), vim.fn.getregtype('') }
   end
