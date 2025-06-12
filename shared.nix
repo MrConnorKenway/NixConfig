@@ -223,6 +223,11 @@
           src = ./.;
           file = "termsupport.zsh";
         }
+        {
+          name = "fzf-tab";
+          src = "${pkgs.zsh-fzf-tab}/share/fzf-tab/";
+          file = "fzf-tab.plugin.zsh";
+        }
       ];
     };
 
