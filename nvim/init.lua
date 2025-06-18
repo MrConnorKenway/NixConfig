@@ -111,9 +111,9 @@ if is_remote then
   }
 end
 
--- Only do the following when the TUI is attached
-for _, ui in ipairs(vim.api.nvim_list_uis()) do
-  if ui.chan == 1 and ui.stdout_tty then
+vim.api.nvim_create_autocmd('UIEnter', {
+  once = true,
+  callback = function()
     --- Enable the autocmd created by vim._defaults if background is set
     if vim.api.nvim_get_option_info2('background', {}).was_set then
       --- Parse a string of hex characters as a color.
@@ -205,9 +205,8 @@ for _, ui in ipairs(vim.api.nvim_list_uis()) do
 
       io.stdout:write('\027]11;?\007')
     end
-    break
-  end
-end
+  end,
+})
 
 local function is_current_window_last()
   local current_win = vim.api.nvim_get_current_win()
