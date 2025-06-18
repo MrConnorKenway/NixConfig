@@ -1,3 +1,10 @@
+local function at_bottom_edge()
+  return vim.fn.winnr() == vim.fn.winnr('j')
+end
+
+local move_cursor_down_key =
+  vim.api.nvim_replace_termcodes('<C-j>', true, false, true)
+
 ---@type LazyPluginSpec
 return {
   'mrjones2014/smart-splits.nvim',
@@ -14,7 +21,11 @@ return {
       '<C-j>',
       mode = { 'n', 'i', 't' },
       function()
-        require('smart-splits').move_cursor_down()
+        if at_bottom_edge() then
+          vim.api.nvim_feedkeys(move_cursor_down_key, 'n', false)
+        else
+          require('smart-splits').move_cursor_down()
+        end
       end,
       desc = 'Move cursort down',
     },
