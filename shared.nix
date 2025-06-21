@@ -95,6 +95,9 @@
 
     fzf = {
       enable = true;
+      defaultOptions = [
+        "--bind ctrl-d:half-page-down,ctrl-u:half-page-up"
+      ];
     };
 
     bat = {
@@ -150,6 +153,7 @@
       completionInit = ''
         autoload -U compinit && compinit
         zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
+        zstyle ':fzf-tab:*' fzf-bindings 'ctrl-a:toggle-all+accept' 'alt-n:toggle-down' 'alt-p:up+toggle'
       '';
 
       initContent = ''
