@@ -49,6 +49,7 @@
               ;;
           esac
         '')
+        sshpass
       ]
       ++ [
         pkgs-unstable.zig
