@@ -112,6 +112,12 @@ if is_remote then
 end
 
 vim.api.nvim_create_autocmd('UIEnter', {
+  callback = function()
+    set_terminal_title(vim.uv.cwd())
+  end,
+})
+
+vim.api.nvim_create_autocmd('UIEnter', {
   once = true,
   callback = function()
     --- Enable the autocmd created by vim._defaults if background is set
