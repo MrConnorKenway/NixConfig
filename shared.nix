@@ -154,7 +154,7 @@
       completionInit = ''
         autoload -U compinit && compinit
         zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
-        zstyle ':fzf-tab:*' fzf-bindings 'ctrl-a:toggle-all+accept' 'alt-n:toggle-down' 'alt-p:up+toggle'
+        zstyle ':fzf-tab:*' fzf-bindings 'ctrl-a:toggle-all+accept' 'alt-n:toggle-down' 'alt-p:up+toggle' 'ctrl-d:half-page-down' 'ctrl-u:half-page-up'
       '';
 
       initContent = ''
