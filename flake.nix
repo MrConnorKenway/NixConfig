@@ -26,12 +26,12 @@
           src = prev.fetchFromGitHub {
             owner = "sigoden";
             repo = "aichat";
-            rev = "master";
-            hash = "sha256-swPbgS9KRzTnWVZ0+0QV/RPwqKh8uQ7dtCC5hcxtAnE=";
+            rev = "84dfbba4f0f3465eea58e97156f67732b0f70966";
+            hash = "sha256-vnXYHdS8cpQtbxX0Tc8INvb0O7xvsgsTZIfgw4hmcpg=";
           };
 
           useFetchCargoVendor = true;
-          cargoHash = "sha256-YK2mps9DUs4HNFmYHtZHTJREuImlQ24y64ykGr8ovTs=";
+          cargoHash = "sha256-9RP2m8EKG6y3gyJaxuDyB7xtFt7Y3F4OoI+Gh+kLKy0=";
 
           nativeBuildInputs = [
             prev.pkg-config
