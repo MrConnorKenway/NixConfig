@@ -300,6 +300,8 @@ vim.keymap.set('n', 'q', function()
   vim.cmd('q')
 end, { desc = 'Close window' })
 
+vim.keymap.set('n', 'K', '<nop>')
+
 vim.keymap.set('n', '<leader>q', function()
   if confirm_to_exit() then
     vim.cmd('qa')
