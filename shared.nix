@@ -134,6 +134,7 @@
       keyMode = "vi";
       prefix = "C-j";
       escapeTime = 10;
+      terminal = "screen-256color";
 
       plugins = with pkgs.tmuxPlugins; [
         nord
