@@ -50,11 +50,11 @@
         '')
         sshpass
       ]
-      ++ [
-        pkgs-unstable.zig
-        pkgs-unstable.zls
-        pkgs-unstable.aichat
-      ];
+      ++ (with pkgs-unstable; [
+        zig
+        zls
+        aichat
+      ]);
 
     username = builtins.getEnv "USER";
     homeDirectory = builtins.getEnv "HOME";
