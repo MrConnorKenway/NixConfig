@@ -34,7 +34,6 @@
         nixfmt-rfc-style
         inetutils
         ollama
-        aichat
         eza
         delta
         lazygit
@@ -54,6 +53,7 @@
       ++ [
         pkgs-unstable.zig
         pkgs-unstable.zls
+        pkgs-unstable.aichat
       ];
 
     username = builtins.getEnv "USER";
