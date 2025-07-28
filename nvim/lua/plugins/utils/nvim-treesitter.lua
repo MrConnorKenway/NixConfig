@@ -75,6 +75,28 @@ vim.keymap.set('n', '[m', function()
   end
 end)
 
+vim.treesitter.query.add_directive(
+  'downcase!',
+  function(match, _, bufnr, pred, metadata)
+    local id = pred[2]
+    local node = match[id]
+    if not node then
+      return
+    end
+
+    local text = vim.treesitter.get_node_text(
+      node,
+      bufnr,
+      { metadata = metadata[id] }
+    ) or ''
+    if not metadata[id] then
+      metadata[id] = {}
+    end
+    metadata[id].text = string.lower(text)
+  end,
+  { force = true, all = false }
+)
+
 ---@type LazyPluginSpec
 return {
   'nvim-treesitter/nvim-treesitter',
