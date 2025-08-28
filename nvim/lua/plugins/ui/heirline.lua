@@ -368,6 +368,9 @@ return {
 
       {
         provider = function(self)
+          if not self.status_dict.root then
+            return
+          end
           local repo = vim.fs.basename(self.status_dict.root)
           local cwd = vim.fs.basename(vim.uv.cwd())
           return repo ~= cwd and ' ' .. repo .. ' '
