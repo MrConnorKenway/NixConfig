@@ -97,6 +97,36 @@ vim.treesitter.query.add_directive(
   { force = true, all = false }
 )
 
+local non_filetype_match_injection_language_aliases = {
+  ex = "elixir",
+  pl = "perl",
+  sh = "bash",
+  uxn = "uxntal",
+  ts = "typescript",
+}
+
+local function get_parser_from_markdown_info_string(injection_alias)
+  local match = vim.filetype.match { filename = 'a.' .. injection_alias }
+  return match
+    or non_filetype_match_injection_language_aliases[injection_alias]
+    or injection_alias
+end
+
+vim.treesitter.query.add_directive(
+  'set-lang-from-info-string!',
+  function(match, _, bufnr, pred, metadata)
+    local capture_id = pred[2]
+    local node = match[capture_id]
+    if not node then
+      return
+    end
+    local injection_alias = vim.treesitter.get_node_text(node, bufnr):lower()
+    metadata['injection.language'] =
+      get_parser_from_markdown_info_string(injection_alias)
+  end,
+  { force = true, all = false }
+)
+
 ---@type LazyPluginSpec
 return {
   'nvim-treesitter/nvim-treesitter',
