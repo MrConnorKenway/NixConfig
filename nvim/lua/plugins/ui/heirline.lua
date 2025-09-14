@@ -408,6 +408,9 @@ return {
       {
         provider = function(self)
           local root = self.status_dict.root
+          if not root then
+            return
+          end
           if not querying[root] then
             querying[root] = true
             vim.system({
