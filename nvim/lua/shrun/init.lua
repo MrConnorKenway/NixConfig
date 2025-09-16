@@ -523,7 +523,7 @@ local function start_task(task)
         end
         if task.elapsed_time > config.long_time_threshold then
           io.stdout:write(
-            string.format('\x1b]9;"%s" finished\a', task.escaped_cmd)
+            string.format('\x1b]777;notify;;"%s" finished\a', task.escaped_cmd)
           )
         end
       end,
