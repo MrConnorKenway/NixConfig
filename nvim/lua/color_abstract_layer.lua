@@ -65,6 +65,7 @@ function M.get_colors()
       terminal = '',
       inactive_fg = '',
       active_bg = '',
+      default_active_fg = '',
       incline_bg = '',
       scrollbar_bg = '',
       red = '',
