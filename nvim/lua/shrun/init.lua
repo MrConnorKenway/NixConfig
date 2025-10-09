@@ -258,7 +258,7 @@ local separator = {
   virt_text = {
     {
       string.rep(config.separator_stem, vim.o.columns),
-      'FloatBorder',
+      'Title',
     },
   },
 }
