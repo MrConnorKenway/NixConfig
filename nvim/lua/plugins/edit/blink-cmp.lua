@@ -48,14 +48,12 @@ return {
       accept = { auto_brackets = { enabled = false } },
       list = { selection = { auto_insert = false } },
       menu = {
-        winhighlight = 'Normal:Normal,FloatBorder:FloatBorder,CursorLine:BlinkCmpMenuSelection,Search:None',
         draw = { treesitter = { 'lsp' } },
         border = 'rounded',
       },
       documentation = {
         auto_show = true,
         window = {
-          winhighlight = 'Normal:Normal,FloatBorder:FloatBorder,CursorLine:BlinkCmpDocCursorLine,Search:None',
           border = 'rounded',
         },
       },
@@ -63,7 +61,6 @@ return {
     signature = {
       enabled = true,
       window = {
-        winhighlight = 'Normal:Normal,FloatBorder:FloatBorder,CursorLine:BlinkCmpDocCursorLine,Search:None',
         border = 'rounded',
       },
     },
