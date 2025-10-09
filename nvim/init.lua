@@ -33,7 +33,7 @@ vim.opt.termguicolors = true
 vim.opt.smartcase = true
 vim.opt.showmode = false
 
-vim.lsp.set_log_level('off')
+vim.lsp.log.set_level('off')
 
 vim.g.mapleader = ' '
 vim.g.no_python_maps = true
