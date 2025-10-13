@@ -1198,7 +1198,7 @@ function M.launch_shell()
     style = 'minimal',
     border = 'rounded',
   })
-  vim.wo[shell_win].winhighlight = 'NormalFloat:Normal'
+  vim.wo[shell_win].winhighlight = 'NormalFloat:Normal,FloatBorder:Title'
 
   vim.api.nvim_create_autocmd('WinClosed', {
     pattern = tostring(shell_win),
