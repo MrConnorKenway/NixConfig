@@ -11,11 +11,8 @@ return {
       },
     }
 
-    vim.keymap.set(
-      'n',
-      '<leader>j',
-      '<cmd>SessionSearch<cr>',
-      { desc = 'Session Search' }
-    )
+    vim.keymap.set('n', '<leader>j', function()
+      require('auto-session').search()
+    end, { desc = 'Session Search' })
   end,
 }
