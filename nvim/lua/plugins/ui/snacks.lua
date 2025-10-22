@@ -516,7 +516,7 @@ return {
             'diff',
             '--no-color',
             '--no-ext-diff',
-            '--submodule=diff',
+            '--submodule=log',
           }
           if opts['staged'] then
             --- TODO: Currently we have to mix both staged hunks and unstaged
