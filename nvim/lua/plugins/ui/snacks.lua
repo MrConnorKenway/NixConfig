@@ -375,9 +375,8 @@ return {
           if opts['all_branch'] then
             table.insert(args, '--all')
           end
-          local finder = require('snacks.picker.source.proc').proc({
-            opts,
-            {
+          local finder = require('snacks.picker.source.proc').proc(
+            ctx:opts {
               cmd = 'git',
               args = args,
               transform = function(item)
@@ -391,7 +390,8 @@ return {
               end,
               notify = false, --- Silently fail
             },
-          }, ctx)
+            ctx
+          )
 
           return finder
         end
@@ -525,10 +525,13 @@ return {
             --- the working tree file.
             table.insert(args, 'HEAD')
           end
-          local finder = require('snacks.picker.source.proc').proc({
-            opts,
-            { cmd = 'git', args = args },
-          }, ctx)
+          local finder = require('snacks.picker.source.proc').proc(
+            ctx:opts {
+              cmd = 'git',
+              args = args,
+            },
+            ctx
+          )
 
           ---@async
           ---@param cb async fun(item: snacks.picker.finder.Item)
