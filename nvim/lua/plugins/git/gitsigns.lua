@@ -56,10 +56,31 @@ return {
       { desc = 'Git blame inline' }
     )
     vim.keymap.set('n', 'ga', gitsigns.stage_hunk, { desc = 'Git stage hunk' })
+    vim.keymap.set('n', '<D-y>', function()
+      gitsigns.stage_hunk()
+      gitsigns.nav_hunk('next', { target = 'all' })
+    end, { desc = 'Git stage hunk' })
+    vim.keymap.set('n', '<M-y>', function()
+      gitsigns.stage_hunk()
+      gitsigns.nav_hunk('next', { target = 'all' })
+    end, { desc = 'Git stage hunk' })
+    local range_stage_hunk_cmd = ":'<,'>Gitsigns stage_hunk<cr>"
     vim.keymap.set(
       'v',
       'ga',
-      ":'<,'>Gitsigns stage_hunk<cr>",
+      range_stage_hunk_cmd,
+      { desc = 'Git stage hunk of visual selected range', silent = true }
+    )
+    vim.keymap.set(
+      'v',
+      '<D-y>',
+      range_stage_hunk_cmd,
+      { desc = 'Git stage hunk of visual selected range', silent = true }
+    )
+    vim.keymap.set(
+      'v',
+      '<M-y>',
+      range_stage_hunk_cmd,
       { desc = 'Git stage hunk of visual selected range', silent = true }
     )
     vim.keymap.set(
