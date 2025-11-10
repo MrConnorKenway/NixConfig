@@ -63,15 +63,15 @@ vim.keymap.set('n', '[m', function()
           end
         end
       end
-
-      if nearest_prev_func_start_row ~= 0 then
-        vim.cmd("normal! m'") -- add to jump list
-        vim.api.nvim_win_set_cursor(
-          win,
-          { nearest_prev_func_start_row, nearest_prev_func_start_col }
-        )
-      end
     end)
+
+    if nearest_prev_func_start_row ~= 0 then
+      vim.cmd("normal! m'") -- add to jump list
+      vim.api.nvim_win_set_cursor(
+        win,
+        { nearest_prev_func_start_row, nearest_prev_func_start_col }
+      )
+    end
   end
 end)
 
