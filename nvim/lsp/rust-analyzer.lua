@@ -17,4 +17,14 @@ return {
       init_params.initializationOptions = config.settings['rust-analyzer']
     end
   end,
+  settings = {
+    ['rust-analyzer'] = {
+      check = {
+        command = 'clippy',
+      },
+      inlayHints = {
+        maxLength = 80,
+      },
+    },
+  },
 }
