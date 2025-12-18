@@ -76,7 +76,7 @@
   programs = {
     less = {
       enable = true;
-      keys = ''
+      config = ''
         #line-edit
         ^A home
         ^E end

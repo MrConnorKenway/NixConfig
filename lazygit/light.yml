@@ -1,6 +1,6 @@
 git:
-  paging:
-    pager: "delta --light --paging=never"
+  pagers:
+    - pager: "delta --light --paging=never"
 gui:
   theme:
     activeBorderColor:
