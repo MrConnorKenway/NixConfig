@@ -217,7 +217,7 @@
             owner = "jimhester";
             repo = "per-directory-history";
             rev = "master";
-            sha256 = "eURWxwUL82MzsDgfjp6N3hT2ddeww8Vddcq0WxgCbnc=";
+            sha256 = "EV9QPBndwAWzdOcghDXrIIgP0oagVMOTyXzoyt8tXRo=";
           };
           file = "per-directory-history.zsh";
         }
