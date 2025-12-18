@@ -56,7 +56,7 @@
     username = builtins.getEnv "USER";
     homeDirectory = builtins.getEnv "HOME";
 
-    stateVersion = "25.05";
+    stateVersion = "25.11";
 
     file = {
       ".clangd" = {
