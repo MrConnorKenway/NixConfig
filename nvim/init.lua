@@ -327,8 +327,18 @@ vim.keymap.set(
   '<cmd>wa<cr>',
   { desc = 'Save workspace without quit' }
 )
-vim.keymap.set('v', '<leader>c', '"+y', { desc = 'OSC52 copy' })
-vim.keymap.set('v', '<D-c>', '"+y', { desc = 'OSC52 copy' })
+
+local function copy_visual()
+  vim.cmd('normal! "+y')
+  if vim.bo.buftype == 'terminal' then
+    local lines = vim.fn.getreginfo('+').regcontents
+    vim.fn.setreg('+', table.concat(lines, ''))
+  end
+end
+
+vim.keymap.set('v', '<leader>c', copy_visual, { desc = 'OSC52 copy' })
+vim.keymap.set('v', '<D-c>', copy_visual, { desc = 'OSC52 copy' })
+
 vim.keymap.set(
   't',
   '<C-;>',
