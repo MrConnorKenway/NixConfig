@@ -329,10 +329,12 @@ vim.keymap.set(
 )
 
 local function copy_visual()
-  vim.cmd('normal! "+y')
   if vim.bo.buftype == 'terminal' then
-    local lines = vim.fn.getreginfo('+').regcontents
+    vim.cmd('normal! ""y')
+    local lines = vim.fn.getreginfo('"').regcontents
     vim.fn.setreg('+', table.concat(lines, ''))
+  else
+    vim.cmd('normal! "+y')
   end
 end
 
