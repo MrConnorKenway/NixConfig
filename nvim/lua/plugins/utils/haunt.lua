@@ -1,21 +1,21 @@
 ---@type LazyPluginSpec
 return {
-  'fnune/recall.nvim',
-  event = 'BufReadPost',
+  'TheNoeTrevino/haunt.nvim',
+  lazy = false,
   keys = {
     {
       '<leader>m',
       function()
-        require('recall.snacks').pick()
+        require('haunt.picker').show()
       end,
       desc = 'Show all bookmarks',
     },
     {
       '<D-k>',
       function()
-        require('recall').toggle()
+        require('haunt.api').annotate()
       end,
-      desc = 'Toggle bookmark',
+      desc = 'Create a new bookmark',
     },
   },
   opts = {},
