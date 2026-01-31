@@ -720,6 +720,7 @@ require('lazy').setup {
         'zipPlugin',
         'tutor',
         'netrwPlugin',
+        'matchparen',
       },
     },
   },
