@@ -59,6 +59,9 @@
     stateVersion = "25.11";
 
     file = {
+      ".hushlogin" = {
+        text = "";
+      };
       ".clangd" = {
         text = ''
           CompileFlags:
