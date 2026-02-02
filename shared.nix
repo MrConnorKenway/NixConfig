@@ -56,6 +56,10 @@
     username = builtins.getEnv "USER";
     homeDirectory = builtins.getEnv "HOME";
 
+    sessionVariables = {
+      LS_COLORS = "";
+    };
+
     stateVersion = "25.11";
 
     file = {
