@@ -101,7 +101,7 @@
     fzf = {
       enable = true;
       defaultOptions = [
-        "--bind ctrl-d:half-page-down,ctrl-u:half-page-up"
+        "--bind ctrl-d:half-page-down,ctrl-u:half-page-up --no-mouse"
       ];
     };
 
