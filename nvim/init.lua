@@ -725,6 +725,7 @@ local opts = {
         'zipPlugin',
         'tutor',
         'netrwPlugin',
+        'matchit',
         'matchparen',
       },
     },
