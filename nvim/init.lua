@@ -54,7 +54,7 @@ local function set_shadafile(args)
   local path = dir .. '/' .. vim.uri_encode(cwd, 'rfc2732') .. '.shada'
   vim.o.shadafile = path
   if args then
-    pcall(vim.cmd, 'rshada!')
+    pcall(vim.cmd.rshada, { bang = true })
   end
 end
 
@@ -696,14 +696,17 @@ vim.lsp.enable {
   'rust-analyzer',
 }
 
-require('lazy').setup {
-  spec = {
-    { import = 'plugins.ui' },
-    { import = 'plugins.git' },
-    { import = 'plugins.lsp' },
-    { import = 'plugins.edit' },
-    { import = 'plugins.utils' },
-  },
+---@type LazySpec
+local spec = {
+  { import = 'plugins.ui' },
+  { import = 'plugins.git' },
+  { import = 'plugins.lsp' },
+  { import = 'plugins.edit' },
+  { import = 'plugins.utils' },
+}
+
+---@type LazyConfig
+local opts = {
   dev = {
     path = '~/NixConfig/nvim/lua',
   },
@@ -725,6 +728,8 @@ require('lazy').setup {
     },
   },
 }
+
+require('lazy').setup(spec, opts)
 
 vim.keymap.set('n', '<leader>l', function()
   require('lazy.view').show('home')
