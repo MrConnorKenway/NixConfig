@@ -508,6 +508,46 @@ return {
           return ctx.filter:filter(items)
         end
 
+        local git_path_escapes = {
+          a = '\a',
+          b = '\b',
+          f = '\f',
+          n = '\n',
+          r = '\r',
+          t = '\t',
+          v = '\v',
+          ['\\'] = '\\',
+          ['"'] = '"',
+        }
+
+        --- Git patch headers may either use an unquoted path with a trailing
+        --- tab-delimited timestamp field, or a quoted C-style path.
+        ---@param diff_text string
+        ---@return string
+        local function parse_git_patch_path(diff_text)
+          local path = diff_text:sub(5)
+
+          if path:sub(1, 1) ~= '"' then
+            -- According to https://www.gnu.org/software/diffutils/manual/html_node/Detailed-Unified.html,
+            -- a trailing tab will be appended after the filename if it contains whitespaces.
+            path = path:match('^(.-)\t') or path
+          else
+            -- If the filename itself contains tab, then it must be wrapped
+            -- by C-style quotes. Perform `unquote_c_style` to unwrap it.
+            path = path:match('^"(.*)"\t?.*$') or path
+            path = path:gsub('\\([0-7][0-7]?[0-7]?)', function(octal)
+              return string.char(tonumber(octal, 8))
+            end)
+            path = path:gsub('\\(.)', git_path_escapes)
+          end
+
+          if path:sub(1, 2) == 'b/' then
+            return path:sub(3)
+          end
+
+          return path
+        end
+
         ---@param opts snacks.picker.Config
         ---@type snacks.picker.finder
         local function git_diff_finder(opts, ctx)
@@ -551,12 +591,18 @@ return {
               end
 
               if not in_hunk then
-                if diff_text:sub(1, 6) == '--- a/' then
+                if
+                  diff_text:sub(1, 6) == '--- a/'
+                  or diff_text:sub(1, 7) == '--- "a/'
+                then
                   return
                 end
 
-                if diff_text:sub(1, 6) == '+++ b/' then
-                  file_name = diff_text:sub(7)
+                if
+                  diff_text:sub(1, 6) == '+++ b/'
+                  or diff_text:sub(1, 7) == '+++ "b/'
+                then
+                  file_name = parse_git_patch_path(diff_text)
                   bufnr = attached_bufnr[file_name]
                   if bufnr then
                     use_gitsigns = true
