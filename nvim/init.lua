@@ -27,6 +27,8 @@ vim.o.equalalways = false
 vim.o.numberwidth = 2
 vim.o.statuscolumn = '%l%s'
 vim.o.listchars = 'tab:⇥ ,lead:·,trail:•,multispace:·'
+-- Prevent neovim changing cursor color when switch to terminal mode
+vim.o.guicursor = 'n-v-c-sm:block,i-ci-ve:ver25,r-cr-o:hor20'
 
 vim.opt.ignorecase = true
 vim.opt.termguicolors = true
