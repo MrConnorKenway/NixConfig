@@ -30,7 +30,6 @@
               rev = "f99ff455e2d3272c9accf3cee6b759c1702d7892";
               hash = "sha256-LZdXKJYEq2L4zhVWVZCJbM9zf3cmNpdBWK4hQv1W4+0=";
             };
-            useFetchCargoVendor = true;
             cargoHash = "sha256-dzIjYAizPDe5//YHV7DyxVNHrF7xfLMJdK6x+YI2hQA=";
             buildAndTestSubdir = "crates/termtheme";
           };
