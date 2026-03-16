@@ -229,22 +229,6 @@ return {
       desc = 'Picker live grep',
     },
     {
-      '<D-t>',
-      mode = { 'n', 'i' },
-      function()
-        Snacks.picker.lsp_workspace_symbols()
-      end,
-      desc = 'Picker find workspace symbols',
-    },
-    {
-      '<M-t>',
-      mode = { 'n', 'i' },
-      function()
-        Snacks.picker.lsp_workspace_symbols()
-      end,
-      desc = 'Picker find workspace symbols',
-    },
-    {
       '<leader>s',
       function()
         Snacks.picker.lsp_workspace_symbols()
