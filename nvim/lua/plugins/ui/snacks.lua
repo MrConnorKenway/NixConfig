@@ -243,21 +243,7 @@ return {
       desc = 'Picker find command history',
     },
     {
-      '<leader>S',
-      function()
-        Snacks.picker.lsp_symbols()
-      end,
-      desc = 'Picker find document symbols',
-    },
-    {
-      '<S-D-o>',
-      function()
-        Snacks.picker.lsp_symbols()
-      end,
-      desc = 'Picker find document symbols',
-    },
-    {
-      '<S-M-o>',
+      '<leader>o',
       function()
         Snacks.picker.lsp_symbols()
       end,
