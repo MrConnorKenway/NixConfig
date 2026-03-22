@@ -33,6 +33,5 @@
   "vim-buffer-ring": { "branch": "release", "commit": "291366b4c8c4ad5db4862ac96e170bb8be6ad3ff" },
   "vim-cool": { "branch": "master", "commit": "9ea940c0d537e55de0de4c0298c04b976960fb12" },
   "vim-flog": { "branch": "master", "commit": "665b16ac8915f746bc43c9572b4581a5e9047216" },
-  "vim-fugitive": { "branch": "master", "commit": "61b51c09b7c9ce04e821f6cf76ea4f6f903e3cf4" },
-  "vim-illuminate": { "branch": "master", "commit": "0cc4410ee5f94ec4f809688abae5035f096d359c" }
+  "vim-fugitive": { "branch": "master", "commit": "61b51c09b7c9ce04e821f6cf76ea4f6f903e3cf4" }
 }
