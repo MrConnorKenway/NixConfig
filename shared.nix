@@ -60,6 +60,10 @@
       LS_COLORS = "";
     };
 
+    sessionPath = [
+      "$HOME/.local/bin"
+    ];
+
     stateVersion = "25.11";
 
     file = {
