@@ -41,7 +41,7 @@ return {
       },
     },
     sources = {
-      default = { 'lsp', 'path' },
+      default = { 'lsp' },
       providers = { cmdline = { min_keyword_length = 0 } },
     },
     completion = {
