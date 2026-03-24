@@ -1,8 +1,9 @@
 ---@type snacks.win?
 local term_win
-local term_height = 16
+local term_height
 
 local function create_snacks_terminal()
+  term_height = vim.o.lines * 0.3
   term_win = Snacks.terminal.get(nil, {
     win = {
       on_close = function(self)
@@ -13,6 +14,12 @@ local function create_snacks_terminal()
         vim.schedule(function()
           vim.api.nvim_exec_autocmds('WinEnter', {})
         end)
+      end,
+      wo = {
+        winbar = '',
+      },
+      height = function()
+        return term_height
       end,
     },
   })
@@ -731,14 +738,6 @@ return {
     },
     terminal = {
       enabled = true,
-      win = {
-        wo = {
-          winbar = '',
-        },
-        height = function()
-          return term_height
-        end,
-      },
     },
     zen = {
       enabled = true,
