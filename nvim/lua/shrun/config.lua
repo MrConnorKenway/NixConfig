@@ -1,7 +1,7 @@
 local M = {}
 
-M.sidebar_width = 48
-M.sidebar_height = 16
+M.sidebar_width = math.floor(vim.o.columns * 0.25)
+M.sidebar_height = math.floor(vim.o.lines * 0.3)
 
 M.shell_width = 80
 M.shell_height = 20
