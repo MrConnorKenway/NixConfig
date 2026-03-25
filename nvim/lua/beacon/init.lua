@@ -63,7 +63,6 @@ local lru = require('beacon.lru')
 ---@field lsp_miss_delay_min_ms integer
 ---@field lsp_latency_samples integer
 ---@field lsp_attach_timeout_ms integer
----@field enable_in_insert boolean
 ---@field max_cache_entries integer
 ---@field priority integer
 ---@field fallback_priority integer
@@ -78,7 +77,6 @@ local lru = require('beacon.lru')
 ---@field lsp_miss_delay_min_ms? integer
 ---@field lsp_latency_samples? integer
 ---@field lsp_attach_timeout_ms? integer
----@field enable_in_insert? boolean
 ---@field max_cache_entries? integer
 ---@field priority? integer
 ---@field fallback_priority? integer
@@ -219,8 +217,6 @@ local defaults = {
   lsp_latency_samples = 8,
   -- Milliseconds to wait for an enabled LSP config to attach before falling back to `matchadd()`.
   lsp_attach_timeout_ms = 1000,
-  -- When false, highlights are cleared on InsertEnter and cursor moves in insert mode are ignored.
-  enable_in_insert = false,
   -- Maximum number of cached reference sets kept per buffer for reuse across cursor moves.
   max_cache_entries = 24,
   -- Extmark highlight priority used for LSP-backed references.
@@ -313,6 +309,10 @@ end
 
 local function is_valid_win(winid)
   return winid and api.nvim_win_is_valid(winid)
+end
+
+local function in_normal_mode()
+  return fn.mode(1) == 'n'
 end
 
 ---@param timer BeaconTimer
@@ -479,14 +479,13 @@ local function clear_lsp_highlights(bufnr)
 end
 
 local function clear_active(bufnr)
-  local buf_state = state.buffers[bufnr]
-  if not buf_state then
-    return
-  end
-
   clear_lsp_highlights(bufnr)
   clear_fallback_matches_for_buffer(bufnr)
-  buf_state.active = nil
+
+  local buf_state = state.buffers[bufnr]
+  if buf_state then
+    buf_state.active = nil
+  end
 end
 
 local function cancel_pending(bufnr)
@@ -518,6 +517,12 @@ local function clear_window_timer(winid)
   win_state.target = nil
 end
 
+---@param bufnr integer
+local function clear_buffer_runtime(bufnr)
+  cancel_pending(bufnr)
+  clear_active(bufnr)
+end
+
 local function clear_window_timers_for_buffer(bufnr)
   for winid, win_state in pairs(state.windows) do
     if win_state.target and win_state.target.bufnr == bufnr then
@@ -525,6 +530,25 @@ local function clear_window_timers_for_buffer(bufnr)
     elseif is_valid_win(winid) and api.nvim_win_get_buf(winid) == bufnr then
       clear_window_timer(winid)
     end
+  end
+end
+
+local function clear_all_runtime_state()
+  for winid in pairs(state.windows) do
+    clear_window_timer(winid)
+  end
+
+  for bufnr in pairs(state.buffers) do
+    cancel_pending(bufnr)
+  end
+
+  for bufnr, buf_state in pairs(state.buffers) do
+    clear_lsp_highlights(bufnr)
+    buf_state.active = nil
+  end
+
+  for winid in pairs(state.windows) do
+    clear_fallback_match(winid)
   end
 end
 
@@ -538,8 +562,7 @@ local function invalidate_buffer(bufnr)
     return
   end
 
-  cancel_pending(bufnr)
-  clear_active(bufnr)
+  clear_buffer_runtime(bufnr)
   buf_state.cache = new_cache()
 end
 
@@ -716,7 +739,6 @@ local function cleanup_buffer(bufnr)
     return
   end
 
-  clear_window_timers_for_buffer(bufnr)
   invalidate_buffer(bufnr)
   state.buffers[bufnr] = nil
 end
@@ -1500,13 +1522,18 @@ local function handle_current_target(winid, opts)
   end
 
   local bufnr = api.nvim_win_get_buf(winid)
+  if not in_normal_mode() then
+    clear_window_timer(winid)
+    clear_buffer_runtime(bufnr)
+    return
+  end
+
   local target = get_target(winid)
   sync_fallback_for_window(winid, target)
 
   if not target then
     clear_window_timer(winid)
-    cancel_pending(bufnr)
-    clear_active(bufnr)
+    clear_buffer_runtime(bufnr)
     return
   end
 
@@ -1560,44 +1587,49 @@ schedule_target = function(winid, target, delay_ms)
 
       local scheduled_target = assert(current_win_state.target)
       clear_window_timer(winid)
+      if not in_normal_mode() then
+        clear_buffer_runtime(scheduled_target.bufnr)
+        return
+      end
       resolve_target(winid, scheduled_target)
     end)
   )
 end
 
----@param winid integer
-local function handle_cursor_event(winid)
-  handle_current_target(winid, { delay_ms = config.delay_ms })
+---@param opts? BeaconCurrentTargetOptions
+local function refresh_current_window(opts)
+  handle_current_target(api.nvim_get_current_win(), opts)
 end
 
-local function handle_insert_enter()
-  if config.enable_in_insert then
-    return
+---@param bufnr integer
+---@return integer?
+local function current_window_for_buffer(bufnr)
+  if not is_valid_buf(bufnr) or api.nvim_get_current_buf() ~= bufnr then
+    return nil
   end
 
   local winid = api.nvim_get_current_win()
-  local bufnr = api.nvim_get_current_buf()
-  clear_window_timer(winid)
-  cancel_pending(bufnr)
-  clear_active(bufnr)
+  if api.nvim_win_get_buf(winid) ~= bufnr then
+    return nil
+  end
+
+  return winid
 end
 
----@param immediate boolean
-local function maybe_highlight_current(immediate)
-  handle_current_target(api.nvim_get_current_win(), {
-    delay_ms = immediate and 0 or config.delay_ms,
-  })
+local function on_mode_changed()
+  if in_normal_mode() then
+    refresh_current_window { delay_ms = config.delay_ms }
+    return
+  end
+
+  clear_all_runtime_state()
 end
 
 ---@param bufnr integer
 local function schedule_current_buffer_refresh(bufnr)
   vim.schedule(function()
-    if api.nvim_get_current_buf() ~= bufnr or not is_valid_buf(bufnr) then
-      return
-    end
-
-    local winid = api.nvim_get_current_win()
-    if api.nvim_win_get_buf(winid) ~= bufnr then
+    local winid = current_window_for_buffer(bufnr)
+    if not winid then
       return
     end
 
@@ -1605,19 +1637,15 @@ local function schedule_current_buffer_refresh(bufnr)
     -- settle the final cursor target without a fresh `CursorMoved`. Re-read the
     -- current target on the next loop turn so highlights do not wait for a
     -- manual cursor nudge.
-    maybe_highlight_current(false)
+    handle_current_target(winid, { delay_ms = config.delay_ms })
   end)
 end
 
 ---@param bufnr integer
 ---@param opts? BeaconResolveOptions
 local function refresh_current_buffer(bufnr, opts)
-  if api.nvim_get_current_buf() ~= bufnr then
-    return
-  end
-
-  local winid = api.nvim_get_current_win()
-  if api.nvim_win_get_buf(winid) ~= bufnr then
+  local winid = current_window_for_buffer(bufnr)
+  if not winid then
     return
   end
 
@@ -1655,7 +1683,7 @@ local function on_lsp_detach(event)
   if buf_state and buf_state.active then
     clear_active(bufnr)
     if api.nvim_get_current_buf() == bufnr then
-      maybe_highlight_current(true)
+      refresh_current_window { delay_ms = 0 }
     end
   end
 end
@@ -1821,8 +1849,7 @@ end
 function M.clear(bufnr)
   bufnr = bufnr or api.nvim_get_current_buf()
   clear_window_timers_for_buffer(bufnr)
-  cancel_pending(bufnr)
-  clear_active(bufnr)
+  clear_buffer_runtime(bufnr)
 end
 
 local function define_highlights()
@@ -1953,13 +1980,9 @@ function M.setup(opts)
 
   -- Drain all outstanding async work so stale timers and LSP responses from a
   -- previous configuration cycle never land on new state.
-  for winid in pairs(state.windows) do
-    clear_window_timer(winid)
-  end
+  clear_all_runtime_state()
 
-  for bufnr, buf_state in pairs(state.buffers) do
-    cancel_pending(bufnr)
-    clear_active(bufnr)
+  for _, buf_state in pairs(state.buffers) do
     rebuild_cache(buf_state)
     reset_cache_stats(buf_state.cache_stats)
   end
@@ -1970,20 +1993,11 @@ function M.setup(opts)
 
   state.augroup = api.nvim_create_augroup('Beacon', { clear = true })
 
-  api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
+  api.nvim_create_autocmd('CursorMoved', {
     group = state.augroup,
     callback = function()
-      if not config.enable_in_insert and fn.mode(1):sub(1, 1) == 'i' then
-        return
-      end
-
-      handle_cursor_event(api.nvim_get_current_win())
+      refresh_current_window { delay_ms = config.delay_ms }
     end,
-  })
-
-  api.nvim_create_autocmd('InsertEnter', {
-    group = state.augroup,
-    callback = handle_insert_enter,
   })
 
   api.nvim_create_autocmd({ 'BufEnter', 'WinEnter' }, {
@@ -1997,8 +2011,13 @@ function M.setup(opts)
       end
 
       get_buf_state(bufnr)
-      maybe_highlight_current(false)
+      refresh_current_window { delay_ms = config.delay_ms }
     end,
+  })
+
+  api.nvim_create_autocmd('ModeChanged', {
+    group = state.augroup,
+    callback = on_mode_changed,
   })
 
   api.nvim_create_autocmd('BufReadPost', {

@@ -3,6 +3,8 @@ vim.opt.swapfile = false
 
 local api = vim.api
 local fn = vim.fn
+---@type any
+local test_lsp = vim.lsp
 
 ---@class BeaconTestRange: BeaconLspRange
 ---@field start { line: integer, character: integer }
@@ -27,11 +29,11 @@ local fn = vim.fn
 ---@field result? BeaconTestHighlight[]
 
 local original_lsp = {
-  get_clients = vim.lsp.get_clients,
-  get_client_by_id = vim.lsp.get_client_by_id,
-  buf_request_all = vim.lsp.buf_request_all,
-  config = vim.lsp.config,
-  enabled_configs = vim.lsp._enabled_configs,
+  get_clients = test_lsp.get_clients,
+  get_client_by_id = test_lsp.get_client_by_id,
+  buf_request_all = test_lsp.buf_request_all,
+  config = test_lsp.config,
+  enabled_configs = test_lsp._enabled_configs,
 }
 
 ---@class BeaconTestState
@@ -45,10 +47,10 @@ local lsp_state = {
   end,
 }
 
-vim.lsp.config = {}
-vim.lsp._enabled_configs = {}
+test_lsp.config = {}
+test_lsp._enabled_configs = {}
 
-vim.lsp.get_clients = function(opts)
+test_lsp.get_clients = function(opts)
   opts = opts or {}
   ---@type BeaconTestClient[]
   local clients = {}
@@ -68,11 +70,11 @@ vim.lsp.get_clients = function(opts)
   return clients
 end
 
-vim.lsp.get_client_by_id = function(id)
+test_lsp.get_client_by_id = function(id)
   return lsp_state.clients[id]
 end
 
-vim.lsp.buf_request_all = function(bufnr, method, params, callback)
+test_lsp.buf_request_all = function(bufnr, method, params, callback)
   return lsp_state.request_handler(bufnr, method, params, callback)
 end
 
@@ -130,6 +132,15 @@ local function spin(timeout)
   end, 10)
 end
 
+---@param keys string
+local function input(keys)
+  api.nvim_feedkeys(
+    api.nvim_replace_termcodes(keys, true, false, true),
+    'xt',
+    false
+  )
+end
+
 ---@param id integer
 ---@param attached_buffers table<integer, boolean>
 ---@param supports_highlight boolean
@@ -170,8 +181,8 @@ local function reset_editor()
   fn.clearmatches()
 
   set_clients {}
-  vim.lsp.config = {}
-  vim.lsp._enabled_configs = {}
+  test_lsp.config = {}
+  test_lsp._enabled_configs = {}
   lsp_state.request_handler = function(_, _, _, callback)
     callback {}
     return function() end
@@ -203,6 +214,133 @@ local function extmark_count(bufnr)
 end
 
 local tests = {}
+
+tests[#tests + 1] = {
+  name = 'LSP highlights only render in normal mode',
+  run = function()
+    reset_editor()
+    local buf = new_buffer({ 'foo foo' }, 'lua')
+    local client = new_client(1, { [buf] = true }, true)
+    set_clients { client }
+
+    lsp_state.request_handler = function(_, _, _, callback)
+      callback {
+        [client.id] = {
+          result = document_highlights {
+            { 0, 0, 0, 3 },
+            { 0, 4, 0, 7 },
+          },
+        },
+      }
+      return function() end
+    end
+
+    beacon.setup {
+      delay_ms = 0,
+      lsp_attach_timeout_ms = 0,
+      mappings = { next = ']m', prev = '[m' },
+    }
+
+    trigger_cursor_moved()
+    spin(20)
+    expect(extmark_count(buf) > 0, 'expected normal-mode LSP extmarks')
+
+    input 'v'
+    spin(20)
+    expect_eq(fn.mode(1), 'v', 'expected visual mode')
+    expect_eq(extmark_count(buf), 0, 'visual mode should clear LSP extmarks')
+
+    input '<Esc>'
+    spin(20)
+    expect_eq(fn.mode(1), 'n', 'expected normal mode after visual')
+    expect(
+      extmark_count(buf) > 0,
+      'returning to normal mode should restore LSP extmarks'
+    )
+
+    input 'gh'
+    spin(20)
+    expect(fn.mode(1):sub(1, 1) == 's', 'expected select mode')
+    expect_eq(
+      extmark_count(buf),
+      0,
+      'select mode should clear LSP extmarks'
+    )
+
+    input '<Esc>'
+    spin(20)
+    expect_eq(fn.mode(1), 'n', 'expected normal mode after select')
+    expect(
+      extmark_count(buf) > 0,
+      'returning to normal mode should restore LSP extmarks after select'
+    )
+  end,
+}
+
+tests[#tests + 1] = {
+  name = 'fallback highlights only render in normal mode',
+  run = function()
+    reset_editor()
+    new_buffer({ 'foo foo' }, 'lua')
+
+    beacon.setup {
+      delay_ms = 60,
+      lsp_attach_timeout_ms = 0,
+      mappings = { next = ']m', prev = '[m' },
+    }
+
+    trigger_cursor_moved()
+    spin(10)
+
+    input 'v'
+    spin(90)
+    expect_eq(fn.mode(1), 'v', 'expected visual mode')
+    expect_eq(
+      #fn.getmatches(),
+      0,
+      'visual mode should keep delayed fallback matches cleared'
+    )
+
+    input '<Esc>'
+    spin(10)
+    expect_eq(fn.mode(1), 'n', 'expected normal mode after visual')
+    expect_eq(
+      #fn.getmatches(),
+      0,
+      'returning to normal mode should rearm the fallback delay'
+    )
+
+    spin(90)
+    expect(
+      #fn.getmatches() > 0,
+      'normal mode should restore fallback matches after the delay'
+    )
+
+    input 'gh'
+    spin(20)
+    expect(fn.mode(1):sub(1, 1) == 's', 'expected select mode')
+    expect_eq(
+      #fn.getmatches(),
+      0,
+      'select mode should clear fallback matches'
+    )
+
+    input '<Esc>'
+    spin(10)
+    expect_eq(fn.mode(1), 'n', 'expected normal mode after select')
+    expect_eq(
+      #fn.getmatches(),
+      0,
+      'returning to normal mode from select should rearm the fallback delay'
+    )
+
+    spin(90)
+    expect(
+      #fn.getmatches() > 0,
+      'normal mode should restore fallback matches after select'
+    )
+  end,
+}
 
 tests[#tests + 1] = {
   name = 'cache hit ratio command reports buffer and total lookups',
@@ -486,8 +624,8 @@ tests[#tests + 1] = {
     spin(20)
 
     set_clients {}
-    vim.lsp.config = {}
-    vim.lsp._enabled_configs = {}
+    test_lsp.config = {}
+    test_lsp._enabled_configs = {}
     api.nvim_exec_autocmds('LspDetach', { buffer = buf, modeline = false })
 
     api.nvim_win_set_cursor(0, { 1, 0 })
@@ -849,8 +987,8 @@ tests[#tests + 1] = {
     expect(extmark_count(buf) > 0, 'expected initial LSP extmarks')
 
     set_clients {}
-    vim.lsp.config = {}
-    vim.lsp._enabled_configs = {}
+    test_lsp.config = {}
+    test_lsp._enabled_configs = {}
     api.nvim_exec_autocmds('LspDetach', { buffer = buf, modeline = false })
 
     api.nvim_win_set_cursor(0, { 1, 4 })
@@ -1180,11 +1318,11 @@ for _, test in ipairs(tests) do
   end
 end
 
-vim.lsp.get_clients = original_lsp.get_clients
-vim.lsp.get_client_by_id = original_lsp.get_client_by_id
-vim.lsp.buf_request_all = original_lsp.buf_request_all
-vim.lsp.config = original_lsp.config
-vim.lsp._enabled_configs = original_lsp.enabled_configs
+test_lsp.get_clients = original_lsp.get_clients
+test_lsp.get_client_by_id = original_lsp.get_client_by_id
+test_lsp.buf_request_all = original_lsp.buf_request_all
+test_lsp.config = original_lsp.config
+test_lsp._enabled_configs = original_lsp.enabled_configs
 vim.cmd('silent! %bwipeout!')
 vim.cmd('enew!')
 vim.bo.modified = false

@@ -16,6 +16,9 @@
   - Clear with `vim.fn.matchdelete()`.
   - Navigate with `vim.fn.search()`.
   - Do not add fallback caches, scanned fallback ranges, or other fallback-specific indexing.
+- Beacon only renders highlights in exact normal mode (`mode() == 'n'`).
+- Entering visual, insert, select, operator-pending, command-line, or any other non-normal mode must clear active highlights and cancel delayed/requested highlight work.
+- Returning to normal mode should re-resolve the current target through the usual delayed path instead of keeping stale non-normal state alive.
 
 ## Performance Constraints
 
@@ -78,7 +81,7 @@
 - Cache-miss debounce must still respect `lsp_miss_delay_min_ms` so rapid cursor movement cannot collapse uncached LSP requests into an immediate flood.
 - Only already-visible `keep_active` and `keep_fallback` states may remain without rearming the timer.
 - `setup()` must drain all outstanding timers and pending LSP requests before rebuilding config/state so stale async callbacks never land on new state.
-- Non-cursor entry points (`maybe_highlight_current`, `refresh_current_buffer`) must clear highlights when the cursor has no target, mirroring the cursor-move cleanup path.
+- Non-cursor entry points (`refresh_current_window`, `refresh_current_buffer`) must clear highlights when the cursor has no target or normal-mode gating fails, mirroring the cursor-move cleanup path.
 - Keep direct uses of Neovim private LSP APIs wrapped in local compatibility helpers.
 - Prefer simple data flow over clever abstractions, especially in fallback mode.
 - Whenever behavior, structure, constraints, or maintenance expectations are updated, synchronize this `AGENTS.md` file in the same change.
