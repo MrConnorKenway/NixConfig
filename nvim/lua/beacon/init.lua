@@ -222,7 +222,7 @@ local defaults = {
   -- Extmark highlight priority used for LSP-backed references.
   priority = 150,
   -- Window match priority used by the fallback `matchadd()` highlight.
-  fallback_priority = 10,
+  fallback_priority = -1,
   -- Whether next/previous reference navigation wraps around at the start or end of the list.
   wrap_navigation = true,
   mappings = {
