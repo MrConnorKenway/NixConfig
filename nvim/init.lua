@@ -376,6 +376,7 @@ vim.api.nvim_create_autocmd('FileType', {
   callback = function(args)
     if vim.b.is_bash then
       vim.treesitter.start(args.buf, 'bash')
+      vim.bo.filetype = 'bash'
     end
   end,
 })
