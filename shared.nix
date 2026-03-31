@@ -20,17 +20,6 @@
         stylua
         home-manager
         termtheme
-        (writeShellScriptBin "vi" ''
-          theme=$(${pkgs.termtheme}/bin/termtheme --force)
-          case $theme in
-            light|dark)
-              nvim --cmd "set bg=$theme" "$@"
-              ;;
-            *)
-              nvim "$@"
-              ;;
-          esac
-        '')
         nixfmt-rfc-style
         eza
         delta
@@ -47,6 +36,7 @@
           esac
         '')
         sshpass
+        tree-sitter
       ]
       ++ (with pkgs-unstable; [
         zig
@@ -198,6 +188,7 @@
         gstp = "git stash pop";
         gstd = "git stash drop";
         gloga = "git log --oneline --decorate --graph --all";
+        vi = "nvim";
       };
 
       history = {
