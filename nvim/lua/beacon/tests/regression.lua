@@ -278,6 +278,189 @@ tests[#tests + 1] = {
 }
 
 tests[#tests + 1] = {
+  name = 'window switches clear LSP highlights from the old buffer',
+  run = function()
+    reset_editor()
+    local buf_a = new_buffer({ 'foo foo' }, 'lua')
+    local win_a = api.nvim_get_current_win()
+
+    vim.cmd('vsplit')
+    local win_b = api.nvim_get_current_win()
+    new_buffer({ 'bar' }, 'lua')
+    api.nvim_set_current_win(win_a)
+
+    local client = new_client(1, { [buf_a] = true }, true)
+    set_clients { client }
+
+    lsp_state.request_handler = function(_, _, _, callback)
+      callback {
+        [client.id] = {
+          result = document_highlights {
+            { 0, 0, 0, 3 },
+            { 0, 4, 0, 7 },
+          },
+        },
+      }
+      return function() end
+    end
+
+    beacon.setup {
+      delay_ms = 0,
+      lsp_attach_timeout_ms = 0,
+      mappings = { next = ']o', prev = '[o' },
+    }
+
+    trigger_cursor_moved()
+    spin(20)
+    expect(extmark_count(buf_a) > 0, 'expected initial LSP extmarks')
+
+    api.nvim_set_current_win(win_b)
+    spin(20)
+
+    expect_eq(
+      extmark_count(buf_a),
+      0,
+      'switching windows should clear the old buffer LSP extmarks'
+    )
+  end,
+}
+
+tests[#tests + 1] = {
+  name = 'same-buffer window switches keep active LSP highlights',
+  run = function()
+    reset_editor()
+    local buf = new_buffer({ 'foo foo' }, 'lua')
+    local win_a = api.nvim_get_current_win()
+
+    vim.cmd('vsplit')
+    local win_b = api.nvim_get_current_win()
+    api.nvim_set_current_win(win_a)
+
+    local client = new_client(1, { [buf] = true }, true)
+    set_clients { client }
+
+    lsp_state.request_handler = function(_, _, _, callback)
+      callback {
+        [client.id] = {
+          result = document_highlights {
+            { 0, 0, 0, 3 },
+            { 0, 4, 0, 7 },
+          },
+        },
+      }
+      return function() end
+    end
+
+    beacon.setup {
+      delay_ms = 60,
+      lsp_attach_timeout_ms = 0,
+      mappings = { next = ']u', prev = '[u' },
+    }
+
+    trigger_cursor_moved()
+    spin(90)
+    expect(extmark_count(buf) > 0, 'expected initial LSP extmarks')
+
+    api.nvim_set_current_win(win_b)
+    spin(20)
+
+    expect(
+      extmark_count(buf) > 0,
+      'same-buffer window switches should keep shared LSP extmarks active'
+    )
+  end,
+}
+
+tests[#tests + 1] = {
+  name = 'same-buffer window switches keep same-target LSP requests in flight',
+  run = function()
+    reset_editor()
+    local buf = new_buffer({ 'foo foo' }, 'lua')
+    local win_a = api.nvim_get_current_win()
+
+    vim.cmd('vsplit')
+    local win_b = api.nvim_get_current_win()
+    api.nvim_set_current_win(win_a)
+
+    local client = new_client(1, { [buf] = true }, true)
+    set_clients { client }
+
+    local request_count = 0
+    local cancel_count = 0
+    lsp_state.request_handler = function(_, _, _, callback)
+      request_count = request_count + 1
+      local timer = assert(vim.uv.new_timer(), 'expected request timer')
+      local closed = false
+      local completed = false
+
+      local function close_timer(count_cancel)
+        if closed then
+          return
+        end
+
+        closed = true
+        timer:stop()
+        timer:close()
+        if count_cancel and not completed then
+          cancel_count = cancel_count + 1
+        end
+      end
+
+      timer:start(
+        80,
+        0,
+        vim.schedule_wrap(function()
+          completed = true
+          close_timer(false)
+          callback {
+            [client.id] = {
+              result = document_highlights {
+                { 0, 0, 0, 3 },
+                { 0, 4, 0, 7 },
+              },
+            },
+          }
+        end)
+      )
+
+      return function()
+        close_timer(true)
+      end
+    end
+
+    beacon.setup {
+      delay_ms = 0,
+      lsp_attach_timeout_ms = 0,
+      mappings = { next = ']v', prev = '[v' },
+    }
+
+    trigger_cursor_moved()
+    spin(20)
+    expect_eq(request_count, 1, 'expected the initial LSP request to start')
+
+    api.nvim_set_current_win(win_b)
+    spin(20)
+
+    expect_eq(
+      cancel_count,
+      0,
+      'same-buffer window switches should keep the same-target request alive'
+    )
+    expect_eq(
+      request_count,
+      1,
+      'same-buffer window switches should reuse the in-flight request'
+    )
+
+    spin(100)
+    expect(
+      extmark_count(buf) > 0,
+      'same-target LSP responses should still render after the window switch'
+    )
+  end,
+}
+
+tests[#tests + 1] = {
   name = 'fallback highlights only render in normal mode',
   run = function()
     reset_editor()
@@ -338,6 +521,42 @@ tests[#tests + 1] = {
     expect(
       #fn.getmatches() > 0,
       'normal mode should restore fallback matches after select'
+    )
+  end,
+}
+
+tests[#tests + 1] = {
+  name = 'window switches clear fallback matches from the old window',
+  run = function()
+    reset_editor()
+    new_buffer({ 'foo foo' }, 'lua')
+    local win_a = api.nvim_get_current_win()
+
+    vim.cmd('vsplit')
+    local win_b = api.nvim_get_current_win()
+    new_buffer({ 'bar' }, 'lua')
+    api.nvim_set_current_win(win_a)
+
+    beacon.setup {
+      delay_ms = 0,
+      lsp_attach_timeout_ms = 0,
+      mappings = { next = ']p', prev = '[p' },
+    }
+
+    trigger_cursor_moved()
+    spin(20)
+    expect(
+      #fn.getmatches(win_a) > 0,
+      'expected initial fallback match in the first window'
+    )
+
+    api.nvim_set_current_win(win_b)
+    spin(20)
+
+    expect_eq(
+      #fn.getmatches(win_a),
+      0,
+      'switching windows should clear the old window fallback match'
     )
   end,
 }
@@ -911,6 +1130,90 @@ tests[#tests + 1] = {
       request_count,
       2,
       'second buffer should still wait for its own initial miss delay'
+    )
+  end,
+}
+
+tests[#tests + 1] = {
+  name = 'same-target pending LSP misses rearm delay after cursor movement',
+  run = function()
+    reset_editor()
+    local buf = new_buffer({ 'foo foo' }, 'lua')
+    local client = new_client(1, { [buf] = true }, true)
+    set_clients { client }
+
+    local request_count = 0
+    lsp_state.request_handler = function(_, _, _, callback)
+      request_count = request_count + 1
+      local timer = assert(vim.uv.new_timer(), 'expected request timer')
+      local closed = false
+
+      local function close_timer()
+        if closed then
+          return
+        end
+        closed = true
+        timer:stop()
+        timer:close()
+      end
+
+      timer:start(
+        20,
+        0,
+        vim.schedule_wrap(function()
+          close_timer()
+          callback {
+            [client.id] = {
+              result = document_highlights {
+                { 0, 0, 0, 3 },
+                { 0, 4, 0, 7 },
+              },
+            },
+          }
+        end)
+      )
+
+      return close_timer
+    end
+
+    beacon.setup {
+      delay_ms = 60,
+      lsp_miss_delay_ms = 0,
+      lsp_miss_delay_min_ms = 0,
+      lsp_attach_timeout_ms = 0,
+      mappings = { next = ']t', prev = '[t' },
+    }
+
+    trigger_cursor_moved()
+    spin(70)
+    expect_eq(request_count, 1, 'expected the initial delayed LSP request')
+    expect_eq(extmark_count(buf), 0, 'response should still be pending')
+
+    api.nvim_win_set_cursor(0, { 1, 1 })
+    trigger_cursor_moved()
+    spin(30)
+
+    expect_eq(
+      extmark_count(buf),
+      0,
+      'same-target cursor movement should rearm delay before rendering'
+    )
+    expect_eq(
+      request_count,
+      1,
+      'same-target cursor movement should not start the next request early'
+    )
+
+    spin(40)
+    expect_eq(
+      request_count,
+      1,
+      'same-target cursor movement should keep the original request in flight'
+    )
+
+    expect(
+      extmark_count(buf) > 0,
+      'the rearmed same-target dwell should eventually render extmarks'
     )
   end,
 }

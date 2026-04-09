@@ -19,6 +19,8 @@
 - Beacon only renders highlights in exact normal mode (`mode() == 'n'`).
 - Entering visual, insert, select, operator-pending, command-line, or any other non-normal mode must clear active highlights and cancel delayed/requested highlight work.
 - Returning to normal mode should re-resolve the current target through the usual delayed path instead of keeping stale non-normal state alive.
+- Leaving the current window must clear active highlights and cancel delayed/requested highlight work for the unfocused buffer.
+- Switching between two windows that show the same buffer must not clear shared buffer-wide LSP state; only the leaving window's own timer/match state should drop immediately.
 
 ## Performance Constraints
 

@@ -13,10 +13,7 @@ local util = vim.lsp.util
 ---@class BeaconLruModule
 ---@field new fun(max_size: integer): BeaconLruCache
 
----@class BeaconTimer
----@field start fun(self: BeaconTimer, timeout: integer, repeat_interval: integer, callback: fun())
----@field stop fun(self: BeaconTimer)
----@field close fun(self: BeaconTimer)
+---@alias BeaconTimer uv.uv_timer_t
 
 ---@class BeaconResolveOptions
 ---@field force_lsp? boolean
@@ -124,6 +121,7 @@ local lru = require('beacon.lru')
 ---@field sample_total integer
 
 ---@class BeaconPendingRequest
+---@field key string
 ---@field seq integer
 ---@field server_tick integer
 ---@field started_at_ms integer
@@ -158,6 +156,7 @@ local lru = require('beacon.lru')
 ---@alias BeaconResolveAction
 ---| 'keep_active'
 ---| 'keep_fallback'
+---| 'keep_pending'
 ---| 'use_cache'
 ---| 'wait'
 ---| 'fallback'
@@ -521,6 +520,28 @@ end
 local function clear_buffer_runtime(bufnr)
   cancel_pending(bufnr)
   clear_active(bufnr)
+end
+
+---@param bufnr integer
+---@return boolean
+local function buffer_has_current_focus(bufnr)
+  if not in_normal_mode() or api.nvim_get_current_buf() ~= bufnr then
+    return false
+  end
+
+  local winid = api.nvim_get_current_win()
+  return is_valid_win(winid) and api.nvim_win_get_buf(winid) == bufnr
+end
+
+---@param bufnr integer
+local function clear_buffer_runtime_if_unfocused(bufnr)
+  vim.schedule(function()
+    if buffer_has_current_focus(bufnr) then
+      return
+    end
+
+    clear_buffer_runtime(bufnr)
+  end)
 end
 
 local function clear_window_timers_for_buffer(bufnr)
@@ -1044,7 +1065,7 @@ local function remaining_attach_wait_ms(bufnr)
   return math.max(0, buf_state.attach_wait_until - uv.now())
 end
 
----@type fun(winid: integer, target: BeaconTarget, delay_ms: integer)
+---@type fun(winid: integer, target: BeaconTarget, delay_ms: integer, rearm_same_target?: boolean)
 local schedule_target
 
 local function client_has_pending_progress(client)
@@ -1308,6 +1329,16 @@ local function should_keep_active(target)
   return find_range_index(active.ranges, target.row, target.col) ~= nil
 end
 
+---@param target BeaconTarget
+---@return boolean
+local function should_keep_pending(target)
+  local buf_state = state.buffers[target.bufnr]
+  local pending = buf_state and buf_state.pending or nil
+  return pending ~= nil
+    and pending.key == target.key
+    and pending.server_tick == current_server_tick(target.bufnr)
+end
+
 -- Pure decision function: callers must supply a fresh `target` (the current
 -- word under cursor) so the planner never recomputes it internally.
 ---@param winid integer
@@ -1326,6 +1357,11 @@ local function plan_target_resolution(winid, target, opts)
   end
 
   if supports_lsp(target.bufnr) then
+    -- An in-flight request for the same target is already the cheapest path.
+    if should_keep_pending(target) then
+      return { action = 'keep_pending', target = target }
+    end
+
     if not opts.force_lsp then
       local entry = cached_entry_for_target(target, opts.count_cache_lookup)
       if entry then
@@ -1372,6 +1408,7 @@ local function request_lsp_entry(winid, target)
 
   ---@type BeaconPendingRequest
   local pending = {
+    key = target.key,
     seq = seq,
     server_tick = current_server_tick(bufnr),
     started_at_ms = uv.now(),
@@ -1412,15 +1449,24 @@ local function request_lsp_entry(winid, target)
 
       cache_put(current_state, entry)
 
+      if not buffer_has_current_focus(bufnr) then
+        return
+      end
+
+      local current_win = api.nvim_get_current_win()
+      local current_win_state = state.windows[current_win]
+      -- Keep the response cached, but wait for the latest cursor/window dwell
+      -- timer to expire before rendering a same-target pending miss.
       if
-        not is_valid_win(winid)
-        or api.nvim_get_current_win() ~= winid
-        or api.nvim_win_get_buf(winid) ~= bufnr
+        current_win_state
+        and current_win_state.timer
+        and current_win_state.target
+        and current_win_state.target.key == target.key
       then
         return
       end
 
-      local cursor = api.nvim_win_get_cursor(winid)
+      local cursor = api.nvim_win_get_cursor(current_win)
       local range_index =
         find_range_index(entry.ranges, cursor[1] - 1, cursor[2])
 
@@ -1438,6 +1484,22 @@ end
 local function apply_target_resolution(winid, target, plan, opts)
   opts = opts or {}
   local bufnr = target.bufnr
+
+  if plan.action == 'keep_pending' then
+    if opts.delay_ms ~= nil then
+      if opts.clear_active_before_schedule then
+        clear_active(bufnr)
+      end
+
+      schedule_target(winid, target, assert(opts.delay_ms), true)
+      return
+    end
+
+    if opts.clear_timer_on_keep then
+      clear_window_timer(winid)
+    end
+    return
+  end
 
   if plan.action == 'keep_fallback' or plan.action == 'keep_active' then
     if opts.clear_timer_on_keep then
@@ -1546,8 +1608,9 @@ local function handle_current_target(winid, opts)
 
   -- Cursor-driven and non-cursor refresh entry points share the same planner
   -- and action handler so keep/cache/schedule behavior cannot drift apart.
-  local plan =
-    plan_target_resolution(winid, target, { count_cache_lookup = false })
+  local plan = plan_target_resolution(winid, target, {
+    count_cache_lookup = false,
+  })
   apply_target_resolution(winid, target, plan, {
     delay_ms = opts.delay_ms,
     clear_timer_on_keep = true,
@@ -1562,10 +1625,15 @@ end
 ---@param winid integer
 ---@param target BeaconTarget
 ---@param delay_ms integer
-schedule_target = function(winid, target, delay_ms)
+---@param rearm_same_target? boolean
+schedule_target = function(winid, target, delay_ms, rearm_same_target)
   local win_state = get_win_state(winid)
 
-  if win_state.target and win_state.target.key == target.key then
+  if
+    not rearm_same_target
+    and win_state.target
+    and win_state.target.key == target.key
+  then
     return
   end
 
@@ -1623,6 +1691,22 @@ local function on_mode_changed()
   end
 
   clear_all_runtime_state()
+end
+
+local function on_win_leave()
+  local winid = api.nvim_get_current_win()
+  if not is_valid_win(winid) then
+    return
+  end
+
+  local bufnr = api.nvim_win_get_buf(winid)
+
+  -- Window-local state always belongs to the window that just lost focus, but
+  -- buffer-wide LSP state should survive when focus stays on the same buffer in
+  -- another split.
+  clear_window_timer(winid)
+  clear_fallback_match(winid)
+  clear_buffer_runtime_if_unfocused(bufnr)
 end
 
 ---@param bufnr integer
@@ -1998,6 +2082,11 @@ function M.setup(opts)
     callback = function()
       refresh_current_window { delay_ms = config.delay_ms }
     end,
+  })
+
+  api.nvim_create_autocmd('WinLeave', {
+    group = state.augroup,
+    callback = on_win_leave,
   })
 
   api.nvim_create_autocmd({ 'BufEnter', 'WinEnter' }, {
