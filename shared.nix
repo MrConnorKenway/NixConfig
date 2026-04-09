@@ -64,7 +64,6 @@
         text = ''
           CompileFlags:
             Add: [-Wno-unknown-warning-option, -Wno-address-of-packed-member]
-            Remove: [-m*, -f*]
         '';
       };
       ".config/nvim" = {
