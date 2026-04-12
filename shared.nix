@@ -52,6 +52,7 @@
 
     sessionPath = [
       "$HOME/.local/bin"
+      "$HOME/.cargo/bin"
     ];
 
     stateVersion = "25.11";
