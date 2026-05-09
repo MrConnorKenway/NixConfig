@@ -1,7 +1,7 @@
 ---@type vim.lsp.Config
 return {
   cmd = { 'clangd', '--header-insertion=never' },
-  filetypes = { 'c', 'cpp', 'objc', 'objcpp', 'cuda', 'proto' },
+  filetypes = { 'c', 'cpp', 'objc', 'objcpp', 'cuda' },
   root_markers = {
     '.clangd',
     '.clang-tidy',
