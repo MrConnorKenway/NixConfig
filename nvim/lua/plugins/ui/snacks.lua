@@ -436,53 +436,15 @@ return {
       'gh',
       function()
         ---@type table<string, integer>
-        ---table that contains mapping from file name to bufnr attached by gitsigns
-        local attached_bufnr = {}
+        ---table that contains mapping from file name to opened bufnr
+        local filename2bufnr = {}
 
-        if package.loaded.gitsigns then
-          for bufnr, cache in pairs(require('gitsigns.cache').cache) do
-            local filename = cache.git_obj.relpath
-            if filename then
-              attached_bufnr[filename] = bufnr
-            end
+        for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+          local keep = vim.bo[buf].buflisted and vim.bo[buf].buftype == ''
+          if keep then
+            local name = vim.api.nvim_buf_get_name(buf)
+            filename2bufnr[name] = buf
           end
-        end
-
-        ---@type snacks.picker.finder
-        local function gitsigns_finder(opts, ctx)
-          if opts['staged'] then
-            return {}
-          end
-          ---@type snacks.picker.finder.Item[]
-          local items = {}
-
-          for file, bufnr in pairs(attached_bufnr) do
-            ---@type Gitsigns.Hunk.Hunk_Public[] | nil
-            local hunks = require('gitsigns').get_hunks(bufnr)
-            if hunks then
-              for _, hunk in ipairs(hunks) do
-                local line_number = hunk.added.start
-                if line_number == 0 then
-                  line_number = 1
-                end
-
-                for _, line in ipairs(hunk.lines) do
-                  items[#items + 1] = {
-                    text = file .. line,
-                    hunk_line = line,
-                    buf = bufnr,
-                    file = file,
-                    pos = { line_number, 0 },
-                    lang = vim.bo[bufnr].filetype,
-                  }
-                  if line:sub(1, 1) == '+' then
-                    line_number = line_number + 1
-                  end
-                end
-              end
-            end
-          end
-          return ctx.filter:filter(items)
         end
 
         local git_path_escapes = {
@@ -554,9 +516,7 @@ return {
           ---@param cb async fun(item: snacks.picker.finder.Item)
           return function(cb)
             local file_name ---@type string
-            local bufnr ---@type integer
             local in_hunk ---@type boolean
-            local use_gitsigns ---@type boolean
             local line_number
 
             finder(function(proc_item)
@@ -580,19 +540,8 @@ return {
                   or diff_text:sub(1, 7) == '+++ "b/'
                 then
                   file_name = parse_git_patch_path(diff_text)
-                  bufnr = attached_bufnr[file_name]
-                  if bufnr then
-                    use_gitsigns = true
-                  else
-                    use_gitsigns = false
-                  end
-
                   return
                 end
-              end
-
-              if use_gitsigns and not opts['staged'] then
-                return
               end
 
               if diff_text:sub(1, 1) == '@' then
@@ -619,7 +568,7 @@ return {
                   hunk_line = diff_text,
                   file = file_name,
                   pos = { line_number, 0 },
-                  buf = attached_bufnr[file_name],
+                  buf = filename2bufnr[file_name],
                 }
                 return
               end
@@ -630,7 +579,7 @@ return {
                   hunk_line = diff_text,
                   file = file_name,
                   pos = { line_number, 0 },
-                  buf = attached_bufnr[file_name],
+                  buf = filename2bufnr[file_name],
                 }
                 line_number = line_number + 1
                 return
@@ -662,7 +611,7 @@ return {
             preset = 'vertical',
           },
           title = 'Git Hunks',
-          finder = { git_diff_finder, gitsigns_finder },
+          finder = git_diff_finder,
           show_empty = true, --- So that we can toggle staged
           formatters = {
             file = {
