@@ -20,7 +20,7 @@
         stylua
         home-manager
         termtheme
-        nixfmt-rfc-style
+        nixfmt
         eza
         delta
         lazygit
@@ -55,7 +55,7 @@
       "$HOME/.cargo/bin"
     ];
 
-    stateVersion = "25.11";
+    stateVersion = "26.05";
 
     file = {
       ".hushlogin" = {
@@ -143,6 +143,7 @@
     neovim = {
       package = pkgs-unstable.neovim-unwrapped;
       enable = true;
+      sideloadInitLua = true;
     };
 
     zsh = {
