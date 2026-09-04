@@ -342,21 +342,6 @@ local function enabled_lsp_configs()
   return {}
 end
 
----@param bufnr integer
----@param position { line: integer, character: integer }
----@param encoding? string
----@return integer
-local function line_byte_from_position(bufnr, position, encoding)
-  -- Keep private Neovim LSP APIs behind a small shim so compatibility work stays
-  -- localized if upstream moves these helpers again.
-  local get_line_byte = util._get_line_byte_from_position
-  assert(
-    type(get_line_byte) == 'function',
-    'Expected Neovim byte-column helper'
-  )
-  return get_line_byte(bufnr, position, encoding or 'utf-16')
-end
-
 local function compare_pos(a_row, a_col, b_row, b_col)
   if a_row ~= b_row then
     return a_row < b_row and -1 or 1
@@ -1115,8 +1100,8 @@ local function build_lsp_entry(target, results)
           range = item
         end
 
-        local start_col = line_byte_from_position(bufnr, range.start, encoding)
-        local end_col = line_byte_from_position(bufnr, range['end'], encoding)
+        local start_col = vim.pos.lsp(bufnr, range.start, encoding).col
+        local end_col = vim.pos.lsp(bufnr, range['end'], encoding).col
         local key = table.concat({
           range.start.line,
           start_col,
