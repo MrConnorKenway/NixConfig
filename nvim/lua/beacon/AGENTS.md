@@ -26,6 +26,11 @@
 
 - LSP requests are the expensive path. Avoid sending them unless the current target really changed.
 - Reuse cached data only for LSP entries.
+- LSP responses belong exclusively to the originating `BeaconTarget.key`. Use direct LRU key lookup; neither range containment nor equal word text permits reuse at another occurrence.
+- Cache reuse, navigation, and newly applied responses must validate the target key, buffer, `changedtick`, and `server_tick`. Drop invalid cache entries as misses.
+- Moving to an uncached target inside a valid visible LSP range may retain the previous display through debounce and the pending request. Keep its original key; this temporary display never authorizes reuse or navigation for the destination. Moving outside those ranges or invalidating the display clears it normally.
+- A fresh destination response with identical spans and kinds adopts ownership without redrawing. Different results replace the display; an empty or failed current response clears it. Obsolete responses must not change another target's display, and returning to the displayed entry's own target cancels unrelated pending work.
+- When the destination has its own valid cached response with identical sorted spans and highlight kinds to the valid visible entry, adopt that response as `active` without clearing or recreating extmarks. This is a cache hit, not cross-target response reuse.
 - The per-buffer LSP cache is backed by the bundled third-party module at `lua/beacon/lru.lua`; do not reintroduce bespoke cache-order bookkeeping.
 - Buffer `active` state and cache entries are LSP-only records; do not add source tags for fallback state.
 - LSP cache validity depends on:
@@ -63,11 +68,13 @@
 ## Navigation
 
 - LSP navigation uses the sorted LSP ranges.
+- Navigation must resolve an entry for the current target before using its ranges. An async miss starts resolution and returns without jumping or queuing a jump.
 - Merge identical LSP ranges by span before rendering/navigation, and keep the strongest highlight kind for that span.
 - `next_reference()` and `prev_reference()` add the current location to Neovim's built-in jumplist before moving.
 - `find_range_index()` is binary-search based, assumes the LSP ranges are sorted by start position, and must still tolerate overlapping or nested ranges from servers.
 - Fallback navigation must stay based on `vim.fn.search()`, not precomputed fallback ranges.
 - `BeaconTarget.key` must include `bufnr` so cross-buffer staleness checks and timer dedup are sound.
+- Target identity is a keyword occurrence, including its buffer, changedtick, row, boundaries, and text; cursor movement within that occurrence retains its identity.
 
 ## Editing Notes
 
@@ -75,10 +82,12 @@
 - Keep comments concise and high-signal.
 - Keep the target-resolution decision logic centralized so cursor events, delayed resolution, and manual refreshes do not drift apart.
 - `plan_target_resolution()` is a pure decision function: callers supply a pre-computed target; the planner never calls `get_target()` internally.
+- A delayed callback must still own the window's timer and focus. Re-read its target before resolution; changed targets restart the usual delayed path, and missing targets clear runtime state.
+- Valid LSP responses may be cached for their originating target after cursor movement, but may render only at that target after normal-mode, focus, version, and dwell checks. Reject edited-buffer responses before converting ranges or caching.
 - Buffer invalidation must clear per-window timers for that buffer before resetting state so pre-edit delayed targets cannot survive a text change.
 - Normal-mode `TextChanged` should re-arm current-target resolution with the usual delayed path after invalidation so undo-like edits do not wait for `CursorMoved`; `TextChangedI` remains invalidate-only so insert-mode behavior stays unchanged.
 - `render_entry()` only sets extmarks and updates `buf_state.active`; cache mutations (`cache_put`) belong at call sites so rendering and LRU policy stay separate.
-- Cursor-driven `delay_ms` gating applies to fallback rendering and cached LSP reuse.
+- Cursor-driven `delay_ms` gating applies to fallback rendering and cached LSP reuse that changes the visible highlights. Adopting an independently cached identical visible result uses `keep_active` immediately; misses still schedule their usual debounce even when retaining the old display. Known differing cached results and cached results with no active display still clear and follow the usual delayed path.
 - Cache-miss LSP debounce is dynamic: maintain per-buffer, per-client latency predictions from the last `lsp_latency_samples` observations, seed unknown clients from `lsp_miss_delay_ms`, and subtract the slowest active prediction from `delay_ms`.
 - Cache-miss debounce must still respect `lsp_miss_delay_min_ms` so rapid cursor movement cannot collapse uncached LSP requests into an immediate flood.
 - Only already-visible `keep_active` and `keep_fallback` states may remain without rearming the timer.

@@ -107,7 +107,7 @@ local lru = require('beacon.lru')
 ---@field key string
 
 ---@class BeaconLspEntry
----@field key string
+---@field key string Originating keyword occurrence's BeaconTarget.key.
 ---@field bufnr integer
 ---@field changedtick integer
 ---@field server_tick integer
@@ -135,7 +135,7 @@ local lru = require('beacon.lru')
 ---@class BeaconBufferState
 ---@field attach_wait_until integer
 ---@field server_tick integer
----@field active? BeaconLspEntry
+---@field active? BeaconLspEntry Visible response; retains its original key while a new target is pending.
 ---@field pending? BeaconPendingRequest
 ---@field cache? BeaconLruCache
 ---@field cache_stats BeaconCacheStats
@@ -165,8 +165,9 @@ local lru = require('beacon.lru')
 ---@class BeaconResolvePlan
 ---@field action BeaconResolveAction
 ---@field target BeaconTarget
----@field entry? BeaconLspEntry
+---@field entry? BeaconLspEntry Cached response to render or adopt without redrawing.
 ---@field wait_ms? integer
+---@field retain_active? boolean Keep the previous display while independently resolving this target.
 
 ---@class BeaconPlanApplyOptions
 ---@field delay_ms? integer
@@ -893,46 +894,38 @@ local function find_adjacent_range_start_index(forward, ranges, row, col)
   return result
 end
 
+---@param entry? BeaconLspEntry
+---@param target BeaconTarget
+---@return boolean
+local function entry_matches_target(entry, target)
+  -- Highlight ranges describe output, not equivalent query targets: servers
+  -- may return different sets even for two occurrences of the same word.
+  return entry ~= nil
+    and entry.key == target.key
+    and entry.bufnr == target.bufnr
+    and entry.changedtick == target.changedtick
+    and entry.server_tick == current_server_tick(target.bufnr)
+end
+
 ---@param buf_state BeaconBufferState
----@param changedtick integer
----@param server_tick integer
----@param row integer
----@param col integer
+---@param target BeaconTarget
 ---@param count_lookup boolean
 ---@return BeaconLspEntry?
-local function find_cached_entry(
-  buf_state,
-  changedtick,
-  server_tick,
-  row,
-  col,
-  count_lookup
-)
+local function find_cached_entry(buf_state, target, count_lookup)
   if not buf_state.cache then
     return
   end
 
-  local hit_key = nil
-
-  -- Reuse the hottest matching LSP entry first, and only refresh recency after
-  -- a real hit so misses stay cheap.
-  for key, entry in buf_state.cache:pairs() do
-    if
-      entry.changedtick == changedtick
-      and entry.server_tick == server_tick
-    then
-      if find_range_index(entry.ranges, row, col) then
-        hit_key = key
-        break
-      end
-    end
-  end
-
-  if hit_key then
+  local entry = buf_state.cache:get(target.key)
+  if entry_matches_target(entry, target) then
     if count_lookup then
       record_cache_hit(buf_state)
     end
-    return buf_state.cache:get(hit_key)
+    return entry
+  end
+
+  if entry then
+    buf_state.cache:delete(target.key)
   end
 
   if count_lookup then
@@ -1219,12 +1212,47 @@ local function apply_fallback(winid, target)
   end
 end
 
+---@param active? BeaconLspEntry
+---@param entry BeaconLspEntry
+---@return boolean
+local function entries_have_same_highlights(active, entry)
+  if
+    not active
+    or active.bufnr ~= entry.bufnr
+    or active.changedtick ~= entry.changedtick
+    or active.server_tick ~= entry.server_tick
+    or #active.ranges ~= #entry.ranges
+  then
+    return false
+  end
+
+  for index, range in ipairs(entry.ranges) do
+    local visible = active.ranges[index]
+    if
+      visible.start_row ~= range.start_row
+      or visible.start_col ~= range.start_col
+      or visible.end_row ~= range.end_row
+      or visible.end_col ~= range.end_col
+      or visible.kind ~= range.kind
+    then
+      return false
+    end
+  end
+
+  return true
+end
+
+
 ---@param entry BeaconLspEntry
 local function render_entry(entry)
   local bufnr = entry.bufnr
   local buf_state = get_buf_state(bufnr)
 
   clear_fallback_matches_for_buffer(bufnr)
+  if entries_have_same_highlights(buf_state.active, entry) then
+    buf_state.active = entry
+    return
+  end
   clear_lsp_highlights(bufnr)
 
   for _, range in ipairs(entry.ranges) do
@@ -1274,14 +1302,7 @@ end
 ---@return BeaconLspEntry?
 local function cached_entry_for_target(target, count_cache_lookup)
   local buf_state = get_buf_state(target.bufnr)
-  return find_cached_entry(
-    buf_state,
-    target.changedtick,
-    current_server_tick(target.bufnr),
-    target.row,
-    target.col,
-    count_cache_lookup ~= false
-  )
+  return find_cached_entry(buf_state, target, count_cache_lookup ~= false)
 end
 
 ---@param winid integer
@@ -1303,16 +1324,24 @@ local function should_keep_active(target)
   local buf_state = state.buffers[target.bufnr]
   local active = buf_state and buf_state.active or nil
 
-  if
-    not active
-    or active.changedtick ~= target.changedtick
-    or active.server_tick ~= current_server_tick(target.bufnr)
-  then
-    return false
-  end
-
-  return find_range_index(active.ranges, target.row, target.col) ~= nil
+  return entry_matches_target(active, target)
 end
+
+---@param target BeaconTarget
+---@return boolean
+local function can_retain_display(target)
+  local buf_state = state.buffers[target.bufnr]
+  local active = buf_state and buf_state.active or nil
+
+  -- Containment permits temporary display continuity, never cache reuse or
+  -- navigation at the new target. The visible response keeps its original key.
+  return active ~= nil
+    and active.bufnr == target.bufnr
+    and active.changedtick == target.changedtick
+    and active.server_tick == current_server_tick(target.bufnr)
+    and find_range_index(active.ranges, target.row, target.col) ~= nil
+end
+
 
 ---@param target BeaconTarget
 ---@return boolean
@@ -1344,21 +1373,34 @@ local function plan_target_resolution(winid, target, opts)
   if supports_lsp(target.bufnr) then
     -- An in-flight request for the same target is already the cheapest path.
     if should_keep_pending(target) then
-      return { action = 'keep_pending', target = target }
+      return {
+        action = 'keep_pending',
+        target = target,
+        retain_active = can_retain_display(target),
+      }
     end
 
     if not opts.force_lsp then
       local entry = cached_entry_for_target(target, opts.count_cache_lookup)
       if entry then
+        -- Both occurrences have their own valid response. Identical output
+        -- can stay visible while ownership switches to the cached target.
+        local active = get_buf_state(target.bufnr).active
         return {
-          action = 'use_cache',
+          action = entries_have_same_highlights(active, entry)
+              and 'keep_active'
+            or 'use_cache',
           target = target,
           entry = entry,
         }
       end
     end
 
-    return { action = 'request_lsp', target = target }
+    return {
+      action = 'request_lsp',
+      target = target,
+      retain_active = can_retain_display(target),
+    }
   end
 
   local wait_ms = remaining_attach_wait_ms(target.bufnr)
@@ -1421,6 +1463,13 @@ local function request_lsp_entry(winid, target)
       end
 
       cancel_pending(bufnr)
+      if
+        not is_valid_buf(bufnr)
+        or api.nvim_buf_get_changedtick(bufnr) ~= target.changedtick
+      then
+        return
+      end
+
       record_lsp_latency_sample(
         bufnr,
         pending.client_ids,
@@ -1428,17 +1477,29 @@ local function request_lsp_entry(winid, target)
       )
 
       local entry = build_lsp_entry(target, results)
-      if #entry.ranges == 0 then
-        return
+      if #entry.ranges > 0 then
+        cache_put(current_state, entry)
       end
-
-      cache_put(current_state, entry)
 
       if not buffer_has_current_focus(bufnr) then
         return
       end
 
       local current_win = api.nvim_get_current_win()
+      local current_target = get_target(current_win)
+      if
+        not current_target or not entry_matches_target(entry, current_target)
+      then
+        return
+      end
+
+      -- Empty/error responses end any retained display for this target, but
+      -- must not erase a different target's highlights after cursor movement.
+      if #entry.ranges == 0 then
+        clear_active(bufnr)
+        return
+      end
+
       local current_win_state = state.windows[current_win]
       -- Keep the response cached, but wait for the latest cursor/window dwell
       -- timer to expire before rendering a same-target pending miss.
@@ -1451,13 +1512,7 @@ local function request_lsp_entry(winid, target)
         return
       end
 
-      local cursor = api.nvim_win_get_cursor(current_win)
-      local range_index =
-        find_range_index(entry.ranges, cursor[1] - 1, cursor[2])
-
-      if range_index then
-        render_entry(entry)
-      end
+      render_entry(entry)
     end
   )
 end
@@ -1472,7 +1527,7 @@ local function apply_target_resolution(winid, target, plan, opts)
 
   if plan.action == 'keep_pending' then
     if opts.delay_ms ~= nil then
-      if opts.clear_active_before_schedule then
+      if opts.clear_active_before_schedule and not plan.retain_active then
         clear_active(bufnr)
       end
 
@@ -1487,6 +1542,16 @@ local function apply_target_resolution(winid, target, plan, opts)
   end
 
   if plan.action == 'keep_fallback' or plan.action == 'keep_active' then
+    if plan.entry then
+      local buf_state = get_buf_state(bufnr)
+      if opts.record_cache_hit then
+        record_cache_hit(buf_state)
+      end
+      buf_state.active = plan.entry
+    end
+    if plan.action == 'keep_active' and opts.cancel_pending_on_cache then
+      cancel_pending(bufnr)
+    end
     if opts.clear_timer_on_keep then
       clear_window_timer(winid)
     end
@@ -1509,7 +1574,7 @@ local function apply_target_resolution(winid, target, plan, opts)
 
     -- Cursor-driven debounce gates every new visible highlight state, while
     -- LSP misses rearm with their predicted request delay above.
-    if opts.clear_active_before_schedule then
+    if opts.clear_active_before_schedule and not plan.retain_active then
       clear_active(bufnr)
     end
     if opts.cancel_pending_before_schedule then
@@ -1534,7 +1599,9 @@ local function apply_target_resolution(winid, target, plan, opts)
     return
   end
 
-  clear_active(bufnr)
+  if not plan.retain_active then
+    clear_active(bufnr)
+  end
 
   if plan.action == 'wait' then
     schedule_target(winid, target, assert(plan.wait_ms))
@@ -1634,17 +1701,31 @@ schedule_target = function(winid, target, delay_ms, rearm_same_target)
     0,
     vim.schedule_wrap(function()
       local current_win_state = state.windows[winid]
-      if not current_win_state or not current_win_state.target then
+      if
+        not current_win_state
+        or current_win_state.timer ~= timer
+        or not current_win_state.target
+      then
         return
       end
 
       local scheduled_target = assert(current_win_state.target)
       clear_window_timer(winid)
+      if winid ~= api.nvim_get_current_win() then
+        return
+      end
       if not in_normal_mode() then
         clear_buffer_runtime(scheduled_target.bufnr)
         return
       end
-      resolve_target(winid, scheduled_target)
+      -- Cursor events may not have run yet. Never send a request at a new
+      -- cursor position under the previous occurrence's cache key.
+      local current_target = get_target(winid)
+      if not current_target or current_target.key ~= scheduled_target.key then
+        handle_current_target(winid, { delay_ms = config.delay_ms })
+        return
+      end
+      resolve_target(winid, current_target)
     end)
   )
 end
@@ -1817,7 +1898,7 @@ local function goto_reference(forward)
   local buf_state = state.buffers[bufnr]
   local entry = buf_state and buf_state.active or nil
 
-  if entry and #entry.ranges > 0 then
+  if entry and entry_matches_target(entry, target) and #entry.ranges > 0 then
     local cursor = api.nvim_win_get_cursor(winid)
     local row = cursor[1] - 1
     local col = cursor[2]

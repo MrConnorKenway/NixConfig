@@ -27,6 +27,9 @@ local test_lsp = vim.lsp
 
 ---@class BeaconTestRequestResult
 ---@field result? BeaconTestHighlight[]
+---@field error? { code: integer, message: string }
+
+---@alias BeaconTestResponseCallback fun(results: table<integer, BeaconTestRequestResult>)
 
 local original_lsp = {
   get_clients = test_lsp.get_clients,
@@ -38,7 +41,7 @@ local original_lsp = {
 
 ---@class BeaconTestState
 ---@field clients table<integer, BeaconTestClient>
----@field request_handler fun(bufnr: integer, method: string, params: any, callback: fun(results: table<integer, BeaconTestRequestResult>)): fun()
+---@field request_handler fun(bufnr: integer, method: string, params: any, callback: BeaconTestResponseCallback): fun()
 local lsp_state = {
   clients = {},
   request_handler = function(_, _, _, callback)
@@ -211,6 +214,29 @@ end
 ---@return integer
 local function extmark_count(bufnr)
   return #api.nvim_buf_get_extmarks(bufnr, namespace, 0, -1, {})
+end
+
+---@param bufnr integer
+---@param expected integer[][]
+---@param message string
+local function expect_highlight_ranges(bufnr, expected, message)
+  ---@type integer[][]
+  local actual = {}
+  for _, mark in
+    ipairs(
+      api.nvim_buf_get_extmarks(bufnr, namespace, 0, -1, { details = true })
+    )
+  do
+    actual[#actual + 1] = { mark[2], mark[3], mark[4].end_row, mark[4].end_col }
+  end
+  expect(
+    vim.deep_equal(actual, expected),
+    ('%s (expected %s, got %s)'):format(
+      message,
+      vim.inspect(expected),
+      vim.inspect(actual)
+    )
+  )
 end
 
 local tests = {}
@@ -596,7 +622,7 @@ tests[#tests + 1] = {
     trigger_cursor_moved()
     spin(20)
 
-    api.nvim_win_set_cursor(0, { 1, 4 })
+    api.nvim_win_set_cursor(0, { 1, 0 })
     trigger_cursor_moved()
     spin(20)
 
@@ -609,6 +635,643 @@ tests[#tests + 1] = {
         'Beacon LRU cache hit ratio: buffer %d 1/2 hits (50.0%%), total 1/2 hits (50.0%%)'
       ):format(buf),
       'expected hit ratio command to report the cache hit and miss'
+    )
+  end,
+}
+
+for _, clear_before_move in ipairs { false, true } do
+  tests[#tests + 1] = {
+    name = 'asymmetric keyword highlights stay target-specific with clear='
+      .. tostring(clear_before_move),
+    run = function()
+      reset_editor()
+      local buf =
+        new_buffer({ 'match item {', '    _ => return Ok(None),', '}' }, 'rust')
+      local client = new_client(1, { [buf] = true }, true)
+      set_clients { client }
+      ---@type integer[][]
+      local match_ranges = { { 0, 0, 0, 5 }, { 1, 9, 1, 24 } }
+      ---@type integer[][]
+      local return_ranges = { { 1, 9, 1, 15 } }
+      local request_count = 0
+      lsp_state.request_handler = function(_, _, params, callback)
+        request_count = request_count + 1
+        local row = params(client).position.line
+        callback {
+          [client.id] = {
+            result = document_highlights(
+              row == 0 and match_ranges or return_ranges
+            ),
+          },
+        }
+        return function() end
+      end
+      beacon.setup { delay_ms = 0, lsp_attach_timeout_ms = 0 }
+      trigger_cursor_moved()
+      spin(25)
+      expect_highlight_ranges(
+        buf,
+        match_ranges,
+        'match should render its broad result'
+      )
+
+      if clear_before_move then
+        api.nvim_win_set_cursor(0, { 1, 5 })
+        trigger_cursor_moved()
+        expect_eq(extmark_count(buf), 0, 'whitespace should clear active state')
+      end
+      api.nvim_win_set_cursor(0, { 2, 9 })
+      trigger_cursor_moved()
+      expect_eq(extmark_count(buf), clear_before_move and 0 or 2, 'only an already-visible result may remain while return is resolved')
+      spin(25)
+      expect_eq(
+        request_count,
+        2,
+        'return needs its own response even inside a cached range'
+      )
+      expect_highlight_ranges(
+        buf,
+        return_ranges,
+        'return should render only its own result'
+      )
+
+      api.nvim_win_set_cursor(0, { 1, 1 })
+      trigger_cursor_moved()
+      spin(25)
+      expect_highlight_ranges(
+        buf,
+        match_ranges,
+        'revisiting match should restore its result'
+      )
+      api.nvim_win_set_cursor(0, { 2, 10 })
+      trigger_cursor_moved()
+      spin(25)
+      expect_highlight_ranges(
+        buf,
+        return_ranges,
+        'revisiting return should restore its result'
+      )
+      expect_eq(
+        request_count,
+        2,
+        'revisits should reuse the two originating entries'
+      )
+    end,
+  }
+end
+
+for _, first_row in ipairs { 3, 4 } do
+  tests[#tests + 1] = {
+    name = 'equal-word shorthand highlights stay target-specific starting on row '
+      .. first_row,
+    run = function()
+      reset_editor()
+      local buf = new_buffer({
+        'struct S { value: i32 }',
+        'fn demo() {',
+        '    let value = 1;',
+        '    let s = S { value };',
+        '    let _ = value;',
+        '    let _ = s.value;',
+        '}',
+      }, 'rust')
+      local client = new_client(1, { [buf] = true }, true)
+      set_clients { client }
+      ---@type integer[][]
+      local local_ranges =
+        { { 2, 8, 2, 13 }, { 3, 16, 3, 21 }, { 4, 12, 4, 17 } }
+      ---@type integer[][]
+      local shorthand_ranges = {
+        { 0, 11, 0, 16 },
+        { 2, 8, 2, 13 },
+        { 3, 16, 3, 21 },
+        { 4, 12, 4, 17 },
+        { 5, 14, 5, 19 },
+      }
+      local request_count = 0
+      lsp_state.request_handler = function(_, _, params, callback)
+        request_count = request_count + 1
+        local row = params(client).position.line
+        callback {
+          [client.id] = {
+            result = document_highlights(
+              row == 2 and local_ranges or shorthand_ranges
+            ),
+          },
+        }
+        return function() end
+      end
+      api.nvim_win_set_cursor(0, { first_row, first_row == 3 and 8 or 16 })
+      beacon.setup { delay_ms = 0, lsp_attach_timeout_ms = 0 }
+      local other_row = first_row == 3 and 4 or 3
+      for index, row in ipairs { first_row, other_row, first_row, other_row } do
+        api.nvim_win_set_cursor(0, { row, row == 3 and 8 or 16 })
+        trigger_cursor_moved()
+        spin(25)
+        expect_eq(
+          request_count,
+          math.min(index, 2),
+          'each occurrence should request once and then hit its own cache'
+        )
+        expect_highlight_ranges(
+          buf,
+          row == 3 and local_ranges or shorthand_ranges,
+          'equal text must not imply symmetric results'
+        )
+      end
+    end,
+  }
+end
+
+tests[#tests + 1] = {
+  name = 'identical cached results switch ownership without flicker',
+  run = function()
+    reset_editor()
+    local buf = new_buffer({ 'foo foo foo' }, 'lua')
+    local client = new_client(1, { [buf] = true }, true)
+    set_clients { client }
+    ---@type integer[][]
+    local ranges = { { 0, 0, 0, 3 }, { 0, 4, 0, 7 }, { 0, 8, 0, 11 } }
+    local request_count = 0
+    lsp_state.request_handler = function(_, _, _, callback)
+      request_count = request_count + 1
+      callback { [client.id] = { result = document_highlights(ranges) } }
+      return function() end
+    end
+    beacon.setup {
+      delay_ms = 60,
+      lsp_miss_delay_ms = 0,
+      lsp_attach_timeout_ms = 0,
+    }
+    trigger_cursor_moved()
+    spin(80)
+    api.nvim_win_set_cursor(0, { 1, 1 })
+    trigger_cursor_moved()
+    expect_highlight_ranges(
+      buf,
+      ranges,
+      'moving inside one occurrence should keep visible highlights'
+    )
+    expect_eq(request_count, 1, 'same occurrence should not request again')
+
+    local initial_marks = api.nvim_buf_get_extmarks(buf, namespace, 0, -1, { details = true })
+    for index, col in ipairs { 4, 8 } do
+      api.nvim_win_set_cursor(0, { 1, col })
+      trigger_cursor_moved()
+      expect_eq(
+        extmark_count(buf),
+        3,
+        'an uncached highlighted occurrence should retain the previous display'
+      )
+      spin(80)
+      expect_eq(
+        request_count,
+        index + 1,
+        'each occurrence needs its own initial response'
+      )
+      expect(vim.deep_equal(api.nvim_buf_get_extmarks(buf, namespace, 0, -1, { details = true }), initial_marks), 'identical fresh results must preserve extmark IDs')
+    end
+
+    local visible_marks =
+      api.nvim_buf_get_extmarks(buf, namespace, 0, -1, { details = true })
+    for _, col in ipairs { 0, 4, 8 } do
+      api.nvim_win_set_cursor(0, { 1, col })
+      trigger_cursor_moved()
+      expect(
+        vim.deep_equal(
+          api.nvim_buf_get_extmarks(buf, namespace, 0, -1, { details = true }),
+          visible_marks
+        ),
+        'identical cached result must preserve extmark IDs and details immediately'
+      )
+      -- A second move inside this occurrence must be keep_active, not another hit.
+      api.nvim_win_set_cursor(0, { 1, col + 1 })
+      trigger_cursor_moved()
+    end
+    spin(80)
+    expect_eq(
+      request_count,
+      3,
+      'cached transitions must not issue more requests'
+    )
+    expect(
+      vim.deep_equal(
+        api.nvim_buf_get_extmarks(buf, namespace, 0, -1, { details = true }),
+        visible_marks
+      ),
+      'cached transitions must not leave a delayed redraw behind'
+    )
+    local output = vim.trim(fn.execute('BeaconCacheHitRatio'))
+    expect_eq(
+      output,
+      ('Beacon LRU cache hit ratio: buffer %d 3/6 hits (50.0%%), total 3/6 hits (50.0%%)'):format(
+        buf
+      ),
+      'adoption should count once per transition and update active ownership'
+    )
+
+    api.nvim_win_set_cursor(0, { 1, 3 })
+    trigger_cursor_moved()
+    expect_eq(extmark_count(buf), 0, 'whitespace must clear the visible entry')
+    api.nvim_win_set_cursor(0, { 1, 0 })
+    trigger_cursor_moved()
+    spin(20)
+    expect_eq(
+      extmark_count(buf),
+      0,
+      'cached result with no visible entry must still wait for the cursor dwell'
+    )
+    spin(60)
+    expect_highlight_ranges(
+      buf,
+      ranges,
+      'cached result should render after the delay'
+    )
+    expect_eq(request_count, 3, 'cached revisit must not request again')
+  end,
+}
+
+for _, difference in ipairs { 'span', 'kind' } do
+  tests[#tests + 1] = {
+    name = 'cached results with different '
+      .. difference
+      .. ' still clear and wait',
+    run = function()
+      reset_editor()
+      local buf = new_buffer({ 'foo foo foo' }, 'lua')
+      local client = new_client(1, { [buf] = true }, true)
+      set_clients { client }
+      local request_count = 0
+      lsp_state.request_handler = function(_, _, params, callback)
+        request_count = request_count + 1
+        local is_second = params(client).position.character == 4
+        local end_col = is_second and difference == 'span' and 11 or 7
+        local kind = is_second and difference == 'kind' and 3 or 2
+        callback {
+          [client.id] = {
+            result = document_highlights {
+              { 0, 0, 0, 3, kind },
+              { 0, 4, 0, end_col, kind },
+            },
+          },
+        }
+        return function() end
+      end
+      beacon.setup {
+        delay_ms = 60,
+        lsp_miss_delay_ms = 0,
+        lsp_attach_timeout_ms = 0,
+      }
+      for index, col in ipairs { 0, 4, 0, 4 } do
+        api.nvim_win_set_cursor(0, { 1, col })
+        trigger_cursor_moved()
+        expect_eq(
+          extmark_count(buf),
+          index == 2 and 2 or 0,
+          'only the first unknown destination may retain the previous display'
+        )
+        spin(20)
+        expect_eq(
+          extmark_count(buf),
+          index == 2 and 2 or 0,
+          'known different output must clear during the dwell'
+        )
+        spin(60)
+        local end_col = col == 4 and difference == 'span' and 11 or 7
+        expect_highlight_ranges(
+          buf,
+          { { 0, 0, 0, 3 }, { 0, 4, 0, end_col } },
+          'destination ranges must render after the delay'
+        )
+        local group = col == 4 and difference == 'kind' and 'BeaconWrite'
+          or 'BeaconRead'
+        for _, mark in
+          ipairs(
+            api.nvim_buf_get_extmarks(buf, namespace, 0, -1, { details = true })
+          )
+        do
+          expect_eq(
+            mark[4].hl_group,
+            group,
+            'destination highlight kind must be preserved'
+          )
+        end
+      end
+      expect_eq(
+        request_count,
+        2,
+        'differing cached responses should still avoid extra requests'
+      )
+    end,
+  }
+end
+
+tests[#tests + 1] = {
+  name = 'stale identical cache entries cannot satisfy a new target',
+  run = function()
+    reset_editor()
+    local buf = new_buffer({ 'foo foo' }, 'lua')
+    local client = new_client(1, { [buf] = true }, true)
+    set_clients { client }
+    local request_count = 0
+    lsp_state.request_handler = function(_, _, _, callback)
+      request_count = request_count + 1
+      callback {
+        [client.id] = {
+          result = document_highlights { { 0, 0, 0, 3 }, { 0, 4, 0, 7 } },
+        },
+      }
+      return function() end
+    end
+    beacon.setup {
+      delay_ms = 60,
+      lsp_miss_delay_ms = 0,
+      lsp_attach_timeout_ms = 0,
+    }
+    trigger_cursor_moved()
+    spin(80)
+    api.nvim_win_set_cursor(0, { 1, 4 })
+    trigger_cursor_moved()
+    spin(80)
+    expect_eq(request_count, 2, 'both occurrences should be cached')
+    api.nvim_exec_autocmds('LspProgress', {
+      modeline = false,
+      pattern = 'end',
+      data = { client_id = client.id, params = { value = { kind = 'end' } } },
+    })
+    expect_eq(request_count, 3, 'progress should refresh the active target')
+    expect_eq(extmark_count(buf), 2, 'refreshed highlights should be visible')
+    api.nvim_win_set_cursor(0, { 1, 0 })
+    trigger_cursor_moved()
+    expect_eq(
+      extmark_count(buf),
+      2,
+      'the refreshed visible result may remain while the stale destination is requested'
+    )
+    spin(80)
+    expect_eq(request_count, 4, 'stale destination needs a fresh response')
+  end,
+}
+
+tests[#tests + 1] = {
+  name = 'late responses only render at their originating target',
+  run = function()
+    reset_editor()
+    local buf = new_buffer({ 'foo foo' }, 'lua')
+    local client = new_client(1, { [buf] = true }, true)
+    set_clients { client }
+    ---@type BeaconTestResponseCallback[]
+    local callbacks = {}
+    lsp_state.request_handler = function(_, _, _, callback)
+      callbacks[#callbacks + 1] = callback
+      return function() end
+    end
+    ---@type integer[][]
+    local broad = { { 0, 0, 0, 3 }, { 0, 4, 0, 7 } }
+    ---@type integer[][]
+    local narrow = { { 0, 4, 0, 7 } }
+    beacon.setup { delay_ms = 0, lsp_attach_timeout_ms = 0 }
+    trigger_cursor_moved()
+    spin(25)
+    expect_eq(#callbacks, 1, 'first request should be pending')
+
+    -- Move without dispatching CursorMoved to exercise response-time validation.
+    api.nvim_win_set_cursor(0, { 1, 4 })
+    callbacks[1] { [client.id] = { result = document_highlights(broad) } }
+    expect_eq(
+      extmark_count(buf),
+      0,
+      'late result must not render at a different covered occurrence'
+    )
+    trigger_cursor_moved()
+    spin(25)
+    expect_eq(#callbacks, 2, 'second occurrence must not reuse the late result')
+    callbacks[2] { [client.id] = { result = document_highlights(narrow) } }
+    expect_highlight_ranges(
+      buf,
+      narrow,
+      'second response should render at its target'
+    )
+    callbacks[1] { [client.id] = { result = document_highlights(broad) } }
+    expect_highlight_ranges(
+      buf,
+      narrow,
+      'obsolete callbacks must not replace current highlights'
+    )
+
+    api.nvim_win_set_cursor(0, { 1, 0 })
+    trigger_cursor_moved()
+    spin(25)
+    expect_eq(
+      #callbacks,
+      2,
+      'valid late response should remain cached for its original target'
+    )
+    expect_highlight_ranges(
+      buf,
+      broad,
+      'original target should reuse its late response'
+    )
+  end,
+}
+
+tests[#tests + 1] = {
+  name = 'edited-buffer responses are rejected before range conversion',
+  run = function()
+    reset_editor()
+    local buf = new_buffer({ 'foo', 'foo' }, 'lua')
+    local client = new_client(1, { [buf] = true }, true)
+    set_clients { client }
+    ---@type BeaconTestResponseCallback[]
+    local callbacks = {}
+    lsp_state.request_handler = function(_, _, _, callback)
+      callbacks[#callbacks + 1] = callback
+      return function() end
+    end
+    beacon.setup { delay_ms = 0, lsp_attach_timeout_ms = 0 }
+    trigger_cursor_moved()
+    spin(25)
+    api.nvim_buf_set_lines(buf, 1, -1, false, {})
+    callbacks[1] {
+      [client.id] = { result = document_highlights { { 1, 0, 1, 3 } } },
+    }
+    expect_eq(
+      extmark_count(buf),
+      0,
+      'response for the old changedtick must not render'
+    )
+    trigger_cursor_moved()
+    spin(25)
+    expect_eq(#callbacks, 2, 'edited target needs a fresh request')
+  end,
+}
+
+for _, destination_col in ipairs { 3, 4 } do
+  tests[#tests + 1] = {
+    name = 'delayed resolution rechecks the target at column '
+      .. destination_col,
+    run = function()
+      reset_editor()
+      local buf = new_buffer({ 'foo foo' }, 'lua')
+      local client = new_client(1, { [buf] = true }, true)
+      set_clients { client }
+      ---@type integer[]
+      local requested_cols = {}
+      lsp_state.request_handler = function(_, _, params, callback)
+        local col = params(client).position.character
+        requested_cols[#requested_cols + 1] = col
+        callback {
+          [client.id] = {
+            result = document_highlights { { 0, col, 0, col + 3 } },
+          },
+        }
+        return function() end
+      end
+      beacon.setup {
+        delay_ms = 80,
+        lsp_miss_delay_ms = 0,
+        lsp_attach_timeout_ms = 0,
+      }
+      trigger_cursor_moved()
+      api.nvim_win_set_cursor(0, { 1, destination_col })
+      spin(100)
+      expect_eq(
+        #requested_cols,
+        0,
+        'changed or missing target must not use the expired dwell'
+      )
+      expect_eq(extmark_count(buf), 0, 'stale delayed work must not render')
+      spin(100)
+      expect_eq(
+        #requested_cols,
+        destination_col == 4 and 1 or 0,
+        'only a current keyword should be resolved after its new delay'
+      )
+      if destination_col == 4 then
+        expect_eq(
+          requested_cols[1],
+          4,
+          'request should use the new occurrence position'
+        )
+      end
+      api.nvim_win_set_cursor(0, { 1, 0 })
+      trigger_cursor_moved()
+      spin(100)
+      expect_eq(
+        requested_cols[#requested_cols],
+        0,
+        'original occurrence must not inherit the new occurrence response'
+      )
+      expect_eq(
+        #requested_cols,
+        destination_col == 4 and 2 or 1,
+        'original occurrence must still be a cache miss'
+      )
+    end,
+  }
+end
+
+tests[#tests + 1] = {
+  name = 'a queued callback cannot consume a replacement timer',
+  run = function()
+    reset_editor()
+    local buf = new_buffer({ 'foo foo' }, 'lua')
+    local client = new_client(1, { [buf] = true }, true)
+    set_clients { client }
+    local request_count = 0
+    lsp_state.request_handler = function(_, _, _, callback)
+      request_count = request_count + 1
+      callback {
+        [client.id] = { result = document_highlights { { 0, 4, 0, 7 } } },
+      }
+      return function() end
+    end
+    beacon.setup {
+      delay_ms = 80,
+      lsp_miss_delay_ms = 0,
+      lsp_attach_timeout_ms = 0,
+    }
+
+    -- Capture scheduled callbacks so the old one can be delivered after cancel.
+    ---@type (fun())[]
+    local scheduled = {}
+    local original_schedule_wrap = vim.schedule_wrap
+    rawset(vim, 'schedule_wrap', function(callback)
+      scheduled[#scheduled + 1] = callback
+      return original_schedule_wrap(callback)
+    end)
+    local ok, err = pcall(function()
+      trigger_cursor_moved()
+      api.nvim_win_set_cursor(0, { 1, 4 })
+      trigger_cursor_moved()
+    end)
+    rawset(vim, 'schedule_wrap', original_schedule_wrap)
+    expect(ok, tostring(err))
+    expect_eq(#scheduled, 2, 'each occurrence should schedule its own timer')
+    scheduled[1]()
+    expect_eq(
+      request_count,
+      0,
+      'old callback must not resolve the replacement timer early'
+    )
+    spin(100)
+    expect_eq(
+      request_count,
+      1,
+      'replacement timer should still resolve its target'
+    )
+    expect_highlight_ranges(
+      buf,
+      { { 0, 4, 0, 7 } },
+      'replacement timer should retain its response ownership'
+    )
+  end,
+}
+
+tests[#tests + 1] = {
+  name = 'responses need not include their originating target in the returned ranges',
+  run = function()
+    reset_editor()
+    local buf = new_buffer({ 'foo foo' }, 'lua')
+    local client = new_client(1, { [buf] = true }, true)
+    set_clients { client }
+    ---@type integer[][]
+    local ranges = { { 0, 4, 0, 7 } }
+    local request_count = 0
+    lsp_state.request_handler = function(_, _, _, callback)
+      request_count = request_count + 1
+      callback { [client.id] = { result = document_highlights(ranges) } }
+      return function() end
+    end
+    beacon.setup { delay_ms = 0, lsp_attach_timeout_ms = 0 }
+    trigger_cursor_moved()
+    spin(25)
+    expect_highlight_ranges(
+      buf,
+      ranges,
+      'response ownership should determine rendering'
+    )
+    api.nvim_win_set_cursor(0, { 1, 1 })
+    trigger_cursor_moved()
+    expect_eq(
+      request_count,
+      1,
+      'same target should keep its result even outside the returned ranges'
+    )
+    api.nvim_win_set_cursor(0, { 1, 3 })
+    trigger_cursor_moved()
+    api.nvim_win_set_cursor(0, { 1, 0 })
+    trigger_cursor_moved()
+    spin(25)
+    expect_eq(
+      request_count,
+      1,
+      'originating target should reuse its cached response'
+    )
+    expect_highlight_ranges(
+      buf,
+      ranges,
+      'cached response should render outside its ranges too'
     )
   end,
 }
@@ -838,7 +1501,7 @@ tests[#tests + 1] = {
     trigger_cursor_moved()
     spin(20)
 
-    api.nvim_win_set_cursor(0, { 1, 4 })
+    api.nvim_win_set_cursor(0, { 1, 0 })
     trigger_cursor_moved()
     spin(20)
 
@@ -1482,6 +2145,64 @@ tests[#tests + 1] = {
 }
 
 tests[#tests + 1] = {
+  name = 'navigation requests the current target instead of using another targets ranges',
+  run = function()
+    reset_editor()
+    local buf = new_buffer({ 'foo foo foo' }, 'lua')
+    local client = new_client(1, { [buf] = true }, true)
+    set_clients { client }
+    ---@type BeaconTestResponseCallback[]
+    local callbacks = {}
+    lsp_state.request_handler = function(_, _, _, callback)
+      callbacks[#callbacks + 1] = callback
+      return function() end
+    end
+    beacon.setup { delay_ms = 0, lsp_attach_timeout_ms = 0 }
+    trigger_cursor_moved()
+    spin(25)
+    callbacks[1] {
+      [client.id] = {
+        result = document_highlights { { 0, 0, 0, 3 }, { 0, 4, 0, 7 } },
+      },
+    }
+    api.nvim_win_set_cursor(0, { 1, 4 })
+    beacon.next_reference()
+    expect_eq(
+      api.nvim_win_get_cursor(0)[2],
+      4,
+      'navigation must not jump using the previous target'
+    )
+    expect_eq(
+      extmark_count(buf),
+      2,
+      'navigation may retain the previous display while resolving the new target'
+    )
+    expect_eq(#callbacks, 2, 'navigation should request the new target')
+    callbacks[2] {
+      [client.id] = {
+        result = document_highlights { { 0, 4, 0, 7 }, { 0, 8, 0, 11 } },
+      },
+    }
+    expect_eq(
+      api.nvim_win_get_cursor(0)[2],
+      4,
+      'response must not execute a queued jump'
+    )
+    beacon.next_reference()
+    expect_eq(
+      api.nvim_win_get_cursor(0)[2],
+      8,
+      'next jump should use the new target result'
+    )
+    expect_eq(
+      #callbacks,
+      2,
+      'navigation from a resolved target should not request again'
+    )
+  end,
+}
+
+tests[#tests + 1] = {
   name = 'overlapping ranges do not force a second request',
   run = function()
     reset_editor()
@@ -1522,7 +2243,24 @@ tests[#tests + 1] = {
     expect_eq(
       request_count,
       1,
-      'overlapping ranges should keep the active entry'
+      'movement within the same keyword should keep the active entry'
+    )
+    beacon.next_reference()
+    expect_eq(
+      api.nvim_win_get_cursor(0)[2],
+      10,
+      'next navigation should find the enclosing outer range'
+    )
+    beacon.prev_reference()
+    expect_eq(
+      api.nvim_win_get_cursor(0)[2],
+      0,
+      'previous navigation should find the nested range'
+    )
+    expect_eq(
+      request_count,
+      1,
+      'overlapping-range navigation within one keyword should not request again'
     )
   end,
 }
