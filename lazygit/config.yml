@@ -3,6 +3,8 @@ gui:
   scrollHeight: 10
 git:
   autoFetch: false
+  diffRenderers:
+    - command: "delta --{{colorScheme}} --paging=never"
 os:
   editPreset: 'nvim-remote'
 quitOnTopLevelReturn: true
