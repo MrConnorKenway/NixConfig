@@ -1,0 +1,63 @@
+name: Bootstrap
+
+on:
+  schedule:
+    # Monday at 11:17 Asia/Shanghai (03:17 UTC).
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bootstrap:
+    name: Bootstrap (${{ matrix.system }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            system: x86_64-linux
+          - runner: macos-15
+            system: aarch64-darwin
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Link checkout into home directory
+        run: ln -s "$GITHUB_WORKSPACE" "$HOME/NixConfig"
+
+      - name: Run bootstrap
+        env:
+          NIX_INSTALLER_NO_CONFIRM: "true"
+          HOME_MANAGER_BACKUP_EXT: ci-backup
+        run: bash bootstrap.sh
+
+      - name: Verify installation and configuration
+        env:
+          EXPECTED_SYSTEM: ${{ matrix.system }}
+        run: |
+          export PATH="$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:$PATH"
+
+          nix --version
+          test "$(nix eval --impure --raw --expr builtins.currentSystem)" = "$EXPECTED_SYSTEM"
+          "$HOME/.nix-profile/bin/home-manager" --version
+          "$HOME/.nix-profile/bin/nvim" --headless -u NONE -i NONE +q
+
+          test -L "$HOME/.config/nvim"
+          test "$HOME/.config/nvim" -ef "$GITHUB_WORKSPACE/nvim"
+          test -r "$HOME/.config/lazygit/config.yml"
+          test -f "$HOME/.clangd"
+
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            test -L "$HOME/.config/ghostty/config"
+            test "$HOME/.config/ghostty/config" -ef "$GITHUB_WORKSPACE/ghostty.conf"
+          fi
