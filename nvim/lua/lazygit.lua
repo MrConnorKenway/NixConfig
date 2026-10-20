@@ -22,12 +22,7 @@ local function lazygit(lazygit_args)
   local args = {
     'lazygit',
     '-ucf',
-    string.format(
-      '%s/.config/lazygit/%s.yml,%s/.config/lazygit/config.yml',
-      home_dir,
-      vim.o.background,
-      home_dir
-    ),
+    string.format('%s/.config/lazygit/config.yml', home_dir),
     unpack(lazygit_args),
   }
   local lazygit_job = vim.fn.jobstart(args, {

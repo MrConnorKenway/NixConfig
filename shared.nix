@@ -19,21 +19,9 @@
         rustup
         stylua
         home-manager
-        termtheme
         nixfmt
         eza
         delta
-        (writeShellScriptBin "lg" ''
-          theme=$(${pkgs.termtheme}/bin/termtheme --force)
-          case $theme in
-            light|dark)
-              ${pkgs-unstable.lazygit}/bin/lazygit -ucf "$HOME/.config/lazygit/$theme.yml,$HOME/.config/lazygit/config.yml" "$@"
-              ;;
-            *)
-              ${pkgs-unstable.lazygit}/bin/lazygit -ucf "$HOME/.config/lazygit/light.yml,$HOME/.config/lazygit/config.yml" "$@"
-              ;;
-          esac
-        '')
         sshpass
         tree-sitter
       ]
@@ -170,6 +158,7 @@
         la = "eza -la --icons=auto";
         ld = "eza --only-dirs";
         lt = "eza --tree --icons=auto";
+        lg = "lazygit -ucf ${lazygit/config.yml}";
         gl = "lg log";
         gs = "lg status";
         ga = "git add";
