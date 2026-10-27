@@ -61,7 +61,7 @@ local function set_shadafile(args)
 end
 
 local hostname = vim.uv.os_gethostname()
-local is_remote = os.getenv('SSH_TTY') ~= nil
+local is_remote = os.getenv('SSH_TTY') ~= nil or os.getenv('REX_SESSION') ~= nil
 
 local function set_terminal_title(dir)
   dir = vim.fs.basename(dir)
