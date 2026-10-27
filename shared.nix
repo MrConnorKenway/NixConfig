@@ -3,6 +3,7 @@
   pkgs,
   pkgs-unstable,
   per-directory-history,
+  fzf-tab,
   ...
 }:
 
@@ -216,12 +217,7 @@
         }
         {
           name = "fzf-tab";
-          src = pkgs.fetchFromGitHub {
-            owner = "Aloxaf";
-            repo = "fzf-tab";
-            rev = "v1.2.0";
-            sha256 = "q26XVS/LcyZPRqDNwKKA9exgBByE0muyuNb0Bbar2lY=";
-          };
+          src = fzf-tab;
         }
       ];
     };

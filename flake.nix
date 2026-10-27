@@ -14,6 +14,11 @@
       url = "github:jimhester/per-directory-history/master";
       flake = false;
     };
+
+    fzf-tab = {
+      url = "github:Aloxaf/fzf-tab/v1.3.0";
+      flake = false;
+    };
   };
 
   outputs =
@@ -22,6 +27,7 @@
       home-manager,
       nixpkgs-unstable,
       per-directory-history,
+      fzf-tab,
       ...
     }:
     let
@@ -31,7 +37,7 @@
           {
             pkgs = import nixpkgs { inherit system; };
             extraSpecialArgs = {
-              inherit per-directory-history;
+              inherit per-directory-history fzf-tab;
               pkgs-unstable = import nixpkgs-unstable { inherit system; };
             };
           }

@@ -1,5 +1,22 @@
 {
   "nodes": {
+    "fzf-tab": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1773575753,
+        "narHash": "sha256-8atbysoOyCBW2OYKmdc91x9V/Mk3eyg3hvzvhJpQ32w=",
+        "owner": "Aloxaf",
+        "repo": "fzf-tab",
+        "rev": "d7e0234614dbe5369fdd760907d12c0e05a4dccc",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Aloxaf",
+        "ref": "v1.3.0",
+        "repo": "fzf-tab",
+        "type": "github"
+      }
+    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -69,6 +86,7 @@
     },
     "root": {
       "inputs": {
+        "fzf-tab": "fzf-tab",
         "home-manager": "home-manager",
         "nixpkgs": "nixpkgs",
         "nixpkgs-unstable": "nixpkgs-unstable",
