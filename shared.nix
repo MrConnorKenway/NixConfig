@@ -151,6 +151,7 @@
       initContent = ''
         autoload -U select-word-style
         select-word-style bash
+        source "${per-directory-history}/per-directory-history.zsh"
       '';
 
       shellAliases = {
@@ -204,11 +205,6 @@
           name = "zsh-autopair";
           src = "${pkgs.zsh-autopair}/share/zsh/zsh-autopair";
           file = "autopair.zsh";
-        }
-        {
-          name = "per-directory-history";
-          src = per-directory-history;
-          file = "per-directory-history.zsh";
         }
         {
           name = "termsupport";
