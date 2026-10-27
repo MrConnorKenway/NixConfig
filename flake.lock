@@ -50,11 +50,29 @@
         "type": "indirect"
       }
     },
+    "per-directory-history": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1787855519,
+        "narHash": "sha256-Qp1RIWFj5FLZs4HeE3hGMZmArEV63qsLNysGwXrcNKM=",
+        "owner": "jimhester",
+        "repo": "per-directory-history",
+        "rev": "fbbf294abfa6819bb12df7d111c800f4f3a3dd07",
+        "type": "github"
+      },
+      "original": {
+        "owner": "jimhester",
+        "ref": "master",
+        "repo": "per-directory-history",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "home-manager": "home-manager",
         "nixpkgs": "nixpkgs",
-        "nixpkgs-unstable": "nixpkgs-unstable"
+        "nixpkgs-unstable": "nixpkgs-unstable",
+        "per-directory-history": "per-directory-history"
       }
     }
   },

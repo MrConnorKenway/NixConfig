@@ -2,6 +2,7 @@
   config,
   pkgs,
   pkgs-unstable,
+  per-directory-history,
   ...
 }:
 
@@ -205,12 +206,7 @@
         }
         {
           name = "per-directory-history";
-          src = pkgs.fetchFromGitHub {
-            owner = "jimhester";
-            repo = "per-directory-history";
-            rev = "master";
-            sha256 = "EV9QPBndwAWzdOcghDXrIIgP0oagVMOTyXzoyt8tXRo=";
-          };
+          src = per-directory-history;
           file = "per-directory-history.zsh";
         }
         {
