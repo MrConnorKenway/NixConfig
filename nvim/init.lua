@@ -61,13 +61,16 @@ local function set_shadafile(args)
 end
 
 local hostname = vim.uv.os_gethostname()
-local is_remote = os.getenv('SSH_TTY') ~= nil or os.getenv('REX_SESSION') ~= nil
+local is_rex = os.getenv('REX_SESSION') ~= nil
+local is_ssh = os.getenv('SSH_TTY') ~= nil
 
 local function set_terminal_title(dir)
   dir = vim.fs.basename(dir)
   local title
-  if is_remote then
+  if is_ssh then
     title = string.format('\x1b]2;%s ❯ 📓 %s\a', hostname, dir)
+  elseif is_rex then
+    title = string.format('\x1b]2;%s\a', dir)
   else
     title = string.format('\x1b]2;📓 %s\a', dir)
   end
@@ -95,7 +98,7 @@ vim.api.nvim_create_autocmd('SessionWritePost', {
 
 set_shadafile()
 
-if is_remote then
+if is_ssh or is_rex then
   local function paste()
     return { vim.fn.split(vim.fn.getreg(''), '\n'), vim.fn.getregtype('') }
   end
