@@ -74,15 +74,16 @@ function M:render(row_offset)
     status_len,
   })
 
+  local language = utils.shell_filetype()
   local ok, parser =
-    pcall(vim.treesitter.get_string_parser, self.escaped_cmd, 'bash')
+    pcall(vim.treesitter.get_string_parser, self.escaped_cmd, language)
   if ok and parser then
     parser:parse(true)
     parser:for_each_tree(function(tstree, _)
       if not tstree then
         return
       end
-      local query = vim.treesitter.query.get('bash', 'highlights')
+      local query = vim.treesitter.query.get(language, 'highlights')
       if not query then
         return
       end
@@ -110,7 +111,7 @@ function M:render(row_offset)
           local end_col = last and range[4] or #(text[row - range[1]] or '')
           end_col = multi and first and end_col + range[2] or end_col
           table.insert(highlights, {
-            '@' .. name .. '.bash',
+            '@' .. name .. '.' .. language,
             row_offset + #lines,
             cmd_offset + (first and range[2] or 0),
             cmd_offset + end_col,

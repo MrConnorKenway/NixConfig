@@ -508,10 +508,16 @@ local function start_task(task)
   task.timer = vim.uv.new_timer()
 
   -- 'sleep': wait 100ms before finishing job, giving neovim enough time to sync output
+  local cmd = string.format('set -e; %s; sleep 0.1', task.cmd)
+  if utils.shell_filetype() == 'fish' then
+    -- Fish has no errexit option; preserve its native final command status.
+    cmd = task.cmd
+      .. '\nset -l __shrun_status $status\nsleep 0.1\nexit $__shrun_status'
+  end
   local new_cmd = {
     vim.o.shell,
     '-c',
-    string.format('set -e; %s; sleep 0.1', task.cmd),
+    cmd,
   }
 
   run_in_tmp_win(task.buf_id, function()
@@ -922,7 +928,7 @@ local function try_load_json()
     new_task_output_buffer(task)
     vim.bo[task.buf_id].filetype = 'shrun_task_command'
     utils.buf_set_lines(task.buf_id, 0, -1, true, vim.split(task.cmd, '\n'))
-    vim.treesitter.start(task.buf_id, 'bash')
+    pcall(vim.treesitter.start, task.buf_id, utils.shell_filetype())
     next_task_id = next_task_id + 1
     all_tasks[task.id] = task
   end
@@ -1156,14 +1162,23 @@ function M.launch_shell()
     return
   end
 
-  -- Currently only support zsh
   if shell == 'zsh' then
-    shell_args = { 'zsh' }
+    shell_args = { vim.o.shell }
     shell_envs = vim.tbl_extend('force', shell_envs, {
       USER_ZDOTDIR = home_dir,
       ZDOTDIR = string.format(config.shell_integration_path, home_dir),
       FZF_DEFAULT_OPTS = config.shell_fzf_default_opts,
     })
+  elseif shell == 'fish' then
+    local integration = string.format(config.shell_integration_path, home_dir)
+      .. '/shellIntegration.fish'
+    shell_args = {
+      vim.o.shell,
+      '--interactive',
+      '--init-command',
+      'source ' .. vim.fn.shellescape(integration),
+    }
+    shell_envs.FZF_DEFAULT_OPTS = config.shell_fzf_default_opts
   else
     error(string.format('Unsupported shell "%s"', shell))
   end
@@ -1193,12 +1208,11 @@ function M.launch_shell()
             if task_panel.sidebar_winid then
               vim.api.nvim_set_current_win(task_panel.sidebar_winid)
             end
-            -- Revert escape
-            cmd = cmd
-              :gsub('\\x3b', ';')
-              :gsub('\\x09', '\t')
-              :gsub('\\x0a', '\n')
-              :gsub('\\\\', '\\')
+            -- Decode doubled backslashes first without interpreting literal
+            -- text such as "\\x3b" as an encoded semicolon.
+            cmd = cmd:gsub('\\\\', '\\x5c'):gsub('\\x(%x%x)', function(hex)
+              return string.char(tonumber(hex, 16))
+            end)
             vim.schedule(function()
               M.display_panel()
               init_task_from_cmd(cmd)
@@ -1208,7 +1222,7 @@ function M.launch_shell()
             --- According to documentation (https://code.visualstudio.com/docs/terminal/shell-integration#_vs-code-custom-sequences-osc-633-st):
             --- > `OSC 633 ; P ; <Property>=<Value> ST` - Set a property on the
             --- > terminal, only known properties will be handled.
-            --- We use an unknown property to represent the `zshexit` event to
+            --- We use an unknown property to represent the shell exit event to
             --- not interfere with VSCode shell integration.
             local is_exit = request:find('\x1b]633;P;ShrunExit', found)
             if is_exit then
@@ -1352,7 +1366,7 @@ function M.task_picker()
       },
     },
     format = 'text',
-    formatters = { text = { ft = 'bash' } },
+    formatters = { text = { ft = utils.shell_filetype() } },
     preview = 'none',
     on_change = function(_, item)
       if not task_panel.sidebar_winid then

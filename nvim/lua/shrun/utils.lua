@@ -1,5 +1,9 @@
 M = {}
 
+function M.shell_filetype()
+  return vim.fs.basename(vim.o.shell) == 'fish' and 'fish' or 'bash'
+end
+
 --- @param bufnr integer Buffer handle, or 0 for current buffer
 --- @param start_line integer First line index
 --- @param end_line integer Last line index, exclusive
