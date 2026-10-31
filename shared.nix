@@ -149,6 +149,43 @@
       interactiveShellInit = ''
         set -g fish_greeting
         ${builtins.readFile p10k-config/p10k.fish}
+
+        function __long_command_preexec --on-event fish_preexec
+          set -l last_status $status
+          if set -q __long_command_reported
+            printf '\e]7501;state=clear:id=fish-%s\a' $fish_pid
+            set -e __long_command_reported
+          end
+          return $last_status
+        end
+
+        function __long_command_postexec --on-event fish_postexec
+          set -l last_status $status
+          if not set -q CMD_DURATION; or test "$CMD_DURATION" -le 3000; or test $last_status -eq 130
+            return $last_status
+          end
+
+          if set -q REX_SESSION
+            set -l tokens
+            printf '%s\0' "$argv[1]" | read --null --tokenize --list tokens
+            while contains -- "$tokens[1]" command builtin exec
+              set -e tokens[1]
+              if test "$tokens[1]" = --
+                set -e tokens[1]
+              end
+            end
+            set -l app (path basename -- "$tokens[1]")
+            string match --quiet --regex '^[A-Za-z0-9_.+-]{1,32}$' -- "$app"; or set app fish
+            set -l state done
+            test $last_status -eq 0; or set state error
+            printf '\e]7501;state=%s:app=%s:id=fish-%s\a' $state $app $fish_pid
+            set -g __long_command_reported 1
+          else
+            set -l text (string replace --all --regex '[[:cntrl:];]' ' ' -- "$argv[1]" | string collect)
+            printf '\e]777;notify;;"%s" finished\a' "$text"
+          end
+          return $last_status
+        end
       '';
 
       binds.tab.command = "fzf_complete --select-1";
