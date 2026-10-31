@@ -2,8 +2,6 @@
   config,
   pkgs,
   pkgs-unstable,
-  per-directory-history,
-  fzf-tab,
   ...
 }:
 
@@ -83,6 +81,7 @@
     };
 
     fzf = {
+      package = pkgs-unstable.fzf;
       enable = true;
       defaultOptions = [
         "--bind ctrl-d:half-page-down,ctrl-u:half-page-up --no-mouse"
@@ -136,23 +135,23 @@
       sideloadInitLua = true;
     };
 
-    zsh = {
+    fish = {
       enable = true;
-      enableCompletion = true;
-      autosuggestion.enable = true;
-      syntaxHighlighting.enable = true;
 
-      completionInit = ''
-        autoload -U compinit && compinit
-        zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
-        zstyle ':fzf-tab:*' fzf-bindings 'ctrl-a:toggle-all+accept' 'alt-n:toggle-down' 'alt-p:up+toggle' 'ctrl-d:half-page-down' 'ctrl-u:half-page-up'
+      shellInit = ''
+        if test -r /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.fish
+          source /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.fish
+        else if test -r "$HOME/.nix-profile/etc/profile.d/nix.fish"
+          source "$HOME/.nix-profile/etc/profile.d/nix.fish"
+        end
       '';
 
-      initContent = ''
-        autoload -U select-word-style
-        select-word-style bash
-        source "${per-directory-history}/per-directory-history.zsh"
+      interactiveShellInit = ''
+        set -g fish_greeting
+        ${builtins.readFile p10k-config/p10k.fish}
       '';
+
+      binds.tab.command = "fzf_complete --select-1";
 
       shellAliases = {
         l = "eza -l --icons=auto";
@@ -183,45 +182,30 @@
         gloga = "git log --oneline --decorate --graph --all";
         vi = "nvim";
       };
+    };
 
-      history = {
-        extended = true;
-        size = 1000000;
-        share = true;
+    atuin = {
+      enable = true;
+      enableFishIntegration = true;
+
+      settings = {
+        # No cloud synchronization or update requests
+        auto_sync = false;
+        update_check = false;
+
+        # Per-directory command history
+        filter_mode = "directory";
+        filter_mode_shell_up_key_binding = "directory";
+
+        # Disable AI features
+        ai.enabled = false;
       };
-
-      plugins = [
-        {
-          name = "zsh-powerlevel10k";
-          src = "${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/";
-          file = "powerlevel10k.zsh-theme";
-        }
-        {
-          name = "powerlevel10k-config";
-          src = ./p10k-config;
-          file = "p10k.zsh";
-        }
-        {
-          name = "zsh-autopair";
-          src = "${pkgs.zsh-autopair}/share/zsh/zsh-autopair";
-          file = "autopair.zsh";
-        }
-        {
-          name = "termsupport";
-          src = ./.;
-          file = "termsupport.zsh";
-        }
-        {
-          name = "fzf-tab";
-          src = fzf-tab;
-        }
-      ];
     };
 
     zoxide = {
       enable = true;
-      enableZshIntegration = true;
       enableBashIntegration = true;
+      enableFishIntegration = true;
     };
   };
 }
