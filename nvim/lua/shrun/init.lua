@@ -19,6 +19,25 @@ local config = require('shrun.config')
 local all_tasks = {}
 local next_task_id = 1
 
+local is_rex = os.getenv('REX_SESSION') ~= nil
+---@type table<integer, boolean>
+local rex_reported_tasks = {}
+
+---@param task shrun.Task
+---@param state 'working' | 'done' | 'error' | 'clear'
+local function report_rex_status(task, state)
+  io.stdout:write(
+    string.format(
+      '\x1b]7501;state=%s:app=shrun:id=shrun-%d/%d\a',
+      state,
+      vim.fn.getpid(),
+      task.id
+    )
+  )
+  io.stdout:flush()
+  rex_reported_tasks[task.id] = state ~= 'clear' or nil
+end
+
 ---@class shrun.TaskPanel
 ---@field sidebar_bufnr integer
 ---map from task id to task range
@@ -470,6 +489,10 @@ end
 
 ---@param task shrun.Task
 local function start_task(task)
+  -- A restart replaces any completion record left by the previous run.
+  if rex_reported_tasks[task.id] then
+    report_rex_status(task, 'clear')
+  end
   local old_buf = task.buf_id
   -- Delay buffer delete after new buffer is opened in task output window,
   -- otherwise the task output window will be instantly closed
@@ -521,7 +544,11 @@ local function start_task(task)
             {}
           )
         end
-        if task.elapsed_time > config.long_time_threshold then
+        if is_rex then
+          if rex_reported_tasks[task.id] then
+            report_rex_status(task, exit_code == 0 and 'done' or 'error')
+          end
+        elseif task.elapsed_time > config.long_time_threshold then
           io.stdout:write(
             string.format('\x1b]777;notify;;"%s" finished\a', task.escaped_cmd)
           )
@@ -541,14 +568,19 @@ local function start_task(task)
       config.timer_repeat_interval,
       config.timer_repeat_interval,
       vim.schedule_wrap(function()
-        if task.status ~= 'RUNNING' and task.timer then
-          pcall(task.timer.close, task.timer)
-          task.timer = nil
+        if task.status ~= 'RUNNING' then
+          if task.timer then
+            pcall(task.timer.close, task.timer)
+            task.timer = nil
+          end
           return
         end
 
         task.elapsed_time = task.elapsed_time + config.timer_repeat_interval
         if task.elapsed_time > config.long_time_threshold then
+          if is_rex and not rex_reported_tasks[task.id] then
+            report_rex_status(task, 'working')
+          end
           if task.elapsed_time_line_num then
             task:update_time(task_panel.sidebar_bufnr)
           else
@@ -720,6 +752,10 @@ local function new_sidebar_buffer()
       task.status = 'CANCELED'
       vim.fn.jobstop(task.job_id)
       vim.fn.chanclose(task.job_id)
+    end
+
+    if rex_reported_tasks[task.id] then
+      report_rex_status(task, 'clear')
     end
 
     all_tasks[task.id] = nil
