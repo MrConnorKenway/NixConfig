@@ -148,6 +148,7 @@
 
       interactiveShellInit = ''
         set -g fish_greeting
+        set -g fish_color_command blue
         ${builtins.readFile p10k-config/p10k.fish}
 
         function __long_command_preexec --on-event fish_preexec
