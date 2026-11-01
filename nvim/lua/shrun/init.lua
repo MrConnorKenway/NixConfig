@@ -508,7 +508,10 @@ local function start_task(task)
   task.timer = vim.uv.new_timer()
 
   -- 'sleep': wait 100ms before finishing job, giving neovim enough time to sync output
-  local cmd = string.format('set -e; %s; sleep 0.1', task.cmd)
+  local cmd = string.format(
+    'set -e\n%s\n__shrun_status=$?\nsleep 0.1\nexit "$__shrun_status"',
+    task.cmd
+  )
   if utils.shell_filetype() == 'fish' then
     -- Fish has no errexit option; preserve its native final command status.
     cmd = task.cmd
@@ -1177,6 +1180,15 @@ function M.launch_shell()
       '--interactive',
       '--init-command',
       'source ' .. vim.fn.shellescape(integration),
+    }
+    shell_envs.FZF_DEFAULT_OPTS = config.shell_fzf_default_opts
+  elseif shell == 'bash' then
+    shell_args = {
+      vim.o.shell,
+      '--rcfile',
+      string.format(config.shell_integration_path, home_dir)
+        .. '/shellIntegration.bash',
+      '-i',
     }
     shell_envs.FZF_DEFAULT_OPTS = config.shell_fzf_default_opts
   else
