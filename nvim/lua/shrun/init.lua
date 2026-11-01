@@ -1226,8 +1226,7 @@ function M.launch_shell()
             --- not interfere with VSCode shell integration.
             local is_exit = request:find('\x1b]633;P;ShrunExit', found)
             if is_exit then
-              vim.api.nvim_win_hide(shell_win)
-              vim.api.nvim_chan_send(shell_job, '\x0c')
+              pcall(vim.api.nvim_win_hide, shell_win)
             end
           end
         end
@@ -1254,7 +1253,10 @@ function M.launch_shell()
     pattern = tostring(shell_win),
     once = true,
     callback = function()
-      vim.api.nvim_chan_send(shell_job, '\x15\x0c') --- NAK and FF in ASCII code
+      if shell_job then
+        -- The shell may have exited before its exit callback runs.
+        pcall(vim.api.nvim_chan_send, shell_job, '\x15\x0c') --- NAK and FF in ASCII code
+      end
     end,
   })
 
@@ -1263,8 +1265,15 @@ function M.launch_shell()
       term = true,
       env = shell_envs,
       on_exit = function()
-        shell_buf = nil
         shell_job = nil
+        if shell_win and vim.api.nvim_win_is_valid(shell_win) then
+          vim.api.nvim_win_hide(shell_win)
+        end
+        shell_win = nil
+        if shell_buf and vim.api.nvim_buf_is_valid(shell_buf) then
+          vim.api.nvim_buf_delete(shell_buf, { force = true })
+        end
+        shell_buf = nil
       end,
     })
   end

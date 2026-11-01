@@ -67,8 +67,8 @@ __shrun_preexec() {
 add-zsh-hook preexec __shrun_preexec
 
 __shrun_on_exit() {
+	# EOF or a disconnected terminal must end the launcher, not restart it.
 	builtin printf "\033]633;P;ShrunExit\033\\"
-	USER_ZDOTDIR=$HOME ZDOTDIR=$HOME/.config/nvim/shell_integration exec zsh -i
 }
 
 add-zsh-hook zshexit __shrun_on_exit

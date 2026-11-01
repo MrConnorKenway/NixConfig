@@ -23,6 +23,6 @@ function __shrun_preexec --on-event fish_preexec
 end
 
 function __shrun_on_exit --on-event fish_exit
+    # EOF or a disconnected terminal must end the launcher, not restart it.
     printf '\e]633;P;ShrunExit\e\\'
-    __shrun_restart
 end
