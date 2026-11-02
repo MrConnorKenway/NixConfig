@@ -237,6 +237,9 @@
 
         # Disable AI features
         ai.enabled = false;
+
+        # full screen history
+        inline_height = 0;
       };
     };
 
