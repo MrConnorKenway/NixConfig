@@ -252,7 +252,7 @@ local function confirm_to_exit()
       then
         ---@type string
         local comm = vim.fs.basename(chan.argv[1])
-        local supported_shells = { 'bash', 'zsh' }
+        local supported_shells = { 'bash', 'zsh', 'fish' }
         if vim.tbl_contains(supported_shells, comm) then
           local pid = vim.fn.jobpid(chan.id)
           local cmd
