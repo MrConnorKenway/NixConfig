@@ -225,6 +225,7 @@
     atuin = {
       enable = true;
       enableFishIntegration = true;
+      flags = [ "--disable-up-arrow" ];
 
       settings = {
         # No cloud synchronization or update requests
