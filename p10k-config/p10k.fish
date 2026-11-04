@@ -10,6 +10,10 @@
 
 set -g fish_transient_prompt 1
 
+# Right-edge margin in columns, like zsh's ZLE_RPROMPT_INDENT.
+# Use a nonnegative integer: 0 is flush with the edge; 1 leaves one column.
+set -q p10k_right_prompt_indent; or set -g p10k_right_prompt_indent 0
+
 # Match p10k 1.20.15's P9K_TTY lifecycle (internal/p10k.zsh:6877, 7050).
 # Keep state across re-sourcing and export it for nested fish/zsh shells.
 function __p10k_init_tty
@@ -633,8 +637,8 @@ function fish_prompt
     test -z "$vcs"; or set left "$left $vcs"
     set -l width (string length --visible -- "$left")
     set -l right_width (string length --visible -- "$right")
-    # zsh's default ZLE_RPROMPT_INDENT leaves the final terminal column empty.
-    set -l gap (math "$columns - $width - $right_width - 4")
+    # Reserve three columns for the frame (' ─╮'), plus the configured margin.
+    set -l gap (math "$columns - $width - $right_width - 3 - $p10k_right_prompt_indent")
     if test $gap -lt 1
         # p10k shortens the directory to make room for the right-hand segments
         # before hiding them. Keep anchors even if they exceed the soft limit.
@@ -643,7 +647,7 @@ function fish_prompt
         set left "$prefix$directory"
         test -z "$vcs"; or set left "$left $vcs"
         set width (string length --visible -- "$left")
-        set gap (math "$columns - $width - $right_width - 4")
+        set gap (math "$columns - $width - $right_width - 3 - $p10k_right_prompt_indent")
     end
     test "$P9K_TTY" = new; or printf '\n'
     if test $gap -ge 1
@@ -664,5 +668,5 @@ end
 
 function fish_right_prompt
     contains -- --final-rendering $argv; and return
-    printf '%s─╯%s ' (set_color 808080) (set_color normal)
+    printf '%s─╯%s%*s' (set_color 808080) (set_color normal) $p10k_right_prompt_indent ''
 end
